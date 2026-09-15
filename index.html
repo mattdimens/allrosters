@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F3F5F7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Scoreboard">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<title>Two-League Scoreboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F5F7; --panel:#FFFFFF; --panel2:#F7F9FB; --line:#E2E7EC; --line2:#EDF1F4;
+  --ink:#131C26; --mute:#5D6C7A; --dim:#98A5B1;
+  --live:#B45309; --livebg:#FEF3C7; --up:#15803D; --down:#B91C1C;
+  --warn:#92400E; --warnbg:#FFF7E6; --warnline:#F5D9A6;
+  --shadow:0 1px 2px rgba(19,28,38,.06), 0 6px 18px rgba(19,28,38,.05);
+  --badgeink:#FFFFFF;
+}
+[data-theme=dark]{
+  --bg:#0E1419; --panel:#161E26; --panel2:#1B242E; --line:#22303D; --line2:#1D2933;
+  --ink:#E8EDF2; --mute:#8A9AA8; --dim:#5A6B79;
+  --live:#FFB020; --livebg:rgba(255,176,32,.14); --up:#5DD39E; --down:#F2727E;
+  --warn:#FFC466; --warnbg:rgba(255,176,32,.1); --warnline:rgba(255,176,32,.3);
+  --shadow:none; --badgeink:#0E1419;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:Archivo,system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  padding:env(safe-area-inset-top) 14px calc(48px + env(safe-area-inset-bottom));
+  overscroll-behavior-y:contain;
+}
+.wrap{max-width:900px;margin:0 auto}
+.num{font-family:"Barlow Condensed",Archivo,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:disabled{opacity:.45;cursor:default}
+:focus-visible{outline:2px solid var(--live);outline-offset:2px;border-radius:4px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- header ---------- */
+header{
+  display:flex;align-items:center;gap:10px;padding:16px 0 12px;
+  position:sticky;top:0;z-index:20;
+  background:linear-gradient(var(--bg) 80%,transparent);
+}
+.wk{display:flex;align-items:center;gap:2px}
+h1{font-family:"Barlow Condensed";font-weight:700;font-size:30px;line-height:1;letter-spacing:.005em;white-space:nowrap}
+h1 span{color:var(--mute);font-weight:500}
+.step{width:30px;height:30px;border-radius:15px;color:var(--mute);font-size:18px;line-height:1;display:grid;place-items:center}
+.step:hover:not(:disabled){background:var(--panel);color:var(--ink)}
+.livepill{display:none;align-items:center;gap:6px;font-size:12.5px;font-weight:600;
+  color:var(--live);background:var(--livebg);border-radius:3px;padding:3px 8px}
+.livepill.on{display:inline-flex}
+.blip{width:6px;height:6px;border-radius:50%;background:var(--live);animation:blip 2s ease-in-out infinite}
+@keyframes blip{0%,100%{opacity:1}50%{opacity:.25}}
+.hright{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--dim);white-space:nowrap}
+.hright #stamp{font-family:"Barlow Condensed";font-size:14px;font-weight:500;margin-right:2px}
+@media(max-width:420px){.hright #stamp .w{display:none}}
+.ib{width:32px;height:32px;border-radius:6px;background:var(--panel);border:1px solid var(--line);
+  color:var(--mute);display:grid;place-items:center}
+.ib:hover:not(:disabled){color:var(--ink);border-color:var(--dim)}
+.ib svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ib.spin svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- scope switcher ---------- */
+.scope{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none}
+.scope::-webkit-scrollbar{display:none}
+.scope button{
+  flex:none;font-size:13px;font-weight:500;color:var(--mute);padding:6px 12px;
+  border:1px solid var(--line);background:var(--panel);border-radius:20px;white-space:nowrap;
+}
+.scope button[aria-pressed=true]{color:#fff;background:var(--hue,var(--ink));border-color:var(--hue,var(--ink));font-weight:600}
+[data-theme=dark] .scope button[aria-pressed=true]{color:#0E1419}
+
+/* ---------- boards ---------- */
+.boards{display:grid;gap:12px;margin-bottom:18px}
+@media(min-width:760px){.boards.two{grid-template-columns:1fr 1fr}}
+.board{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--hue);
+  border-radius:8px;padding:14px 15px 13px;box-shadow:var(--shadow)}
+.board .lg{display:flex;align-items:baseline;gap:8px;font-size:12.5px;font-weight:600;color:var(--hue);margin-bottom:9px}
+.board .lg .rec{color:var(--dim);font-weight:500;margin-left:auto}
+.side{display:flex;align-items:baseline;gap:10px}
+.side .who{font-weight:500;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side .who.me{font-weight:600}
+.side .who button{font-weight:inherit;font-size:inherit;text-align:left;padding:0;
+  border-bottom:1px dotted var(--dim)}
+.side .sc{margin-left:auto;font-size:31px;font-weight:700;line-height:1;display:flex;align-items:baseline;gap:6px}
+.side.lo .who,.side.lo .sc{color:var(--mute)}
+.delta{font-family:"Barlow Condensed";font-weight:600;font-size:14px;color:var(--live);animation:fade 6s forwards}
+@keyframes fade{0%,70%{opacity:1}100%{opacity:0}}
+
+.tug{margin:9px 0 8px;position:relative;height:22px}
+.track{position:absolute;inset:5px 0;background:var(--line2);border-radius:3px;overflow:hidden}
+[data-theme=dark] .track{background:#0B1116}
+.fill{position:absolute;left:0;top:0;bottom:0;background:var(--hue);transition:width .7s cubic-bezier(.4,0,.2,1)}
+.pct{position:absolute;top:0;transform:translateX(-50%);font-family:"Barlow Condensed";font-weight:700;
+  font-size:15px;line-height:22px;background:var(--panel);padding:0 6px;
+  transition:left .7s cubic-bezier(.4,0,.2,1);white-space:nowrap}
+.board .foot{font-size:12.5px;color:var(--mute);margin-top:2px}
+.board .foot b{color:var(--ink);font-weight:600}
+.alert{margin-top:10px;background:var(--warnbg);border:1px solid var(--warnline);color:var(--warn);
+  border-radius:6px;padding:8px 10px;font-size:12.5px;line-height:1.4}
+.alert b{font-weight:600}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:3px;margin-bottom:12px;position:sticky;top:60px;z-index:15;box-shadow:var(--shadow)}
+.tabs button{flex:1;font-size:13px;font-weight:500;color:var(--mute);border-radius:6px;padding:7px 2px;white-space:nowrap}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--panel);font-weight:600}
+[data-theme=dark] .tabs button[aria-selected=true]{background:var(--panel2);color:var(--ink)}
+
+/* ---------- lists ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:12px}
+.grp{font-size:12.5px;color:var(--mute);font-weight:600;padding:10px 14px 4px}
+.grp.hue{color:var(--hue)}
+.row{display:flex;align-items:center;gap:11px;padding:9px 14px;border-top:1px solid var(--line2);
+  width:100%;text-align:left}
+.row:first-child,.grp+.row{border-top:0}
+button.row:hover{background:var(--panel2)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--line);flex:none}
+.dot.live{background:var(--live);animation:blip 2s ease-in-out infinite}
+.dot.done{background:var(--dim)}
+.dot.soon{background:var(--line)}
+.meta{min-width:0;flex:1}
+.nm{font-size:14.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:baseline;gap:6px}
+.nm .t{font-size:11px;font-weight:600;padding:0 5px;border-radius:3px;line-height:16px;flex:none}
+.t.inj{background:#FDECEC;color:var(--down)}
+.t.q{background:var(--warnbg);color:var(--warn)}
+.t.bench{background:var(--line2);color:var(--mute);font-weight:500}
+.t.conf{background:#EEE6FF;color:#5B21B6}
+[data-theme=dark] .t.inj{background:rgba(242,114,126,.15)}
+[data-theme=dark] .t.conf{background:rgba(192,132,252,.18);color:#D8B4FE}
+.sub{font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub .lv{color:var(--live);font-weight:500}
+.badges{display:flex;gap:4px;flex:none}
+.bdg{width:17px;height:17px;border-radius:3px;font-size:11px;font-weight:600;display:grid;place-items:center;
+  color:var(--badgeink);font-family:"Barlow Condensed"}
+.bdg.out{background:none!important;border:1px solid var(--hue2);color:var(--hue2)}
+.pts{font-family:"Barlow Condensed";font-weight:700;font-size:21px;min-width:52px;text-align:right;flex:none;
+  font-variant-numeric:tabular-nums;display:flex;flex-direction:column;align-items:flex-end;line-height:1}
+.pts.zero{color:var(--dim)}
+.pts .delta{font-size:12px;margin-top:2px}
+
+/* games */
+.game{border-top:1px solid var(--line2)}
+.game:first-child{border-top:0}
+.gh{display:flex;align-items:center;gap:11px;padding:11px 14px;cursor:pointer;width:100%;text-align:left;list-style:none}
+.gh::-webkit-details-marker{display:none}
+.gh:hover{background:var(--panel2)}
+.gmatch{flex:1;min-width:0}
+.gteams{font-family:"Barlow Condensed";font-weight:600;font-size:18px;letter-spacing:.02em}
+.gstate{font-size:12px;color:var(--mute)}
+.gstate.live{color:var(--live);font-weight:600}
+.gcount{font-size:12px;color:var(--mute);flex:none}
+.gcount b{color:var(--ink);font-weight:600}
+.gscore{font-family:"Barlow Condensed";font-weight:700;font-size:19px;min-width:56px;text-align:right;flex:none}
+.chev{color:var(--dim);flex:none;transition:transform .2s;font-size:11px}
+.game[open] .chev{transform:rotate(90deg)}
+.gbody{padding:0 0 6px 20px}
+.gbody .row{padding:7px 14px 7px 8px}
+.nobody{color:var(--dim);font-size:12.5px;padding:2px 14px 10px 30px}
+
+/* standings */
+.st{display:flex;align-items:center;gap:11px;padding:9px 14px;border-top:1px solid var(--line2);width:100%;text-align:left}
+.st:hover{background:var(--panel2)}
+.st.me{background:color-mix(in srgb,var(--hue) 7%,transparent)}
+.st .rk{font-family:"Barlow Condensed";font-weight:600;font-size:16px;color:var(--dim);width:20px;text-align:right;flex:none}
+.av{width:28px;height:28px;border-radius:14px;background:var(--line2);flex:none;overflow:hidden;
+  display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--mute)}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.st .tn{flex:1;min-width:0}
+.st .tn .a{font-size:14.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st .tn .b{font-size:12px;color:var(--mute)}
+.st .wl{font-family:"Barlow Condensed";font-weight:700;font-size:19px;flex:none;min-width:44px;text-align:right}
+.st .pf{font-family:"Barlow Condensed";font-size:14px;color:var(--mute);flex:none;min-width:52px;text-align:right}
+
+.empty{color:var(--mute);font-size:14px;padding:26px 14px;text-align:center}
+.err{background:#FDECEC;border:1px solid #F5C2C2;color:#7F1D1D;border-radius:6px;padding:11px 13px;font-size:13.5px;margin-bottom:14px}
+.err b{display:block;color:var(--down);font-weight:600;margin-bottom:2px}
+.skel{color:var(--dim);font-size:13.5px;padding:30px 4px;text-align:center}
+
+/* ---------- sheets ---------- */
+.scrim{position:fixed;inset:0;background:rgba(19,28,38,.42);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--panel);border-radius:14px 14px 0 0;
+  max-height:86vh;overflow:auto;transform:translateY(105%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+  padding:8px 16px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -8px 30px rgba(19,28,38,.15)}
+.sheet.on{transform:none}
+@media(min-width:760px){
+  .sheet{left:50%;right:auto;bottom:auto;top:50%;width:520px;border-radius:12px;
+    transform:translate(-50%,-46%);opacity:0;padding:16px 20px 20px}
+  .sheet.on{transform:translate(-50%,-50%);opacity:1}
+}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:4px auto 14px}
+@media(min-width:760px){.grab{display:none}}
+.sh-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.sh-head h2{font-size:20px;font-weight:600;line-height:1.2}
+.sh-head .sub{font-size:13px;white-space:normal}
+.sh-head .x{margin-left:auto;width:30px;height:30px;border-radius:15px;color:var(--mute);font-size:20px;line-height:1;display:grid;place-items:center;flex:none}
+.sh-head .x:hover{background:var(--panel2);color:var(--ink)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin:0 0 14px}
+.kv div{background:var(--panel2);border-radius:6px;padding:8px 10px}
+.kv .k{font-size:11.5px;color:var(--mute)}
+.kv .v{font-family:"Barlow Condensed";font-weight:700;font-size:22px;line-height:1.1;margin-top:2px}
+.kv .v small{font-family:Archivo;font-size:11.5px;font-weight:500;color:var(--mute);margin-left:4px}
+.statline{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.stat{background:var(--panel2);border-radius:5px;padding:5px 9px;font-size:12.5px;color:var(--mute)}
+.stat b{font-family:"Barlow Condensed";font-size:16px;font-weight:700;color:var(--ink);margin-right:3px}
+.sheet .row{padding:8px 0}
+.sheet .grp{padding:12px 0 4px}
+.note{font-size:12.5px;color:var(--dim);margin-top:10px}
+
+/* settings */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12.5px;color:var(--mute);margin-bottom:5px;font-weight:500}
+.field input,.field select{font:inherit;font-size:15px;color:var(--ink);background:var(--panel2);
+  border:1px solid var(--line);border-radius:6px;padding:9px 11px;width:100%}
+.field input:focus,.field select:focus{outline:2px solid var(--live);outline-offset:0;border-color:transparent}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;padding:8px;border:1px solid var(--line);border-radius:6px;font-size:13.5px;color:var(--mute);background:var(--panel2)}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--panel);border-color:var(--ink);font-weight:600}
+.primary{width:100%;padding:11px;border-radius:7px;background:var(--ink);color:var(--panel);font-weight:600;font-size:15px;margin-top:6px}
+.linkbtn{font-size:13px;color:var(--mute);text-decoration:underline;text-underline-offset:3px;padding:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="wk">
+    <button class="step" id="prev" aria-label="Previous week">‹</button>
+    <h1 id="wk">Week <span>—</span></h1>
+    <button class="step" id="next" aria-label="Next week">›</button>
+  </div>
+  <span class="livepill" id="pill"><span class="blip"></span>live</span>
+  <div class="hright">
+    <span id="stamp"></span>
+    <button class="ib" id="btn" aria-label="Refresh"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button>
+    <button class="ib" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </div>
+</header>
+
+<div class="scope" id="scope"></div>
+<div id="err"></div>
+<div class="boards" id="boards"></div>
+
+<div class="tabs" role="tablist" id="tabs">
+  <button role="tab" data-t="mine"  aria-selected="true">My players</button>
+  <button role="tab" data-t="games" aria-selected="false">Games</button>
+  <button role="tab" data-t="them"  aria-selected="false">Against me</button>
+  <button role="tab" data-t="stand" aria-selected="false">Standings</button>
+</div>
+
+<div id="view"><div class="skel">Loading rosters and live scores…</div></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   A single-file Sleeper scoreboard for people in more than one league.
+   Data: api.sleeper.app (rosters, matchups, players, projections, stats)
+         sleeper.com/graphql (live NFL game clocks)
+   No server, no keys. Everything below is plain browser JS.
+   ============================================================ */
+
+const DEFAULTS = { username:"mdimenno", refresh:45, theme:"light" };
+const SPORT   = "nfl";
+const HUES    = ["#0E9A8C","#7C3AED","#C2410C","#1D4ED8"];
+const SLEEPER = "https://api.sleeper.app";
+const GQL     = "https://sleeper.com/graphql";
+const AVATAR  = "https://sleepercdn.com/avatars/thumbs/";
+
+/* ---------- state ---------- */
+const S = {
+  cfg:{...DEFAULTS},
+  week:null, curWeek:null, season:null, userId:null,
+  leagues:[], players:{}, proj:{}, lastProj:0, projWeek:null,
+  games:[], byTeam:{},
+  scope:"all", tab:"mine", open:new Set(),
+  prevPts:{}, deltas:{}, statCache:{},
+};
+
+/* ---------- helpers ---------- */
+const $  = s => document.querySelector(s);
+const el = (t,c,x) => { const n=document.createElement(t); if(c)n.className=c; if(x!=null)n.textContent=x; return n; };
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const f1 = n => (Math.round((n||0)*10)/10).toFixed(1);
+const f2 = n => (Math.round((n||0)*100)/100).toFixed(2);
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+async function getJSON(url){
+  const r = await fetch(url,{cache:"no-store"});
+  if(!r.ok) throw new Error(url.replace(/^https?:\/\/[^/]+/,"")+" returned "+r.status);
+  return r.json();
+}
+function erf(x){ const s=x<0?-1:1; x=Math.abs(x); const t=1/(1+0.3275911*x);
+  return s*(1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x)); }
+const normCdf = z => 0.5*(1+erf(z/Math.SQRT2));
+const visible = L => S.scope==="all" || S.scope===L.id;
+const isCurrent = () => S.week === S.curWeek;
+const timeStr = d => d.toLocaleTimeString([], {weekday:"short",hour:"numeric",minute:"2-digit"});
+
+/* ---------- config ---------- */
+function loadCfg(){
+  const c = store.get("sb_cfg") || {};
+  S.cfg = {...DEFAULTS, ...c};
+  document.documentElement.dataset.theme = S.cfg.theme;
+  $('meta[name=theme-color]').content = S.cfg.theme==="dark" ? "#0E1419" : "#F3F5F7";
+}
+function saveCfg(){ store.set("sb_cfg", S.cfg); }
+
+/* ============================================================
+   GAME CLOCK
+   ============================================================ */
+function fractionLeft(g){
+  if(!g) return 0;
+  if(g.state==="pre")  return 1;
+  if(g.state==="post") return 0;
+  if(g.period>4) return 0.03;
+  const [m,s] = String(g.clock||"0:00").split(":").map(Number);
+  const left = (isFinite(m)?m:0) + (isFinite(s)?s:0)/60 + (4-g.period)*15;
+  return clamp(left/60, 0.02, 1);
+}
+
+/* ============================================================
+   FETCH
+   ============================================================ */
+async function loadState(){
+  const st = await getJSON(`${SLEEPER}/v1/state/${SPORT}`);
+  S.curWeek = st.display_week || st.week || 1;
+  S.season  = st.season;
+  if(S.week==null) S.week = S.curWeek;
+}
+
+async function loadShell(){
+  const u = await getJSON(`${SLEEPER}/v1/user/${encodeURIComponent(S.cfg.username)}`);
+  if(!u || !u.user_id) throw new Error(`No Sleeper user named "${S.cfg.username}". Open settings to fix it`);
+  S.userId = u.user_id;
+  const lgs = await getJSON(`${SLEEPER}/v1/user/${S.userId}/leagues/${SPORT}/${S.season}`);
+  if(!lgs.length) throw new Error(`${S.cfg.username} has no ${S.season} leagues`);
+  const seen = {};
+  S.leagues = lgs.map((l,i)=>{
+    const name = (l.name||"League").trim();
+    let key = name.replace(/[^A-Za-z]/g,"")[0]?.toUpperCase() || "L";
+    if(seen[key]) key = name.replace(/[^A-Za-z]/g,"")[1]?.toUpperCase() || String(i+1);
+    seen[key]=1;
+    return { id:l.league_id, name, key, hue:HUES[i%HUES.length],
+             rec: l.scoring_settings?.rec ?? 1, slots:l.roster_positions||[] };
+  });
+  if(S.scope!=="all" && !S.leagues.some(l=>l.id===S.scope)) S.scope="all";
+}
+
+async function loadPlayers(needed){
+  const c = store.get("sb_players");
+  const fresh = c && (Date.now()-c.at) < 4*3600e3;          // injuries move; 4h cache
+  if(fresh && needed.every(p=>c.map[p])){ S.players=c.map; return; }
+  const all = await getJSON(`${SLEEPER}/v1/players/${SPORT}`); // ~5MB
+  const map = {};
+  for(const pid of needed){
+    const p = all[pid];
+    if(!p){ map[pid]={n:pid,pos:"",team:"",inj:""}; continue; }
+    map[pid] = {
+      n: p.position==="DEF" ? `${p.first_name||""} ${p.last_name||""}`.trim()+" D/ST"
+                            : (p.full_name || `${p.first_name||""} ${p.last_name||""}`.trim()),
+      pos:p.position||"", team:p.team||"",
+      inj:p.injury_status||"", body:p.injury_body_part||"",
+      num:p.number||"", age:p.age||"", exp:p.years_exp
+    };
+  }
+  S.players = map; store.set("sb_players",{at:Date.now(),map});
+}
+
+async function loadProjections(){
+  if(S.projWeek===S.week && Date.now()-S.lastProj<600e3 && Object.keys(S.proj).length) return;
+  const pos = ["QB","RB","WR","TE","K","DEF"].map(p=>`position[]=${p}`).join("&");
+  try{
+    const d = await getJSON(`${SLEEPER}/projections/${SPORT}/${S.season}/${S.week}?season_type=regular&${pos}`);
+    const m={}; for(const r of d){ const st=r?.stats||{}; m[String(r.player_id)]={ppr:st.pts_ppr,half:st.pts_half_ppr,std:st.pts_std}; }
+    S.proj=m; S.lastProj=Date.now(); S.projWeek=S.week;
+  }catch(e){ S.proj={}; }
+}
+const DEFAULT_PROJ = {QB:16,RB:9,WR:9,TE:6,K:8,DEF:7};
+function projFor(p, L){
+  const r = S.proj[p.pid];
+  if(!r) return DEFAULT_PROJ[p.pos] ?? 7;
+  const v = L?.rec>=1 ? r.ppr : L?.rec>=0.5 ? r.half : r.std;
+  return v ?? r.ppr ?? DEFAULT_PROJ[p.pos] ?? 7;
+}
+
+async function loadGames(){
+  try{
+    const r = await fetch(GQL,{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({query:`query{scores(sport:"nfl",season_type:"regular",season:"${S.season}",week:${S.week}){game_id status start_time metadata}}`})});
+    if(!r.ok) throw new Error("scores "+r.status);
+    const d = (await r.json())?.data?.scores || [];
+    S.games = d.map(g=>{ const m=g.metadata||{};
+      return { id:g.game_id, state:m.is_over?"post":(m.is_in_progress?"in":"pre"),
+        period:+m.quarter_num||0, clock:m.time_remaining||"15:00",
+        home:m.home_team, away:m.away_team, homeScore:+m.home_score||0, awayScore:+m.away_score||0,
+        start:new Date(+g.start_time||0), poss:(m.possession||"").trim(), dnd:(m.down_and_distance||"").trim() };
+    }).filter(g=>g.home&&g.away);
+  }catch(e){ S.games=[]; }
+  S.byTeam={}; for(const g of S.games){ S.byTeam[g.home]=g; S.byTeam[g.away]=g; }
+}
+
+async function loadLeague(L){
+  const [rosters,users,matchups] = await Promise.all([
+    getJSON(`${SLEEPER}/v1/league/${L.id}/rosters`),
+    getJSON(`${SLEEPER}/v1/league/${L.id}/users`),
+    getJSON(`${SLEEPER}/v1/league/${L.id}/matchups/${S.week}`).catch(()=>[])
+  ]);
+  L.userById = {}; for(const u of users) L.userById[u.user_id] = u;
+  L.rosters  = rosters; L.matchups = matchups;
+  L.teamName = r => { const u=r&&L.userById[r.owner_id]; return u?.metadata?.team_name || u?.display_name || "Team"; };
+  L.userName = r => L.userById[r?.owner_id]?.display_name || "";
+  L.avatar   = r => L.userById[r?.owner_id]?.avatar || null;
+
+  const mine = rosters.find(r=>r.owner_id===S.userId || (r.co_owners||[]).includes(S.userId));
+  if(!mine){ L.error="You're not on a roster in this league"; return; }
+  L.myRoster = mine;
+  const mm  = matchups.find(m=>m.roster_id===mine.roster_id);
+  const opp = mm ? matchups.find(m=>m.matchup_id===mm.matchup_id && m.roster_id!==mine.roster_id) : null;
+  const oppR = opp ? rosters.find(r=>r.roster_id===opp.roster_id) : null;
+  L.oppRoster = oppR;
+  L.myName=L.teamName(mine); L.oppName=oppR?L.teamName(oppR):null;
+  L.myPts=mm?.points??0; L.oppPts=opp?.points??0; L.hasMatchup=!!mm;
+  L.mine = buildSide(mm,mine,L); L.them = opp?buildSide(opp,oppR,L):[];
+  L.record = `${mine.settings?.wins??0}-${mine.settings?.losses??0}${mine.settings?.ties?`-${mine.settings.ties}`:""}`;
+}
+
+function buildSide(m, roster, L){
+  const startIds = m?.starters || roster?.starters || [];
+  const allIds   = m?.players  || roster?.players  || [];
+  const ptsMap   = m?.players_points || {};
+  const out=[], seen=new Set();
+  startIds.forEach((pid,i)=>{ if(!pid || pid==="0") out.push({pid:`empty-${i}`, name:"Empty slot", pos:L.slots[i]||"", team:"", starter:true, empty:true, pts:0, league:L, slot:L.slots[i]}); });
+  for(const pid of allIds){
+    if(!pid||seen.has(pid)) continue; seen.add(pid);
+    const info=S.players[pid]||{n:pid,pos:"",team:"",inj:""};
+    out.push({pid, name:info.n, pos:info.pos, team:info.team, inj:info.inj, starter:startIds.includes(pid),
+      slot:startIds.includes(pid)?L.slots[startIds.indexOf(pid)]:"", pts:ptsMap[pid]??0, league:L});
+  }
+  return out;
+}
+
+/* ============================================================
+   MODELS: win probability, lineup alerts, best lineup
+   ============================================================ */
+function projectSide(players, L){
+  let rem=0, v=0, left=0, total=0;
+  for(const p of players){
+    if(!p.starter) continue; total++;
+    if(p.empty) continue;
+    const fr = fractionLeft(S.byTeam[p.team]);
+    if(fr<=0) continue;
+    if(isOut(p)) continue;
+    left++;
+    const pj=projFor(p,L); rem+=pj*fr; const sd=Math.max(3,pj*0.55)*Math.sqrt(fr); v+=sd*sd;
+  }
+  return {rem, sd:Math.sqrt(v), left, total};
+}
+function winProb(L){
+  if(!L.hasMatchup||!L.them.length) return null;
+  const a=projectSide(L.mine,L), b=projectSide(L.them,L);
+  const diff=(L.myPts+a.rem)-(L.oppPts+b.rem), sd=Math.sqrt(a.sd*a.sd+b.sd*b.sd);
+  const p = sd<0.5 ? (diff>0?1:diff<0?0:0.5) : normCdf(diff/sd);
+  return { p:clamp(p,0.001,0.999), projMe:L.myPts+a.rem, projOpp:L.oppPts+b.rem,
+           left:a.left, total:a.total, oppLeft:b.left, decided:a.left===0&&b.left===0, margin:L.myPts-L.oppPts };
+}
+const OUT = new Set(["Out","IR","PUP","Sus","COV","NA","Doubtful"]);
+const isOut = p => OUT.has(p.inj);
+
+function lineupAlerts(L){
+  const a=[];
+  for(const p of L.mine||[]){
+    if(!p.starter) continue;
+    const g=S.byTeam[p.team];
+    if(g && g.state==="post") continue;               // too late to matter
+    if(p.empty) a.push(`empty ${p.slot||""} slot`.replace("  "," "));
+    else if(!g && p.team) a.push(`${p.name} is on bye`);
+    else if(isOut(p)) a.push(`${p.name} is ${p.inj}`);
+  }
+  return a;
+}
+
+const ELIG = {QB:["QB"],RB:["RB"],WR:["WR"],TE:["TE"],K:["K"],DEF:["DEF"],
+  FLEX:["RB","WR","TE"],SUPER_FLEX:["QB","RB","WR","TE"],REC_FLEX:["WR","TE"],WRRB_FLEX:["RB","WR"],
+  DL:["DL"],LB:["LB"],DB:["DB"],IDP_FLEX:["DL","LB","DB"]};
+function bestLineup(players, slots){
+  const use = slots.filter(s=>ELIG[s]);
+  const order = [...use].sort((a,b)=>ELIG[a].length-ELIG[b].length);   // tightest slots first
+  const pool = players.filter(p=>!p.empty).sort((a,b)=>b.pts-a.pts);
+  const taken=new Set(); let total=0;
+  for(const s of order){
+    const pick = pool.find(p=>!taken.has(p.pid) && ELIG[s].includes(p.pos));
+    if(pick){ taken.add(pick.pid); total+=pick.pts; }
+  }
+  return total;
+}
+
+/* conflicts: someone I start in league A who is starting against me in league B */
+function conflicts(){
+  const out={};
+  for(const A of S.leagues) for(const p of A.mine||[]){
+    if(!p.starter) continue;
+    for(const B of S.leagues){ if(B===A) continue;
+      if((B.them||[]).some(q=>q.starter && q.pid===p.pid)) (out[p.pid]=out[p.pid]||[]).push(B.key);
+    }
+  }
+  return out;
+}
+
+/* ============================================================
+   RENDER — chrome
+   ============================================================ */
+function renderScope(){
+  const h=$("#scope"); h.innerHTML="";
+  if(S.leagues.length<2){ h.style.display="none"; return; }
+  h.style.display="";
+  const mk=(label,val,hue)=>{ const b=el("button",null,label); b.setAttribute("aria-pressed",S.scope===val);
+    if(hue) b.style.setProperty("--hue",hue); b.onclick=()=>{S.scope=val; render();}; return b; };
+  h.appendChild(mk("Both leagues","all"));
+  S.leagues.forEach(L=>h.appendChild(mk(L.name,L.id,L.hue)));
+}
+
+function renderBoards(){
+  const host=$("#boards"); host.innerHTML="";
+  const shown=S.leagues.filter(visible);
+  host.classList.toggle("two", shown.length>1);
+  for(const L of shown){
+    const b=el("div","board"); b.style.setProperty("--hue",L.hue);
+    const lg=el("div","lg"); lg.appendChild(el("span",null,L.name));
+    if(L.record) lg.appendChild(el("span","rec",L.record)); b.appendChild(lg);
+    if(L.error){ b.appendChild(el("div","foot",L.error)); host.appendChild(b); continue; }
+    if(!L.hasMatchup){ b.appendChild(el("div","foot",`No week ${S.week} matchup posted.`)); host.appendChild(b); continue; }
+
+    const w=winProb(L), ahead=L.myPts>=L.oppPts;
+    const me=el("div","side"+(ahead?"":" lo"));
+    const who=el("div","who me"); const mb=el("button",null,L.myName); mb.onclick=()=>openTeam(L,L.myRoster); who.appendChild(mb); me.appendChild(who);
+    const sc=el("div","sc num",f2(L.myPts));
+    const dk=`team:${L.id}`; if(S.deltas[dk]) sc.appendChild(el("span","delta",(S.deltas[dk]>0?"+":"")+f1(S.deltas[dk])));
+    me.appendChild(sc); b.appendChild(me);
+
+    if(w){
+      const tug=el("div","tug"), tr=el("div","track"), fl=el("div","fill"); tr.appendChild(fl); tug.appendChild(tr);
+      const pc=el("div","pct num");
+      if(w.decided){ fl.style.width="100%"; fl.style.background=w.margin>=0?"var(--up)":"var(--down)"; fl.style.opacity=".18";
+        pc.textContent=(w.margin>=0?"Won by ":"Lost by ")+f2(Math.abs(w.margin)); pc.style.left="50%"; }
+      else{ fl.style.width=(w.p*100).toFixed(1)+"%"; pc.textContent=Math.round(w.p*100)+"% to win"; pc.style.left=clamp(w.p*100,22,78)+"%"; }
+      tug.appendChild(pc); b.appendChild(tug);
+    }
+    const th=el("div","side"+(ahead?" lo":""));
+    const ow=el("div","who"); const ob=el("button",null,L.oppName||"Opponent"); ob.onclick=()=>openTeam(L,L.oppRoster); ow.appendChild(ob); th.appendChild(ow);
+    th.appendChild(el("div","sc num",f2(L.oppPts))); b.appendChild(th);
+
+    if(w){
+      const foot=el("div","foot");
+      if(!w.decided) foot.innerHTML=`<b>${w.left}</b> of ${w.total} starters left, ${w.oppLeft} for them. Projected <b>${f1(w.projMe)}</b> to ${f1(w.projOpp)}.`;
+      else{ const best=bestLineup(L.mine,L.slots), left=best-L.myPts;
+        foot.innerHTML = left>0.05 ? `Best lineup would have scored <b>${f2(best)}</b>. Left ${f2(left)} on the bench.` : `You played your best possible lineup.`; }
+      b.appendChild(foot);
+    }
+    const al=lineupAlerts(L);
+    if(al.length){ const a=el("div","alert"); a.innerHTML=`<b>Check your lineup:</b> ${esc(al.join(", "))}.`; b.appendChild(a); }
+    host.appendChild(b);
+  }
+}
+
+/* ============================================================
+   RENDER — rows
+   ============================================================ */
+function gameLabel(team){
+  const g=S.byTeam[team];
+  if(!g) return {txt:team?"bye":"", live:false, phase:"none"};
+  if(g.state==="post") return {txt:`final, ${g.away} ${g.awayScore} ${g.home} ${g.homeScore}`, live:false, phase:"done"};
+  if(g.state==="in")   return {txt:`${g.period>4?"OT":"Q"+g.period} ${g.clock}, ${g.away} ${g.awayScore} ${g.home} ${g.homeScore}`+(g.poss===team?", has ball":""), live:true, phase:"live"};
+  return {txt:`${g.away} at ${g.home}, ${timeStr(g.start)}`, live:false, phase:"soon"};
+}
+
+function playerRow(p, opts={}){
+  const r=el(opts.static?"div":"button","row");
+  if(!opts.static) r.onclick=()=>openPlayer(p);
+  const gl=gameLabel(p.team);
+  r.appendChild(el("span","dot "+gl.phase));
+  const meta=el("div","meta"), nm=el("div","nm");
+  nm.appendChild(el("span",null,p.name));
+  if(p.inj) nm.appendChild(el("span","t "+(isOut(p)?"inj":"q"), p.inj==="Questionable"?"Q":p.inj));
+  if(opts.benchIn?.length) nm.appendChild(el("span","t bench","bench in "+opts.benchIn.join(", ")));
+  if(opts.conflict?.length) nm.appendChild(el("span","t conf","vs you in "+opts.conflict.join(", ")));
+  meta.appendChild(nm);
+  const sub=el("div","sub");
+  const pre=[p.pos,p.team].filter(Boolean).join(" ");
+  sub.appendChild(document.createTextNode(pre?pre+"  ":""));
+  sub.appendChild(el("span",gl.live?"lv":"",gl.txt)); meta.appendChild(sub); r.appendChild(meta);
+  if(opts.badges){ const bs=el("div","badges");
+    for(const b of opts.badges){ const d=el("div","bdg"+(b.starter?"":" out"),b.key);
+      if(b.starter) d.style.background=b.hue; else d.style.setProperty("--hue2",b.hue);
+      d.title=b.name+(b.starter?", starting":", on your bench"); bs.appendChild(d); }
+    r.appendChild(bs); }
+  const pts=el("div","pts num"+(p.pts?"":" zero")); pts.appendChild(el("span",null,f1(p.pts)));
+  const d=S.deltas[p.pid]; if(d && Math.abs(d)>=0.05) pts.appendChild(el("span","delta",(d>0?"+":"")+f1(d)));
+  r.appendChild(pts);
+  return r;
+}
+
+function mergeMine(){
+  const by=new Map();
+  for(const L of S.leagues.filter(visible)) for(const p of L.mine||[]){
+    if(p.empty) continue;
+    if(!by.has(p.pid)) by.set(p.pid,{...p,badges:[],pts:0,starter:false,benchIn:[],perLeague:[]});
+    const e=by.get(p.pid);
+    e.badges.push({key:L.key,hue:L.hue,name:L.name,starter:p.starter});
+    e.perLeague.push({L,starter:p.starter,pts:p.pts});
+    e.pts=Math.max(e.pts,p.pts);
+    if(p.starter) e.starter=true; else e.benchIn.push(L.key);
+  }
+  for(const e of by.values()) if(!e.starter) e.benchIn=[];
+  return [...by.values()];
+}
+const sortRows = a => a.sort((x,y)=>{ const lx=gameLabel(x.team).live?0:1, ly=gameLabel(y.team).live?0:1;
+  if(lx!==ly) return lx-ly; return (y.pts||0)-(x.pts||0); });
+
+function renderMine(){
+  const v=$("#view"); v.innerHTML="";
+  const all=mergeMine(), cf=conflicts();
+  const st=sortRows(all.filter(p=>p.starter)), bn=sortRows(all.filter(p=>!p.starter));
+  if(!all.length){ v.appendChild(el("div","empty","No rostered players found.")); return; }
+  const c=el("div","card");
+  c.appendChild(el("div","grp",`Starting (${st.length})`));
+  st.forEach(p=>c.appendChild(playerRow(p,{badges:p.badges,benchIn:p.benchIn,conflict:cf[p.pid]})));
+  if(bn.length){ c.appendChild(el("div","grp",`Bench (${bn.length})`)); bn.forEach(p=>c.appendChild(playerRow(p,{badges:p.badges}))); }
+  v.appendChild(c);
+}
+
+function renderThem(){
+  const v=$("#view"); v.innerHTML=""; let any=false;
+  for(const L of S.leagues.filter(visible)){
+    const st=sortRows((L.them||[]).filter(p=>p.starter && !p.empty)); if(!st.length) continue; any=true;
+    const c=el("div","card"); c.style.setProperty("--hue",L.hue);
+    c.appendChild(el("div","grp hue",`${L.oppName||"Opponent"}, ${L.name}`));
+    st.forEach(p=>c.appendChild(playerRow(p,{badges:[{key:L.key,hue:L.hue,name:L.name,starter:true}]})));
+    v.appendChild(c);
+  }
+  if(!any) v.appendChild(el("div","empty","No opponent lineups posted yet."));
+}
+
+function renderGames(){
+  const v=$("#view"); v.innerHTML="";
+  if(!S.games.length){ v.appendChild(el("div","empty","Live game feed is unreachable. Scores above still work.")); return; }
+  const mine=mergeMine();
+  const inGame=g=>mine.filter(p=>p.team===g.home||p.team===g.away);
+  const order={in:0,pre:1,post:2}, mineIn=g=>inGame(g).filter(p=>p.starter).length;
+  const games=[...S.games].sort((a,b)=>(order[a.state]-order[b.state])||(mineIn(b)-mineIn(a))||(a.start-b.start));
+  const c=el("div","card");
+  for(const g of games){
+    const ps=sortRows(inGame(g)); const d=el("details","game"); if(S.open.has(g.id)) d.open=true;
+    d.addEventListener("toggle",()=>{ d.open?S.open.add(g.id):S.open.delete(g.id); });
+    const sum=document.createElement("summary"); sum.className="gh"; sum.appendChild(el("span","chev","▶"));
+    const m=el("div","gmatch"); m.appendChild(el("div","gteams",`${g.away} at ${g.home}`));
+    const stt=el("div","gstate"+(g.state==="in"?" live":""));
+    stt.textContent = g.state==="in" ? `${g.period>4?"OT":"Q"+g.period} ${g.clock}`+(g.dnd?`, ${g.dnd}`:"")+(g.poss?` (${g.poss} ball)`:"")
+      : g.state==="post" ? (g.period>4?"Final, overtime":"Final") : timeStr(g.start);
+    m.appendChild(stt); sum.appendChild(m);
+    const cnt=el("div","gcount"); const s=ps.filter(p=>p.starter).length;
+    cnt.innerHTML = ps.length ? `<b>${s}</b> starting${ps.length-s?`, ${ps.length-s} bench`:""}` : ""; sum.appendChild(cnt);
+    if(g.state!=="pre") sum.appendChild(el("div","gscore num",`${g.awayScore}-${g.homeScore}`));
+    d.appendChild(sum);
+    const body=el("div","gbody");
+    if(ps.length) ps.forEach(p=>body.appendChild(playerRow(p,{badges:p.badges,benchIn:p.benchIn})));
+    else body.appendChild(el("div","nobody","Nobody of yours in this one."));
+    d.appendChild(body); c.appendChild(d);
+  }
+  v.appendChild(c);
+}
+
+function renderStandings(){
+  const v=$("#view"); v.innerHTML="";
+  for(const L of S.leagues.filter(visible)){
+    if(!L.rosters) continue;
+    const c=el("div","card"); c.style.setProperty("--hue",L.hue);
+    c.appendChild(el("div","grp hue",L.name));
+    const rows=[...L.rosters].sort((a,b)=>{ const A=a.settings||{},B=b.settings||{};
+      const wk=r=>L.matchups.find(x=>x.roster_id===r.roster_id)?.points||0;
+      return (B.wins-A.wins)||(A.losses-B.losses)||((B.fpts+(B.fpts_decimal||0)/100)-(A.fpts+(A.fpts_decimal||0)/100))||(wk(b)-wk(a)); });
+    rows.forEach((r,i)=>{
+      const st=r.settings||{}; const b=el("button","st"+(r.roster_id===L.myRoster?.roster_id?" me":""));
+      b.onclick=()=>openTeam(L,r);
+      b.appendChild(el("div","rk",String(i+1)));
+      b.appendChild(avatar(L,r));
+      const tn=el("div","tn"); tn.appendChild(el("div","a",L.teamName(r))); tn.appendChild(el("div","b",L.userName(r))); b.appendChild(tn);
+      const m=L.matchups.find(x=>x.roster_id===r.roster_id);
+      b.appendChild(el("div","pf num", m?f1(m.points)+" this wk":""));
+      b.appendChild(el("div","wl num",`${st.wins??0}-${st.losses??0}`));
+      c.appendChild(b);
+    });
+    v.appendChild(c);
+  }
+}
+function avatar(L,r){ const a=el("div","av"); const id=L.avatar(r);
+  if(id){ const img=document.createElement("img"); img.src=AVATAR+id; img.alt=""; img.loading="lazy"; a.appendChild(img); }
+  else a.textContent=(L.teamName(r)[0]||"?").toUpperCase(); return a; }
+
+function render(){
+  renderScope(); renderBoards();
+  ({mine:renderMine,games:renderGames,them:renderThem,stand:renderStandings}[S.tab])();
+  $("#pill").classList.toggle("on", isCurrent() && S.games.some(g=>g.state==="in"));
+  $("#wk").innerHTML=`Week <span>${S.week}</span>`;
+  $("#prev").disabled = S.week<=1; $("#next").disabled = S.week>=S.curWeek;
+  $("#stamp").innerHTML = isCurrent() ? `<span class="w">updated </span>${new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}` : "past week";
+}
+
+/* ============================================================
+   SHEETS
+   ============================================================ */
+function openSheet(build){
+  const sh=$("#sheet"); sh.innerHTML=""; sh.appendChild(el("div","grab")); build(sh);
+  sh.classList.add("on"); $("#scrim").classList.add("on"); document.body.style.overflow="hidden";
+}
+function closeSheet(){ $("#sheet").classList.remove("on"); $("#scrim").classList.remove("on"); document.body.style.overflow=""; }
+$("#scrim").onclick=closeSheet;
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeSheet(); });
+function head(sh,title,sub){
+  const h=el("div","sh-head"); const t=el("div"); t.appendChild(el("h2",null,title)); if(sub) t.appendChild(el("div","sub",sub)); h.appendChild(t);
+  const x=el("button","x","×"); x.setAttribute("aria-label","Close"); x.onclick=closeSheet; h.appendChild(x); sh.appendChild(h);
+}
+
+const STAT_KEYS = {
+  QB:[["pass_cmp","cmp"],["pass_att","att"],["pass_yd","pass yd"],["pass_td","pass td"],["pass_int","int"],["rush_yd","rush yd"],["rush_td","rush td"]],
+  RB:[["rush_att","car"],["rush_yd","rush yd"],["rush_td","rush td"],["rec","rec"],["rec_tgt","tgt"],["rec_yd","rec yd"],["rec_td","rec td"],["fum_lost","fum"]],
+  WR:[["rec","rec"],["rec_tgt","tgt"],["rec_yd","rec yd"],["rec_td","rec td"],["rush_yd","rush yd"],["rush_td","rush td"]],
+  TE:[["rec","rec"],["rec_tgt","tgt"],["rec_yd","rec yd"],["rec_td","rec td"]],
+  K:[["fgm","fg"],["fga","fga"],["xpm","xp"],["fgm_50p","50+"]],
+  DEF:[["sack","sack"],["int","int"],["fum_rec","fum rec"],["def_td","td"],["pts_allow","pts allowed"],["safe","safety"]],
+};
+async function statsFor(pid){
+  const k=`${pid}:${S.week}`; if(S.statCache[k]) return S.statCache[k];
+  try{ const d=await getJSON(`${SLEEPER}/stats/${SPORT}/player/${pid}?season_type=regular&season=${S.season}&grouping=week`);
+    const w=d?.[String(S.week)]; return S.statCache[k]=(w?.stats||null); }catch(e){ return null; }
+}
+
+function openPlayer(p){
+  const info=S.players[p.pid]||{};
+  openSheet(async sh=>{
+    const gl=gameLabel(p.team);
+    head(sh,p.name,[p.pos,p.team,info.num?`#${info.num}`:"",info.age?`age ${info.age}`:""].filter(Boolean).join("  "));
+    if(p.inj) sh.appendChild(el("div","alert",`${p.inj}${info.body?", "+info.body.toLowerCase():""}`));
+    const kv=el("div","kv");
+    const per=p.perLeague||[{L:p.league,starter:p.starter,pts:p.pts}];
+    for(const x of per){ const d=el("div"); d.style.borderLeft=`3px solid ${x.L.hue}`;
+      d.appendChild(el("div","k",`${x.L.name}, ${x.starter?"starting":"bench"}`));
+      const v=el("div","v num",f1(x.pts)); v.appendChild(el("small",null,`proj ${f1(projFor(p,x.L))}`)); d.appendChild(v); kv.appendChild(d); }
+    const g=el("div"); g.appendChild(el("div","k","Game")); g.appendChild(el("div","v",gl.txt||"—")).style.fontSize="16px"; kv.appendChild(g);
+    sh.appendChild(kv);
+    const holder=el("div","statline"); holder.appendChild(el("div","stat","loading stat line…")); sh.appendChild(holder);
+    const st=await statsFor(p.pid); holder.innerHTML="";
+    if(!st){ holder.appendChild(el("div","stat","No stats yet this week.")); return; }
+    for(const [k,lab] of (STAT_KEYS[p.pos]||[])){ if(st[k]==null||st[k]===0) continue;
+      const s=el("div","stat"); s.appendChild(el("b",null,String(st[k]))); s.appendChild(document.createTextNode(lab)); holder.appendChild(s); }
+    if(st.off_snp && st.tm_off_snp){ const s=el("div","stat"); s.appendChild(el("b",null,Math.round(100*st.off_snp/st.tm_off_snp)+"%")); s.appendChild(document.createTextNode("snaps")); holder.appendChild(s); }
+    if(!holder.children.length) holder.appendChild(el("div","stat","Nothing in the box score yet."));
+  });
+}
+
+function openTeam(L,roster){
+  if(!roster) return;
+  const m=L.matchups.find(x=>x.roster_id===roster.roster_id);
+  const side=buildSide(m,roster,L);
+  const oppM=m?L.matchups.find(x=>x.matchup_id===m.matchup_id&&x.roster_id!==m.roster_id):null;
+  const oppR=oppM?L.rosters.find(r=>r.roster_id===oppM.roster_id):null;
+  openSheet(sh=>{
+    head(sh,L.teamName(roster),`${L.userName(roster)}  ${L.name}  ${roster.settings?.wins??0}-${roster.settings?.losses??0}`);
+    const kv=el("div","kv");
+    const a=el("div"); a.appendChild(el("div","k",`This week`)); a.appendChild(el("div","v num",f2(m?.points||0))); kv.appendChild(a);
+    const b=el("div"); b.appendChild(el("div","k",oppR?`vs ${L.teamName(oppR)}`:"No matchup")); b.appendChild(el("div","v num",oppM?f2(oppM.points||0):"—")); kv.appendChild(b);
+    sh.appendChild(kv);
+    const st=side.filter(p=>p.starter), bn=side.filter(p=>!p.starter);
+    sh.appendChild(el("div","grp",`Starting (${st.length})`)); st.forEach(p=>sh.appendChild(playerRow(p,{static:true})));
+    if(bn.length){ sh.appendChild(el("div","grp",`Bench (${bn.length})`)); sortRows(bn).forEach(p=>sh.appendChild(playerRow(p,{static:true}))); }
+  });
+}
+
+function openSettings(){
+  openSheet(sh=>{
+    head(sh,"Settings");
+    const f1=el("div","field"); f1.innerHTML=`<label for="un">Sleeper username</label>`; const un=document.createElement("input"); un.id="un"; un.value=S.cfg.username; un.autocapitalize="off"; un.spellcheck=false; f1.appendChild(un); sh.appendChild(f1);
+    const f2=el("div","field"); f2.innerHTML=`<label>Refresh every</label>`; const seg=el("div","seg");
+    [[30,"30s"],[45,"45s"],[90,"90s"],[300,"5 min"]].forEach(([v,l])=>{ const b=el("button",null,l); b.setAttribute("aria-pressed",S.cfg.refresh===v); b.onclick=()=>{S.cfg.refresh=v; seg.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));}; seg.appendChild(b); });
+    f2.appendChild(seg); sh.appendChild(f2);
+    const f3=el("div","field"); f3.innerHTML=`<label>Look</label>`; const seg2=el("div","seg");
+    [["light","Light"],["dark","Dark"]].forEach(([v,l])=>{ const b=el("button",null,l); b.setAttribute("aria-pressed",S.cfg.theme===v); b.onclick=()=>{S.cfg.theme=v; document.documentElement.dataset.theme=v; seg2.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));}; seg2.appendChild(b); });
+    f3.appendChild(seg2); sh.appendChild(f3);
+    const save=el("button","primary","Save"); save.onclick=async()=>{
+      const changed=un.value.trim()&&un.value.trim()!==S.cfg.username;
+      S.cfg.username=un.value.trim()||S.cfg.username; saveCfg(); closeSheet(); restartTimer();
+      if(changed){ S.leagues=[]; S.scope="all"; S.prevPts={}; refresh(true); } else render();
+    }; sh.appendChild(save);
+    const rl=el("button","linkbtn","Reload player database (injuries, teams)"); rl.onclick=()=>{ store.set("sb_players",null); closeSheet(); refresh(false); }; sh.appendChild(rl);
+    sh.appendChild(el("div","note","Everything here lives in this browser only. Sleeper's API is read-only, so lineups and waivers still happen in the Sleeper app."));
+  });
+}
+$("#gear").onclick=openSettings;
+
+/* ============================================================
+   ORCHESTRATION
+   ============================================================ */
+let busy=false, timer=null;
+function snapshotPts(){ const cur={};
+  for(const L of S.leagues){ cur[`team:${L.id}`]=L.myPts; for(const p of [...(L.mine||[]),...(L.them||[])]) cur[p.pid]=Math.max(cur[p.pid]||0,p.pts); }
+  S.deltas={}; if(isCurrent()) for(const k in cur){ if(S.prevPts[k]!=null){ const d=cur[k]-S.prevPts[k]; if(Math.abs(d)>=0.05) S.deltas[k]=d; } }
+  S.prevPts=cur;
+}
+async function refresh(first){
+  if(busy) return; busy=true; $("#btn").disabled=true; $("#btn").classList.add("spin");
+  try{
+    await loadState();
+    if(first||!S.leagues.length) await loadShell();
+    await Promise.all([loadGames(), loadProjections()]);
+    const raw=await Promise.all(S.leagues.map(L=>getJSON(`${SLEEPER}/v1/league/${L.id}/rosters`)));
+    const need=new Set(); raw.flat().forEach(r=>(r.players||[]).forEach(p=>need.add(p)));
+    await loadPlayers([...need]);
+    await Promise.all(S.leagues.map(loadLeague));
+    snapshotPts();
+    $("#err").innerHTML=""; render();
+  }catch(e){
+    $("#err").innerHTML=`<div class="err"><b>Couldn't load</b>${esc(e.message)}.</div>`; console.error(e);
+  }finally{ busy=false; $("#btn").disabled=false; $("#btn").classList.remove("spin"); }
+}
+function restartTimer(){ clearInterval(timer); timer=setInterval(()=>{ if(!document.hidden && isCurrent()) refresh(false); }, S.cfg.refresh*1000); }
+function setWeek(w){ S.week=clamp(w,1,S.curWeek||w); S.open=new Set(); S.prevPts={}; S.deltas={}; refresh(false); }
+
+document.querySelectorAll("#tabs button").forEach(b=>b.addEventListener("click",()=>{
+  S.tab=b.dataset.t; document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x===b)); render(); }));
+$("#btn").onclick=()=>refresh(false);
+$("#prev").onclick=()=>setWeek(S.week-1);
+$("#next").onclick=()=>setWeek(S.week+1);
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden && isCurrent()) refresh(false); });
+
+loadCfg(); refresh(true); restartTimer();
+</script>
+</body>
+</html>
