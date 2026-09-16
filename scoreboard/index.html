@@ -27,6 +27,28 @@
    ds/modernist/styles.css — no hard-coded hexes, no radii.
    The dark values live in /assets/dark.css.
    ============================================================ */
+/* League colors. Red stays the signal color (live, winning, lost points), so each league gets
+   its own hue instead; every value clears 4.5:1 on the ground and on its tint, in both themes. */
+:root{
+  --league-0:#2549c8; --league-0-tint:#e8edfb;
+  --league-1:#0a7650; --league-1-tint:#e2f2ea;
+  --league-2:#6a3ecf; --league-2-tint:#eee8fa;
+  --league-3:#8f5d00; --league-3-tint:#f6ecd8;
+  --on-league:#ffffff;
+}
+[data-theme=dark]{
+  --league-0:#8ea7ff; --league-0-tint:#1b2243;
+  --league-1:#4ccf9e; --league-1-tint:#0f2a20;
+  --league-2:#b89dff; --league-2-tint:#241b3b;
+  --league-3:#eeb04f; --league-3-tint:#2e2310;
+  --on-league:#1a1918;
+}
+.lg0{--lg:var(--league-0);--lg-tint:var(--league-0-tint)}
+.lg1{--lg:var(--league-1);--lg-tint:var(--league-1-tint)}
+.lg2{--lg:var(--league-2);--lg-tint:var(--league-2-tint)}
+.lg3{--lg:var(--league-3);--lg-tint:var(--league-3-tint)}
+.lgc,.lb.lgc{color:var(--lg)}
+
 html,body{margin:0;padding:0;height:100%}
 body{background:var(--color-bg);-webkit-font-smoothing:antialiased;overscroll-behavior-y:contain}
 button{font-family:inherit;color:inherit;font-size:inherit;background:none;border:0;padding:0}
@@ -84,7 +106,8 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
 .lgrid{border-bottom:2px solid var(--color-divider);flex:none}
 .cell{padding:12px 12px 13px;text-align:left;cursor:pointer;background:var(--color-bg);width:100%;
   display:flex;flex-direction:column}
-.cell:hover,.cell.sel{background:var(--color-accent-100)}
+.cell:hover,.cell.sel{background:var(--lg-tint,var(--color-accent-100))}
+.lgrid .cell{box-shadow:inset 0 4px 0 var(--lg);padding-top:16px}
 .cells .cell:nth-child(2n){border-left:2px solid var(--color-divider)}
 .lgrid .cell:nth-child(n+3){border-top:2px solid var(--color-divider)}
 /* under two columns the vertical rules become horizontal ones */
@@ -102,10 +125,15 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
 .copen{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;border-top:1px solid var(--color-divider)}
 .copen .o{font-size:11px;font-weight:800;letter-spacing:.08em}
 .copen .s{margin-left:auto;font-size:18px;line-height:1;color:var(--color-neutral-600)}
-.cell.sel .copen .s{color:var(--color-accent)}
-/* a league's letter, which also marks its players in other leagues' lists */
+/* a league's colored letter: solid where the player is yours, outlined where he starts against you */
 .key{display:inline-grid;place-items:center;min-width:15px;height:15px;padding:0 3px;flex:none;align-self:center;
-  font-size:9px;font-weight:800;letter-spacing:0;background:var(--color-text);color:var(--color-bg)}
+  font-size:9px;font-weight:800;letter-spacing:0;line-height:1;text-transform:uppercase;
+  background:var(--lg,var(--color-text));color:var(--on-league)}
+.key.vs{background:transparent;color:var(--lg);box-shadow:inset 0 0 0 1.5px var(--lg)}
+.chips{display:inline-flex;gap:3px;flex:none;align-items:center}
+.nmrow{display:flex;align-items:center;gap:6px;min-width:0}
+.nmrow .nm{min-width:0}
+.cell.sel .copen .s{color:var(--lg)}
 .chead .lb.ell{min-width:0}
 
 /* ---------- home: live cells ---------- */
@@ -148,12 +176,18 @@ button.main:hover{background:var(--color-accent-100)}
 .switch{border-bottom:2px solid var(--color-divider);flex:none}
 .sw{padding:11px 14px;text-align:left;cursor:pointer;min-height:48px;background:var(--color-bg);
   color:var(--color-neutral-600);display:block;width:100%}
-.sw:hover{background:var(--color-accent-100)}
 .sw .nm{font-size:11px;font-weight:800;letter-spacing:.1em}
-.sw[aria-pressed=true]{background:var(--color-accent);color:var(--color-bg)}
-.sw[aria-pressed=true]:hover{background:var(--color-accent-600)}
-.sw[aria-pressed=true] .lb{color:var(--color-bg);opacity:.85}
-.score{display:flex;flex:none}
+.sw:hover{background:var(--lg-tint)}
+.sw .nm{display:flex;align-items:center;gap:6px}
+.sw[aria-pressed=true]{background:var(--lg);color:var(--on-league)}
+.sw[aria-pressed=true]:hover{background:var(--lg)}
+.sw[aria-pressed=true] .lb{color:var(--on-league);opacity:.85}
+.sw[aria-pressed=true] .key{background:var(--on-league);color:var(--lg)}
+.score{display:flex;flex:none;box-shadow:inset 0 4px 0 var(--lg)}
+.lghead{display:flex;align-items:center;gap:8px;margin:2px 0 12px;min-width:0}
+.lghead img{width:24px;height:24px;object-fit:cover;flex:none;display:block;background:var(--color-surface)}
+.lghead .t{font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--lg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lghead .lb{margin-left:auto;flex:none}
 .score .body{flex:1;min-width:0;padding:14px 14px 13px}
 .big{font-size:clamp(46px,13.5vw,66px);line-height:.86;letter-spacing:-.035em}
 .big.them{font-size:clamp(32px,9vw,44px);line-height:.88;letter-spacing:-.03em;color:var(--color-neutral-600)}
@@ -170,7 +204,7 @@ button.main:hover{background:var(--color-accent-100)}
   color:var(--color-neutral-600)}
 .tabs button:hover{color:var(--color-accent)}
 .tabs button[aria-selected=true]{font-weight:800;color:var(--color-text);
-  border-bottom:3px solid var(--color-accent);margin-bottom:-2px}
+  border-bottom:3px solid var(--lg,var(--color-accent));margin-bottom:-2px}
 
 /* ---------- rows ---------- */
 /* wide: games flow into columns; an open one spans them */
@@ -208,7 +242,10 @@ button.mside:hover,.mside.on{background:var(--color-accent-100)}
 .list.wide .mwrap,.list.wide .stand{max-width:1040px;border-right:2px solid var(--color-divider);min-height:100%}
 /* up next: kickoffs that involve your starters */
 .row.up{min-height:0;gap:14px}
-.row.up .clk{width:auto;min-width:64px}
+.row.up .clk{width:auto;min-width:64px;align-self:flex-start}
+.plist{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:4px}
+.pl{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--color-neutral-800)}
+.mside.b .nmrow{flex-direction:row-reverse}
 .hdr{display:flex;align-items:baseline;gap:10px;padding:9px 14px;background:var(--color-surface);
   border-bottom:2px solid var(--color-divider)}
 .hdr .v{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:800;font-size:12px;letter-spacing:.06em}
@@ -450,7 +487,7 @@ async function loadShell(){
     let key = name.replace(/[^A-Za-z]/g,"")[0]?.toUpperCase() || "L";
     if(seen[key]) key = name.replace(/[^A-Za-z]/g,"")[1]?.toUpperCase() || String(i+1);
     seen[key]=1;
-    return { id:l.league_id, name, key, rec: l.scoring_settings?.rec ?? 1,
+    return { id:l.league_id, name, key, ci:i%4, avatar:l.avatar||null, rec: l.scoring_settings?.rec ?? 1,
              scoring: l.scoring_settings || {}, slots:l.roster_positions||[] };
   });
   if(S.league && !S.leagues.some(l=>l.id===S.league)){ S.league=null; S.view="home"; }
@@ -641,14 +678,21 @@ function ownership(){
   }
   return m;
 }
-/* the compact "· D" / "· VS D" tag that says a player is in play twice */
-function sharedTag(pid, L){
-  const e=(S.own[pid]||[]).filter(x=>x.L!==L);
-  if(!e.length) return "";
-  const vs = e.filter(x=>!x.mine && x.starter).map(x=>x.L.key);
-  if(vs.length) return " · VS "+vs.join("+");
-  const mine = e.filter(x=>x.mine).map(x=>x.L.key);
-  return mine.length ? " · "+mine.join("+") : "";
+/* a league's colored letter; outlined means the player starts against you there */
+function chip(L, vs){
+  const c=el("span","key lg"+L.ci+(vs?" vs":""),L.key);
+  c.title = vs ? `Starting against you in ${L.name}` : `Yours in ${L.name}`;
+  return c;
+}
+/* chips for every league a player matters in: all of them, or all but `except` */
+function leagueChips(pid, except, startersOnly){
+  const box=el("span","chips"), seen=new Set();
+  for(const x of S.own[pid]||[]){
+    if(x.L===except || seen.has(x.L)) continue;
+    if(x.mine && (x.starter || !startersOnly)){ box.appendChild(chip(x.L,false)); seen.add(x.L); }
+    else if(!x.mine && x.starter){ box.appendChild(chip(x.L,true)); seen.add(x.L); }
+  }
+  return box.childNodes.length ? box : null;
 }
 function rosteredText(pid, fallback){
   const e=S.own[pid]||[];
@@ -743,7 +787,8 @@ function rowEl(o){
   if(o.delta) p.appendChild(el("span","dl",(o.delta>0?"+":"")+f1(o.delta)));
   b.appendChild(p);
   const mid=el("div","mid");
-  mid.appendChild(el("div","nm",o.name));
+  if(o.chips){ const nr=el("div","nmrow"); nr.appendChild(el("div","nm",o.name)); nr.appendChild(o.chips); mid.appendChild(nr); }
+  else mid.appendChild(el("div","nm",o.name));
   mid.appendChild(el("div","lb ell"+(o.metaAccent?" acc":""),o.meta));
   b.appendChild(mid);
   const c=el("div","clk");
@@ -806,11 +851,12 @@ function playerPanel(p, L, ctx){
    RENDER — home
    ============================================================ */
 function leagueCell(L){
-  const b=el("button","cell"+(S.wide && L.id===detailLeague().id ? " sel":""));
+  const b=el("button","cell lg"+L.ci+(S.wide && L.id===detailLeague().id ? " sel":""));
   b.onclick=()=>openLeague(L.id);
   const h=el("div","chead");
-  h.appendChild(el("span","key",L.key));
-  h.appendChild(lb(L.name.toUpperCase(),"acc ell"));
+  h.appendChild(chip(L));
+  h.lastChild.title=L.name;
+  h.appendChild(lb(L.name.toUpperCase(),"lgc ell"));
   const rec=lb(L.record||""); rec.style.marginLeft="auto"; rec.style.flex="none"; h.appendChild(rec);
   b.appendChild(h);
 
@@ -855,7 +901,7 @@ function statusOf(L){
 function upNext(){
   const mine={};
   for(const L of S.leagues) for(const p of L.mine||[])
-    if(p.starter && !p.empty && p.team) (mine[p.team]=mine[p.team]||new Map()).set(p.pid,p);
+    if(p.starter && !p.empty && p.team && !(mine[p.team]?.has(p.pid))) (mine[p.team]=mine[p.team]||new Map()).set(p.pid,p);
   return S.games.filter(g=>g.state==="pre").sort((a,b)=>a.start-b.start)
     .map(g=>({g, ps:[...(mine[g.away]||new Map()).values(), ...(mine[g.home]||new Map()).values()]}))
     .filter(x=>x.ps.length).slice(0,8);
@@ -875,7 +921,8 @@ function liveCell({p,L,gl}){
   const b=el("button","pcell");
   b.onclick=()=>openLeague(L.id,p.pid);
   const h=el("div","chead");
-  h.appendChild(lb([p.pos,p.team].filter(Boolean).join(" ")+" · "+L.key+sharedTag(p.pid,L)));
+  h.appendChild(lb([p.pos,p.team].filter(Boolean).join(" ")));
+  const ch=leagueChips(p.pid,null,true); if(ch) h.appendChild(ch);
   h.appendChild(el("span","clock",gl.clock));
   b.appendChild(h);
   b.appendChild(el("div","nm ell",p.name));
@@ -910,7 +957,13 @@ function renderHome(v){
       r.appendChild(t);
       const mid=el("div","mid");
       mid.appendChild(el("div","nm",`${g.away} at ${g.home}`));
-      mid.appendChild(el("div","lb ell",ps.map(p=>p.name).join(" · ")));
+      const pl=el("div","plist");
+      for(const p of ps){
+        const it=el("span","pl"); it.appendChild(el("span",null,p.name));
+        const ch=leagueChips(p.pid,null,true); if(ch) it.appendChild(ch);
+        pl.appendChild(it);
+      }
+      mid.appendChild(pl);
       r.appendChild(mid);
       body.appendChild(r);
     }
@@ -985,13 +1038,13 @@ function pushPlayer(host,p,L,key){
   const gl=gameLabel(p.team);
   const proj=projFor(p,L);
   const open=S.open.has(key);
-  const shared=sharedTag(p.pid,L);
-  const flag=p.empty||isOut(p)||!!shared;
+  /* the tint is for problems only; other leagues show as chips */
+  const flag=p.empty||isOut(p);
   const slot = p.starter && !p.empty && p.slot && p.slot!==p.pos ? (SLOT_NAME[p.slot]||slotLabel(p.slot)) : "";
-  const meta=[slot, [p.pos,p.team].filter(Boolean).join(" "), p.inj||"", shared.replace(/^ · /,"ALSO ")]
-    .filter(Boolean).join(" · ");
+  const meta=[slot, [p.pos,p.team].filter(Boolean).join(" "), p.inj||""].filter(Boolean).join(" · ");
   host.appendChild(rowEl({
     pts:f1(p.pts), zero:!p.pts, delta:S.deltas[p.pid], name:p.name, meta, metaAccent:flag,
+    chips:p.empty?null:leagueChips(p.pid,L),
     clock:gl.clock, clockSub:gl.sub, live:gl.live, on:open, flag,
     onClick:()=>toggle(key,p.empty?null:p.pid)
   }));
@@ -1081,11 +1134,12 @@ function matchSide(p, L, side, lead){
   const parts=String(p.name||"").split(" ");
   nm.appendChild(el("span","full",p.empty?"Empty slot":p.name));
   nm.appendChild(el("span","short",p.empty?"Empty":parts.length>1 && p.pos!=="DEF" ? `${parts[0][0]}. ${parts.slice(1).join(" ")}` : p.name));
-  t.appendChild(nm);
+  const nr=el("div","nmrow"); nr.appendChild(nm);
+  const ch=p.empty?null:leagueChips(p.pid,L); if(ch) nr.appendChild(ch);
+  t.appendChild(nr);
   const gl=gameLabel(p.team);
-  const mineElsewhere = side==="b" && (S.own[p.pid]||[]).some(x=>x.mine);
-  t.appendChild(el("div","lb ell"+(isOut(p)||mineElsewhere?" acc":""), p.empty ? "NOBODY" :
-    [[p.pos,p.team].filter(Boolean).join(" "), isOut(p)?p.inj:"", mineElsewhere?"YOURS":"", gl.clock].filter(Boolean).join(" · ")));
+  t.appendChild(el("div","lb ell"+(isOut(p)?" acc":""), p.empty ? "NOBODY" :
+    [[p.pos,p.team].filter(Boolean).join(" "), isOut(p)?p.inj:"", gl.clock].filter(Boolean).join(" · ")));
   b.appendChild(t);
   return b;
 }
@@ -1110,22 +1164,24 @@ function tableRows(L, host){
 
 function renderDetail(d){
   const L=detailLeague();
+  d.classList.add("lg"+L.ci);
 
   /* wide keeps home open beside this, so neither control has anything to do */
   if(!S.wide){
     const back=el("button","back");
     back.onclick=()=>{ S.view="home"; S.open=new Set(); render(); };
     back.appendChild(el("span","t","‹ ALL LEAGUES"));
-    const f=lb(L.name.toUpperCase()); f.style.marginLeft="auto"; back.appendChild(f);
+    const f=lb(L.name.toUpperCase(),"lgc"); f.style.marginLeft="auto"; back.appendChild(f);
     d.appendChild(back);
   }
 
   if(!S.wide && S.leagues.length>1){
     const sw=el("div","grid2 switch");
     for(const x of S.leagues){
-      const b=el("button","sw"); b.setAttribute("aria-pressed",x.id===L.id);
+      const b=el("button","sw lg"+x.ci); b.setAttribute("aria-pressed",x.id===L.id);
       b.onclick=()=>openLeague(x.id);
-      b.appendChild(el("div","nm",x.name.toUpperCase()));
+      const nm=el("div","nm"); nm.appendChild(chip(x)); nm.appendChild(el("span","ell",x.name.toUpperCase()));
+      b.appendChild(nm);
       b.appendChild(lb(`${x.record||"—"} · ${statusOf(x)}`));
       sw.appendChild(b);
     }
@@ -1135,12 +1191,24 @@ function renderDetail(d){
   const w=winProb(L);
   const sc=el("div","score");
   const body=el("div","body");
+  /* which league this is, in its own color; the phone switcher above already says so */
+  if(S.wide || S.leagues.length<2){
+    const lh=el("div","lghead");
+    if(L.avatar){
+      const img=el("img"); img.src=`https://sleepercdn.com/avatars/thumbs/${encodeURIComponent(L.avatar)}`;
+      img.alt=""; img.width=24; img.height=24; img.loading="lazy"; img.onerror=()=>img.replaceWith(chip(L));
+      lh.appendChild(img);
+    }else lh.appendChild(chip(L));
+    lh.appendChild(el("span","t",L.name.toUpperCase()));
+    lh.appendChild(lb(L.record||""));
+    body.appendChild(lh);
+  }
   if(L.error || !L.hasMatchup){
     body.appendChild(lb("THIS LEAGUE"));
     body.appendChild(el("div","big n","—"));
     body.appendChild(lb(L.error || `NO WEEK ${S.week} MATCHUP POSTED`));
   }else{
-    body.appendChild(lb(`ME · ${L.myName}`,"acc"));
+    body.appendChild(lb(`ME · ${L.myName}`,"lgc"));
     body.appendChild(el("div","big n",f2(L.myPts)));
     body.appendChild(lb(w?`PROJ ${f1(w.projMe)} · ${w.left} OF ${w.total} STARTERS LEFT`:"—"));
     body.appendChild(el("div","srule"));
