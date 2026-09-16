@@ -1,0 +1,14 @@
+/* Dark theme for the Modernist tokens, shared by every page.
+   Modernist is light-only, so this is the one place the dark values are stated.
+   A page opts in by setting data-theme="dark" on <html>. */
+[data-theme=dark]{
+  --color-bg:#1a1918; --color-surface:#252322; --color-text:#f3f2f2;
+  --color-divider:color-mix(in srgb,#f3f2f2 38%,transparent);
+  /* ramps flipped end for end so the same step keeps the same job */
+  --color-neutral-100:#2d2b2b; --color-neutral-200:#444141; --color-neutral-300:#605d5d;
+  --color-neutral-400:#7d7979; --color-neutral-500:#9b9797; --color-neutral-600:#bab6b6;
+  --color-neutral-700:#d7d3d3; --color-neutral-800:#eae7e7; --color-neutral-900:#f8f4f4;
+  --color-accent:#ff563c; --color-accent-100:#2e1510; --color-accent-600:#ff7c66;
+  --color-accent-700:#ff9783; --color-accent-800:#ffc4b8;
+  color-scheme:dark;
+}

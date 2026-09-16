@@ -1,1179 +1,390 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en-US" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f3f2f2">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Scoreboard">
-<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
-<title>Two-League Scoreboard</title>
+<title>AllRosters: A Live Scoreboard for Every Sleeper League</title>
+<meta name="description" content="Follow all your Sleeper fantasy football leagues on one live scoreboard: scores, win probability, game clocks, and the points your bench is costing you. Free, no login.">
+<link rel="canonical" href="https://allrosters.com/">
+<meta name="theme-color" content="#f3f2f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1918" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+
+<!-- sharing -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AllRosters">
+<meta property="og:url" content="https://allrosters.com/">
+<meta property="og:title" content="AllRosters: A Live Scoreboard for Every Sleeper League">
+<meta property="og:description" content="Every Sleeper matchup on one screen, with live win probability and the points your bench is costing you.">
+<meta property="og:image" content="https://allrosters.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="AllRosters scoreboard showing two Sleeper leagues side by side with scores and win probability">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="ds/modernist/styles.css">
-<style>
-/* ============================================================
-   App layer. Every value below comes from a Modernist token in
-   ds/modernist/styles.css — no hard-coded hexes, no radii.
-   The one exception is the dark ground further down, which has
-   to state its token values somewhere.
-   ============================================================ */
-:root{ --ground:var(--color-neutral-300); }
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/ds/modernist/styles.css">
+<link rel="stylesheet" href="/assets/dark.css">
+<script>
+/* match the scoreboard's saved look, else the system's, before first paint */
+try{
+  var t=(JSON.parse(localStorage.getItem("sb_cfg"))||{}).theme;
+  if(!t && matchMedia("(prefers-color-scheme: dark)").matches) t="dark";
+  if(t) document.documentElement.dataset.theme=t;
+}catch(e){}
+</script>
 
-[data-theme=dark]{
-  --color-bg:#1a1918; --color-surface:#252322; --color-text:#f3f2f2;
-  --color-divider:color-mix(in srgb,#f3f2f2 38%,transparent);
-  --ground:#0d0c0c;
-  /* ramps flipped end for end so the same step keeps the same job */
-  --color-neutral-100:#2d2b2b; --color-neutral-200:#444141; --color-neutral-300:#605d5d;
-  --color-neutral-400:#7d7979; --color-neutral-500:#9b9797; --color-neutral-600:#bab6b6;
-  --color-neutral-700:#d7d3d3; --color-neutral-800:#eae7e7; --color-neutral-900:#f8f4f4;
-  --color-accent:#ff563c; --color-accent-100:#2e1510; --color-accent-600:#ff7c66;
-  --color-accent-700:#ff9783; --color-accent-800:#ffc4b8;
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://allrosters.com/#org",
+      "name": "AllRosters",
+      "url": "https://allrosters.com/",
+      "logo": { "@type": "ImageObject", "url": "https://allrosters.com/icon-512.png", "width": 512, "height": 512 }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://allrosters.com/#website",
+      "name": "AllRosters",
+      "url": "https://allrosters.com/",
+      "inLanguage": "en-US",
+      "publisher": { "@id": "https://allrosters.com/#org" }
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://allrosters.com/#webpage",
+      "url": "https://allrosters.com/",
+      "name": "AllRosters: A Live Scoreboard for Every Sleeper League",
+      "description": "Follow all your Sleeper fantasy football leagues on one live scoreboard: scores, win probability, game clocks, and the points your bench is costing you.",
+      "isPartOf": { "@id": "https://allrosters.com/#website" },
+      "about": { "@id": "https://allrosters.com/#app" },
+      "primaryImageOfPage": { "@type": "ImageObject", "url": "https://allrosters.com/og.png" },
+      "dateModified": "2026-09-16",
+      "inLanguage": "en-US"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://allrosters.com/#app",
+      "name": "AllRosters Scoreboard",
+      "url": "https://allrosters.com/scoreboard",
+      "applicationCategory": "SportsApplication",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "publisher": { "@id": "https://allrosters.com/#org" },
+      "description": "A free, read-only live scoreboard for people who play in more than one Sleeper fantasy football league.",
+      "featureList": [
+        "Every Sleeper league for a username on one screen",
+        "Live win probability for each matchup",
+        "Points left on the bench against your best possible lineup",
+        "Your starters currently on the field, with game clocks",
+        "Point-by-point scoring breakdowns using each league's settings",
+        "Opponent lineups and league standings",
+        "Lineup alerts for injured, bye-week and empty starters"
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://allrosters.com/#faq",
+      "mainEntity": [
+        { "@type": "Question", "name": "Is AllRosters free?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. There is no account, no subscription and no ads. You enter your Sleeper username and your leagues load." } },
+        { "@type": "Question", "name": "Do I have to log in to Sleeper or share my password?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. AllRosters only needs your public Sleeper username. It reads the same public data anyone can see about a Sleeper league, and never asks for a password." } },
+        { "@type": "Question", "name": "Will it remember my leagues next time?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. Your username is saved in the browser you used, so the scoreboard opens straight to your leagues. Settings also gives you a personal link that brings them back on any other phone or computer, or if your browser's data gets cleared." } },
+        { "@type": "Question", "name": "Can AllRosters change my lineup or make waiver claims?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. Sleeper's public API is read-only, so AllRosters can only show your leagues. Lineup changes, trades and waivers still happen in the Sleeper app." } },
+        { "@type": "Question", "name": "Does it work with ESPN, Yahoo or NFL.com leagues?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Not today. AllRosters works with Sleeper NFL leagues only." } },
+        { "@type": "Question", "name": "How is win probability calculated?",
+          "acceptedAnswer": { "@type": "Answer", "text": "For each starter still to play, AllRosters takes their projection and scales it by the share of their game left. Adding that to the points already scored gives a projected final for both teams. The uncertainty of each remaining starter is combined, and the chance your projected margin stays above zero on a normal curve is your win probability. Injured and inactive players count for nothing." } },
+        { "@type": "Question", "name": "What does \"left on the bench\" mean?",
+          "acceptedAnswer": { "@type": "Answer", "text": "It is the gap between what your lineup scored and the highest-scoring legal lineup you could have set from everyone on your roster that week, including flex eligibility. AllRosters also names the swaps that would have closed the gap." } },
+        { "@type": "Question", "name": "How often do scores update?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Every 45 seconds by default. You can choose 30 seconds, 90 seconds or 5 minutes in settings, and refresh by hand at any time." } },
+        { "@type": "Question", "name": "Is AllRosters made by Sleeper?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. AllRosters is an independent project and is not affiliated with or endorsed by Sleeper." } }
+      ]
+    }
+  ]
 }
+</script>
 
-html,body{margin:0;padding:0}
-body{background:var(--ground);display:flex;justify-content:center;align-items:flex-start;
-  min-height:100svh;padding:clamp(0px,2vw,24px);-webkit-font-smoothing:antialiased;
-  overscroll-behavior-y:contain}
-button{font-family:inherit;color:inherit;font-size:inherit;background:none;border:0;padding:0}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-@keyframes fan{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
-@keyframes slidein{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
-@keyframes blip{0%,100%{opacity:1}50%{opacity:.2}}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-.app{width:100%;max-width:430px;max-height:920px;height:calc(100svh - clamp(0px,4vw,48px));
-  background:var(--color-bg);border:2px solid var(--color-text);display:flex;flex-direction:column;
-  overflow:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
-/* ≥900px: one shell holding both panes, home pinned open as a sidebar */
-@media(min-width:900px){.app{max-width:1440px;max-height:none}}
-.view{flex:1;min-height:0;display:flex;flex-direction:column}
-.view.wide{flex-direction:row}
-.pane{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
-.view.wide .pane.home{width:min(38%,380px);flex:none;border-right:2px solid var(--color-divider)}
-.scroll{overflow-y:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.scroll::-webkit-scrollbar{display:none}
-.lb{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--color-neutral-700)}
+<style>
+/* Homepage layer. Values come from the Modernist tokens, as in the scoreboard. */
+body{-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 var(--space-4)}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:var(--space-4);top:var(--space-2);background:var(--color-bg);padding:var(--space-2);z-index:9}
+.lb{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--color-neutral-700)}
 .lb.acc{color:var(--color-accent-700)}
 .n{font-variant-numeric:tabular-nums;font-weight:800}
-.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* ---------- header ---------- */
-.top{display:flex;align-items:center;gap:var(--space-2);padding:11px 14px;flex:none;
-  border-bottom:2px solid var(--color-divider)}
-.brand{font-size:13px;font-weight:800;letter-spacing:.14em;white-space:nowrap}
-.wk{margin-left:auto;display:flex;align-items:center;gap:2px;flex:none}
-.step{width:20px;height:22px;display:grid;place-items:center;cursor:pointer;
-  color:var(--color-neutral-700);font-size:16px;line-height:1}
-.step:hover:not(:disabled){color:var(--color-accent)}
-.step:disabled{opacity:.3;cursor:default}
-.stamp{white-space:nowrap}
-@media(max-width:379px){.stamp{display:none}}
-.icon{width:22px;height:22px;display:grid;place-items:center;cursor:pointer;color:var(--color-neutral-700);flex:none}
-.icon:hover:not(:disabled){color:var(--color-accent)}
-.icon:disabled{opacity:.45;cursor:default}
-.icon svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
-.icon.spin svg{animation:spin .8s linear infinite}
-.blip{width:8px;height:8px;background:var(--color-accent);display:block;flex:none;animation:blip 2s ease-in-out infinite}
-.blip.off{background:var(--color-neutral-400);animation:none}
+/* header */
+.site{border-bottom:2px solid var(--color-divider)}
+.site .wrap{display:flex;align-items:center;gap:var(--space-4);min-height:56px}
+.brand{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:800;letter-spacing:.14em;
+  color:var(--color-text);text-decoration:none}
+.brand svg{width:22px;height:22px;display:block}
+.site nav{margin-left:auto;display:flex;align-items:center;gap:var(--space-6)}
+.site nav a:not(.btn){font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--color-neutral-700);text-decoration:none}
+.site nav a:not(.btn):hover{color:var(--color-accent)}
+@media(max-width:559px){.site nav a:not(.btn){display:none}}
 
-/* ---------- shared bits ---------- */
-.err{background:var(--color-accent-100);border-bottom:2px solid var(--color-accent);padding:10px 14px;flex:none}
-.err .t{font-size:13px;font-weight:800;color:var(--color-accent-700)}
-.err .d{font-size:13px;color:var(--color-neutral-800)}
-.loading{padding:40px 14px;text-align:center}
-.grid2{display:grid;grid-template-columns:1fr 1fr}
-.cells{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr))}
-.band{display:flex;align-items:center;gap:var(--space-2);padding:9px 14px;flex:none;
-  background:var(--color-surface);border-bottom:2px solid var(--color-divider)}
-.note{padding:10px 14px 14px;border-bottom:1px solid var(--color-divider);font-size:13px;color:var(--color-neutral-800)}
+/* hero */
+.hero{padding:clamp(40px,8vw,88px) 0 clamp(32px,6vw,64px);border-bottom:2px solid var(--color-divider)}
+.hero .wrap{display:grid;gap:clamp(32px,5vw,56px);align-items:center}
+@media(min-width:900px){.hero .wrap{grid-template-columns:1.05fr .95fr}}
+.hero h1{font-size:clamp(40px,6.4vw,72px);line-height:.95;letter-spacing:-.035em;margin:var(--space-3) 0 var(--space-4)}
+.hero h1 em{font-style:normal;color:var(--color-accent);display:block}
+.lede{font-size:clamp(17px,1.8vw,20px);line-height:1.5;color:var(--color-neutral-800);max-width:34em}
+.cta{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3) var(--space-4);margin-top:var(--space-6)}
+.btn-lg{font-size:16px;padding:14px 22px}
+.start{margin-top:var(--space-6);max-width:520px}
+.start label{display:block;margin-bottom:6px}
+.startrow{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.startrow .input{flex:1 1 220px;min-height:50px;font-size:16px}
+.startrow .btn{flex:none}
+@media(max-width:419px){.startrow .btn{flex:1 1 100%}}
+.start .fine{margin:var(--space-2) 0 0}
+.fine{font-size:13px;color:var(--color-neutral-700)}
 
-/* ---------- home: league cells ---------- */
-.lgrid{border-bottom:2px solid var(--color-divider);flex:none}
-.cell{padding:12px 12px 13px;text-align:left;cursor:pointer;background:var(--color-bg);width:100%;
-  display:flex;flex-direction:column}
-.cell:hover,.cell.sel{background:var(--color-accent-100)}
-.cells .cell:nth-child(2n){border-left:2px solid var(--color-divider)}
-.lgrid .cell:nth-child(n+3){border-top:2px solid var(--color-divider)}
-/* under two columns the vertical rules become horizontal ones */
-@media(max-width:359px){
-  .cells .cell:nth-child(2n),.cells .pcell:nth-child(2n){border-left:0}
-  .lgrid .cell+.cell{border-top:2px solid var(--color-divider)}
-}
-.chead{display:flex;align-items:baseline;gap:6px}
-.cme{font-size:30px;line-height:1.05;margin-top:3px}
-.cthem{font-size:20px;line-height:1.05;color:var(--color-neutral-600)}
-.matrix{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;margin-top:9px}
-.matrix i{aspect-ratio:1;display:block;background:var(--color-neutral-300)}
+/* product picture, drawn with the scoreboard's own parts */
+.shot{border:2px solid var(--color-text);background:var(--color-bg)}
+.shot .bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:2px solid var(--color-divider)}
+.shot .bar b{font-size:12px;letter-spacing:.14em}
+.shot .bar .lb{margin-left:auto}
+.shot .blip{width:8px;height:8px;background:var(--color-accent)}
+.cells{display:grid;grid-template-columns:1fr 1fr}
+.cell{padding:12px;display:flex;flex-direction:column}
+.cell+.cell{border-left:2px solid var(--color-divider)}
+.cell.sel{background:var(--color-accent-100)}
+.cell .hd{display:flex;gap:6px}
+.cell .hd .lb:last-child{margin-left:auto}
+.cme{font-size:clamp(24px,3.4vw,32px);line-height:1.05;margin-top:3px}
+.cthem{font-size:clamp(17px,2.2vw,21px);line-height:1.05;color:var(--color-neutral-600)}
+.matrix{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;margin:9px 0 4px}
+.matrix i{aspect-ratio:1;background:var(--color-neutral-300)}
 .matrix i.on{background:var(--color-accent)}
-/* auto keeps the OPEN rule on the same line across cells of unequal text */
-.copen{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;border-top:1px solid var(--color-divider)}
-.copen .o{font-size:11px;font-weight:800;letter-spacing:.08em}
-.copen .s{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--color-neutral-700)}
+.shot .band{padding:8px 14px;background:var(--color-surface);border-top:2px solid var(--color-divider);
+  border-bottom:2px solid var(--color-divider);display:flex}
+.shot .band .lb:last-child{margin-left:auto}
+.row{display:flex;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--color-divider)}
+.row:last-child{border-bottom:0}
+.row .p{width:48px;font-size:20px}
+.row .nm{font-size:14px;font-weight:600}
+.row .ck{margin-left:auto;text-align:right;font-size:12px;font-weight:800;color:var(--color-accent)}
+.shot figcaption{padding:8px 14px;margin:0;border-top:2px solid var(--color-divider)}
 
-/* ---------- home: live cells ---------- */
-.pcell{padding:11px 12px;text-align:left;cursor:pointer;background:var(--color-bg);width:100%;display:block;
-  border-bottom:1px solid var(--color-divider)}
-.pcell:hover{background:var(--color-accent-100)}
-.cells .pcell:nth-child(2n){border-left:1px solid var(--color-divider)}
-.pcell .nm{font-size:14px;font-weight:600;margin-top:3px}
-.pcell .pt{font-size:26px;line-height:1.1}
-.pcell .clock{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--color-accent-700);
-  white-space:nowrap;flex:none;font-variant-numeric:tabular-nums}
-.track{height:3px;background:var(--color-neutral-300);margin-top:5px}
-.track i{display:block;height:3px;background:var(--color-accent)}
-
-/* ---------- footers ---------- */
-.foot{border-top:2px solid var(--color-divider);display:flex;align-items:stretch;flex:none}
-.foot .main{flex:1;min-width:0;padding:11px 12px;text-align:left}
-.foot .main .v{font-size:15px;font-variant-numeric:tabular-nums;font-weight:800}
-button.main{cursor:pointer}
-button.main:hover{background:var(--color-accent-100)}
-.alertbtn{width:118px;flex:none;border-left:2px solid var(--color-divider);background:var(--color-accent);
-  color:var(--color-bg);padding:11px 12px;text-align:left;cursor:pointer}
-.alertbtn:hover{background:var(--color-accent-600)}
-.alertbtn .k{font-size:10px;font-weight:600;letter-spacing:.12em;opacity:.85}
-.alertbtn .v{font-size:15px;font-weight:800;letter-spacing:.02em}
-.alertbtn.clear{background:var(--color-surface);color:var(--color-text);cursor:default}
-.alertbtn.clear .k{color:var(--color-neutral-700);opacity:1}
-.livepill{margin-left:auto;display:inline-flex;align-items:center;gap:6px;background:var(--color-accent);
-  color:var(--color-bg);padding:4px 9px;font-size:10px;font-weight:800;letter-spacing:.12em;white-space:nowrap}
-.livepill.off{background:var(--color-surface);color:var(--color-neutral-700)}
-.footline{border-top:2px solid var(--color-divider);display:flex;align-items:center;gap:10px;padding:10px 14px;flex:none}
-
-/* ---------- detail ---------- */
-.detail{flex:1;display:flex;flex-direction:column;min-height:0}
-.detail.enter{animation:slidein .22s ease-out}   /* only when it arrives as a navigation */
-.back{display:flex;align-items:center;gap:8px;padding:10px 14px;width:100%;text-align:left;cursor:pointer;flex:none;
-  border-bottom:1px solid var(--color-divider)}
-.back:hover{background:var(--color-accent-100)}
-.back .t{font-size:11px;font-weight:800;letter-spacing:.1em}
-.switch{border-bottom:2px solid var(--color-divider);flex:none}
-.sw{padding:11px 14px;text-align:left;cursor:pointer;min-height:48px;background:var(--color-bg);
-  color:var(--color-neutral-600);display:block;width:100%}
-.sw:hover{background:var(--color-accent-100)}
-.sw .nm{font-size:11px;font-weight:800;letter-spacing:.1em}
-.sw[aria-pressed=true]{background:var(--color-accent);color:var(--color-bg)}
-.sw[aria-pressed=true]:hover{background:var(--color-accent-600)}
-.sw[aria-pressed=true] .lb{color:var(--color-bg);opacity:.85}
-.score{display:flex;flex:none}
-.score .body{flex:1;min-width:0;padding:14px 14px 13px}
-.big{font-size:clamp(46px,13.5vw,66px);line-height:.86;letter-spacing:-.035em}
-.big.them{font-size:clamp(32px,9vw,44px);line-height:.88;letter-spacing:-.03em;color:var(--color-neutral-600)}
-.srule{height:2px;background:var(--color-divider);margin:12px 0}
-.gauge{width:58px;flex:none;border-left:2px solid var(--color-divider);display:flex;flex-direction:column;
-  padding:10px 0;gap:3px;align-items:center}
-.gauge .lb{writing-mode:vertical-rl;letter-spacing:.18em;margin-bottom:6px}
-.gauge i{width:22px;height:9px;flex:none;display:block;background:var(--color-neutral-300)}
-.gauge i.on{background:var(--color-accent)}
-.tabs{display:flex;gap:16px;padding:0 14px;flex:none;
-  border-top:2px solid var(--color-divider);border-bottom:2px solid var(--color-divider)}
-.tabs button{padding:11px 0 9px;cursor:pointer;font-size:12px;letter-spacing:.08em;font-weight:600;
-  color:var(--color-neutral-600)}
-.tabs button:hover{color:var(--color-accent)}
-.tabs button[aria-selected=true]{font-weight:800;color:var(--color-text);
-  border-bottom:3px solid var(--color-accent);margin-bottom:-2px}
-
-/* ---------- rows ---------- */
-/* wide: rows flow into columns, but anything that organises them spans the lot */
-.list.wide{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));align-content:start}
-.list.wide .hdr,.list.wide .note,.list.wide .exp,.list.wide .row.on{grid-column:1/-1}
-.hdr{display:flex;align-items:baseline;gap:10px;padding:9px 14px;background:var(--color-surface);
-  border-bottom:2px solid var(--color-divider)}
-.hdr .v{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:800;font-size:12px;letter-spacing:.06em}
-.hdr.strong{background:var(--color-accent)}
-.hdr.strong .lb,.hdr.strong .v{color:var(--color-bg)}
-.list{flex:1;min-height:0}
-.row{display:flex;align-items:center;gap:12px;padding:11px 14px;width:100%;text-align:left;min-height:56px;
-  background:var(--color-bg);border-bottom:1px solid var(--color-divider)}
-button.row{cursor:pointer}
-button.row:hover{background:var(--color-accent-100)}
-.row.on,.row.flag{background:var(--color-accent-100)}
-.row .p{width:56px;flex:none;display:flex;flex-direction:column;align-items:flex-start;font-size:22px;line-height:1}
-.row .p.wide{width:68px;font-size:17px;white-space:nowrap}
-.row .p.zero{color:var(--color-neutral-500)}
-.row .p .dl{font-size:10px;font-weight:800;letter-spacing:.04em;color:var(--color-accent);margin-top:3px}
-.row .mid{flex:1;min-width:0}
-.row .nm{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .clk{width:78px;flex:none;text-align:left}
-.row .clk .lb{white-space:nowrap}
-.row .ck{font-size:13px;font-weight:800;letter-spacing:.02em;font-variant-numeric:tabular-nums}
-.row .ck.live{color:var(--color-accent)}
-.row .ck.rec{font-size:15px}
-
-/* ---------- expanded ---------- */
-.exp{animation:fan .22s ease-out;background:var(--color-surface);padding:12px 14px 13px;
-  border-bottom:2px solid var(--color-divider)}
-.exptop{display:flex;align-items:flex-end;gap:14px}
-.exptop .big3{font-size:40px;line-height:.9}
-.expbar{flex:1;min-width:0;padding-bottom:3px}
-.expbar .hd{display:flex;justify-content:space-between;gap:8px}
-.bar{height:10px;border:1px solid var(--color-divider);margin-top:5px;display:flex}
-.bar .fill{background:var(--color-accent)}
-.bar .fill.beat{background:var(--color-text)}
-.bar .rest{flex:1;background:repeating-linear-gradient(90deg,var(--color-neutral-400) 0 1px,transparent 1px 4px)}
-.stats{margin-top:12px}
-.stats .hd{display:flex;align-items:baseline;gap:10px;padding-bottom:5px}
-.stats .hd .r{margin-left:auto;width:58px;text-align:right}
-.sr{display:flex;align-items:baseline;gap:10px;padding:6px 0;border-top:1px solid var(--color-divider)}
-.sr .v{font-size:15px;min-width:42px;font-variant-numeric:tabular-nums;font-weight:800}
-.sr .l{font-size:13px;color:var(--color-neutral-800);flex:1;min-width:0}
-.sr .p{width:58px;flex:none;text-align:right;font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
-.sr .p.none{color:var(--color-neutral-500)}
-.sr .p.neg{color:var(--color-accent-700)}
-.total{display:flex;align-items:baseline;gap:10px;padding:7px 0 0;border-top:2px solid var(--color-text)}
-.total .k{font-size:11px;font-weight:800;letter-spacing:.1em}
-.total .v{margin-left:auto;font-size:20px;width:58px;text-align:right;font-variant-numeric:tabular-nums;font-weight:800}
-.expfoot{margin-top:11px;padding-top:9px;border-top:1px solid var(--color-divider);display:flex;gap:12px}
-.expfoot > div{flex:1;min-width:0}
-.expfoot .v{font-size:13px;font-weight:600;letter-spacing:.02em}
-
-/* ---------- modals ---------- */
-.backdrop{position:fixed;inset:0;z-index:40;background:color-mix(in srgb,var(--color-neutral-900) 50%,transparent)}
-[data-theme=dark] .backdrop{background:color-mix(in srgb,#000 66%,transparent)}
-.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(358px,calc(100% - 32px));
-  z-index:41;background:var(--color-surface);border:2px solid var(--color-text);padding:16px;
-  max-height:86dvh;overflow:auto;animation:fan .2s ease-out}
-.modal h2{font-size:20px;font-weight:800;letter-spacing:-.01em;margin:0}
-.mhead{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
-.mhead button{margin-left:auto;cursor:pointer;padding:4px}
-.arow{border-top:1px solid var(--color-divider);padding:10px 0}
-.arow .t{font-size:15px;font-weight:600}
-.field{margin-bottom:14px}
-.segbtns{display:flex;border:1px solid var(--color-divider)}
-.segbtns button{flex:1;padding:7px 4px;font-size:13px;cursor:pointer;color:var(--color-neutral-700)}
-.segbtns button + button{border-left:1px solid var(--color-divider)}
-.segbtns button:hover{background:color-mix(in srgb,var(--color-text) 7%,transparent)}
-.segbtns button[aria-pressed=true]{background:var(--color-accent);color:var(--color-bg);font-weight:800}
-.modal .note{padding:12px 0 0;border:0;color:var(--color-neutral-700);line-height:1.6}
+/* sections */
+section{padding:clamp(48px,7vw,80px) 0;border-bottom:2px solid var(--color-divider)}
+section h2{font-size:clamp(28px,3.6vw,40px);letter-spacing:-.025em;margin:var(--space-2) 0 var(--space-3);max-width:20em}
+section .intro{font-size:17px;color:var(--color-neutral-800);max-width:40em;margin-bottom:var(--space-8)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));border-top:2px solid var(--color-text)}
+.grid > *{padding:var(--space-4) var(--space-4) var(--space-6) 0;border-bottom:1px solid var(--color-divider)}
+.grid h3{font-size:19px;margin:var(--space-2) 0}
+.grid p{margin:0;color:var(--color-neutral-800)}
+@media(min-width:600px){.grid > *{padding-right:var(--space-6)}}
+ol.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+ol.steps li{counter-increment:s}
+ol.steps li::before{content:"0" counter(s);display:block;font-size:44px;font-weight:800;line-height:1;
+  color:var(--color-accent);font-variant-numeric:tabular-nums}
+.method{display:grid;gap:var(--space-8)}
+@media(min-width:900px){.method{grid-template-columns:1fr 1fr}}
+.method p{color:var(--color-neutral-800)}
+.method dl{margin:0;border-top:2px solid var(--color-text)}
+.method dt{font-weight:800;padding-top:var(--space-3)}
+.method dd{margin:0 0 var(--space-3);padding-bottom:var(--space-3);border-bottom:1px solid var(--color-divider);color:var(--color-neutral-800)}
+.faq{border-top:2px solid var(--color-text);max-width:760px}
+.faq details{border-bottom:1px solid var(--color-divider)}
+.faq summary{cursor:pointer;list-style:none;display:flex;gap:var(--space-4);padding:var(--space-4) 0;
+  font-size:18px;font-weight:800}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";margin-left:auto;color:var(--color-accent);font-size:22px;line-height:1}
+.faq details[open] summary::after{content:"–"}
+.faq details p{margin:0;padding:0 0 var(--space-4);color:var(--color-neutral-800);max-width:40em}
+.closer{background:var(--color-accent);color:var(--color-bg);border-bottom:0}
+.closer h2{color:var(--color-bg)}
+.closer .btn{background:var(--color-bg);color:var(--color-text)}
+.closer .btn:hover{background:var(--color-surface)}
+footer{padding:var(--space-6) 0 calc(var(--space-6) + env(safe-area-inset-bottom))}
+footer .wrap{display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-6);font-size:13px;color:var(--color-neutral-700)}
+footer a{color:inherit}
+footer .dis{flex-basis:100%}
 </style>
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
-<div class="app">
-  <header class="top">
-    <span class="brand">SCOREBOARD</span>
-    <div class="wk">
-      <button class="step" id="prev" aria-label="Previous week">‹</button>
-      <span class="lb" id="wklab">W—</span>
-      <button class="step" id="next" aria-label="Next week">›</button>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="AllRosters home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" fill="var(--color-text)"/><rect x="5" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="5" y="17" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="17" width="10" height="10" fill="var(--color-neutral-600)"/></svg>
+      ALLROSTERS
+    </a>
+    <nav aria-label="Main">
+      <a href="#features">Features</a>
+      <a href="#win-probability">How it works</a>
+      <a href="#faq">FAQ</a>
+      <a class="btn btn-primary" href="/scoreboard">Open scoreboard</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="hero">
+    <div class="wrap">
+      <div>
+        <p class="lb acc">For Sleeper fantasy football</p>
+        <h1>Every league you play in. <em>One live scoreboard.</em></h1>
+        <p class="lede">AllRosters puts all of your Sleeper matchups on one screen, with live scores, the odds you win each one, and the points your bench is costing you. No more flipping between leagues on a Sunday.</p>
+        <form class="start" action="/scoreboard" method="get">
+          <label class="lb" for="user">Your Sleeper username</label>
+          <div class="startrow">
+            <input class="input" id="user" name="user" required autocapitalize="off" autocomplete="off" spellcheck="false" enterkeyhint="go">
+            <button class="btn btn-primary btn-lg" type="submit">Load my leagues</button>
+          </div>
+          <p class="fine">Free. No login or password. Saved in this browser, so your leagues are there next time.</p>
+        </form>
+      </div>
+
+      <figure class="shot">
+        <div aria-hidden="true">
+          <div class="bar"><b>SCOREBOARD</b><span class="lb">W2 · 3:42 PM</span><span class="blip"></span></div>
+          <div class="cells">
+            <div class="cell sel">
+              <div class="hd"><span class="lb acc">Home league</span><span class="lb">1-0</span></div>
+              <div class="cme n">98.42</div>
+              <div class="cthem n">81.10</div>
+              <div class="matrix"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+              <span class="lb">74% to win</span>
+              <span class="lb acc">Bench 22.6 · +6.4 lost</span>
+            </div>
+            <div class="cell">
+              <div class="hd"><span class="lb acc">Dynasty</span><span class="lb">0-1</span></div>
+              <div class="cme n">64.90</div>
+              <div class="cthem n">77.35</div>
+              <div class="matrix"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <span class="lb">36% to win</span>
+              <span class="lb acc">Bench 31.0 · +14.2 lost</span>
+            </div>
+          </div>
+          <div class="band"><span class="lb">On the field now</span><span class="lb">3 playing</span></div>
+          <div class="row"><span class="p n">18.4</span><span class="nm">Your QB</span><span class="ck">Q3 6:12</span></div>
+          <div class="row"><span class="p n">11.7</span><span class="nm">Your WR1</span><span class="ck">Q2 0:48</span></div>
+        </div>
+        <figcaption class="lb">Two leagues, live, on one screen. Sample numbers.</figcaption>
+      </figure>
     </div>
-    <span class="lb stamp" id="stamp"></span>
-    <button class="icon" id="btn" aria-label="Refresh"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
-    <button class="icon" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
-    <span class="blip off" id="blip"></span>
-  </header>
-  <div id="err"></div>
-  <div class="view" id="view"><div class="loading lb">Loading rosters and live scores</div></div>
-</div>
-<div id="layer"></div>
+  </div>
 
+  <section id="features" aria-labelledby="features-h">
+    <div class="wrap">
+      <p class="lb acc">What you see</p>
+      <h2 id="features-h">Everything a multi-league Sunday needs, and nothing it doesn't</h2>
+      <p class="intro">Sleeper shows one league at a time. AllRosters loads every league for your username for the season and keeps them all live together.</p>
+      <div class="grid">
+        <div><p class="lb">01</p><h3>All your leagues at once</h3><p>Your score, your opponent's score and your record in every league, side by side. Tap one to open the full matchup.</p></div>
+        <div><p class="lb">02</p><h3>Live win probability</h3><p>A 20-square meter per league shows how likely you are to win right now, based on who has played and who is still to come.</p></div>
+        <div><p class="lb">03</p><h3>Points left on the bench</h3><p>How many more points your best possible lineup would have scored, and exactly which swaps would have done it.</p></div>
+        <div><p class="lb">04</p><h3>Your players on the field now</h3><p>Every starter of yours in a live game, across all leagues, with the game clock and how far through the game they are.</p></div>
+        <div><p class="lb">05</p><h3>Scoring broken down</h3><p>Open any player to see each stat and what it was worth, priced with that league's own scoring settings, against their projection.</p></div>
+        <div><p class="lb">06</p><h3>Lineup alerts</h3><p>Injured, inactive and bye-week starters and empty slots, flagged before kickoff, with the bench players who could replace them.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" aria-labelledby="how-h">
+    <div class="wrap">
+      <p class="lb acc">Getting started</p>
+      <h2 id="how-h">Set up in under a minute</h2>
+      <ol class="steps grid">
+        <li><h3>Open AllRosters</h3><p>It runs in any browser on your phone or computer. Nothing to install, though you can add it to your home screen.</p></li>
+        <li><h3>Enter your Sleeper username</h3><p>Type the username from your Sleeper profile. AllRosters finds every NFL league you're in this season and remembers you in that browser.</p></li>
+        <li><h3>Leave it open on game day</h3><p>Scores refresh every 45 seconds while games are live. Step back through past weeks with the arrows in the header.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="win-probability" aria-labelledby="wp-h">
+    <div class="wrap method">
+      <div>
+        <p class="lb acc">The math</p>
+        <h2 id="wp-h">How AllRosters calculates win probability and bench points</h2>
+        <p>Win probability starts from the points already on the board. For each starter still to play, AllRosters takes their Sleeper projection for the week (PPR, half-PPR or standard, whichever your league uses) and scales it by how much of their game is left. That gives a projected final score for you and for your opponent.</p>
+        <p>Each remaining starter adds uncertainty, and the less of their game is left, the less they can swing it. Those are combined into one spread, and your win probability is the chance, on a normal curve, that your projected margin finishes above zero. Starters listed Out, Doubtful, on IR or suspended count for nothing.</p>
+        <p>Bench points compare what you scored with the best legal lineup you could have set from your whole roster, filling the most restrictive slots first so flex eligibility is respected.</p>
+      </div>
+      <dl>
+        <dt>Data source</dt>
+        <dd>Sleeper's public API for rosters, matchups, projections and stats, and Sleeper's live NFL scores for game clocks.</dd>
+        <dt>Refresh rate</dt>
+        <dd>Every 45 seconds by default while the current week is live. You can pick 30 seconds, 90 seconds or 5 minutes.</dd>
+        <dt>Scoring formats</dt>
+        <dd>Whatever your league uses. Point breakdowns are priced with each league's own settings.</dd>
+        <dt>Lineup slots</dt>
+        <dd>QB, RB, WR, TE, K, DEF, FLEX, Superflex, WR/TE and WR/RB flex, and IDP slots.</dd>
+        <dt>Privacy</dt>
+        <dd>Your username and preferences are saved only in your browser. There are no accounts and nothing is stored on a server.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section id="faq" aria-labelledby="faq-h">
+    <div class="wrap">
+      <p class="lb acc">Questions</p>
+      <h2 id="faq-h">Frequently asked questions</h2>
+      <div class="faq">
+        <details open><summary>Is AllRosters free?</summary><p>Yes. There is no account, no subscription and no ads. You enter your Sleeper username and your leagues load.</p></details>
+        <details><summary>Do I have to log in to Sleeper or share my password?</summary><p>No. AllRosters only needs your public Sleeper username. It reads the same public data anyone can see about a Sleeper league, and never asks for a password.</p></details>
+        <details><summary>Will it remember my leagues next time?</summary><p>Yes. Your username is saved in the browser you used, so the scoreboard opens straight to your leagues. Settings also gives you a personal link that brings them back on any other phone or computer, or if your browser's data gets cleared.</p></details>
+        <details><summary>Can AllRosters change my lineup or make waiver claims?</summary><p>No. Sleeper's public API is read-only, so AllRosters can only show your leagues. Lineup changes, trades and waivers still happen in the Sleeper app.</p></details>
+        <details><summary>Does it work with ESPN, Yahoo or NFL.com leagues?</summary><p>Not today. AllRosters works with Sleeper NFL leagues only.</p></details>
+        <details><summary>How is win probability calculated?</summary><p>For each starter still to play, AllRosters takes their projection and scales it by the share of their game left. Adding that to the points already scored gives a projected final for both teams. The uncertainty of each remaining starter is combined, and the chance your projected margin stays above zero on a normal curve is your win probability. Injured and inactive players count for nothing.</p></details>
+        <details><summary>What does "left on the bench" mean?</summary><p>It is the gap between what your lineup scored and the highest-scoring legal lineup you could have set from everyone on your roster that week, including flex eligibility. AllRosters also names the swaps that would have closed the gap.</p></details>
+        <details><summary>How often do scores update?</summary><p>Every 45 seconds by default. You can choose 30 seconds, 90 seconds or 5 minutes in settings, and refresh by hand at any time.</p></details>
+        <details><summary>Is AllRosters made by Sleeper?</summary><p>No. AllRosters is an independent project and is not affiliated with or endorsed by Sleeper.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="closer" aria-labelledby="go-h">
+    <div class="wrap">
+      <h2 id="go-h">Kickoff is coming. Get every league on one screen.</h2>
+      <div class="cta"><a class="btn btn-lg" href="/scoreboard">Open the scoreboard</a></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 AllRosters</span>
+    <a href="/scoreboard">Scoreboard</a>
+    <a href="#faq">FAQ</a>
+    <span class="dis">AllRosters is an independent project and is not affiliated with, sponsored by or endorsed by Sleeper or the NFL.</span>
+  </div>
+</footer>
 <script>
-"use strict";
-/* ============================================================
-   A single-page Sleeper scoreboard for people in more than one
-   league, dressed in the Modernist design system.
-
-   Data: api.sleeper.app (rosters, matchups, players, projections, stats)
-         sleeper.com/graphql (live NFL game clocks)
-   No server, no keys. Everything below is plain browser JS.
-   ============================================================ */
-
-const DEFAULTS = { username:"mdimenno", refresh:45, theme:"light" };
-const SPORT   = "nfl";
-const SLEEPER = "https://api.sleeper.app";
-const GQL     = "https://sleeper.com/graphql";
-const CELLS   = 20;                       // win-probability matrix cells
-
-/* ---------- state ---------- */
-const S = {
-  cfg:{...DEFAULTS},
-  week:null, curWeek:null, season:null, userId:null,
-  leagues:[], players:{}, proj:{}, lastProj:0, projWeek:null,
-  games:[], byTeam:{}, own:{},
-  view:"home", league:null, tab:"mine", open:new Set(), modal:null,
-  wide: window.matchMedia("(min-width:900px)").matches,
-  prevPts:{}, deltas:{}, statCache:{}, err:null, booted:false,
-};
-
-/* ---------- helpers ---------- */
-const $  = s => document.querySelector(s);
-const el = (t,c,x) => { const n=document.createElement(t); if(c)n.className=c; if(x!=null)n.textContent=x; return n; };
-const lb = (x,c) => el("div","lb"+(c?" "+c:""),x);   // a label is its own line, even inside a flex row
-const f1 = n => (Math.round((n||0)*10)/10).toFixed(1);
-const f2 = n => (Math.round((n||0)*100)/100).toFixed(2);
-const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
-const store = {
-  get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
-  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
-};
-async function getJSON(url){
-  const r = await fetch(url,{cache:"no-store"});
-  if(!r.ok) throw new Error(url.replace(/^https?:\/\/[^/]+/,"")+" returned "+r.status);
-  return r.json();
-}
-function erf(x){ const s=x<0?-1:1; x=Math.abs(x); const t=1/(1+0.3275911*x);
-  return s*(1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x)); }
-const normCdf = z => 0.5*(1+erf(z/Math.SQRT2));
-const isCurrent = () => S.week === S.curWeek;
-const timeStr = d => d.toLocaleTimeString([], {weekday:"short",hour:"numeric",minute:"2-digit"});
-const hhmm    = d => d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
-const slotLabel = s => String(s||"").replace(/_/g," ");
-
-/* ---------- config ---------- */
-function loadCfg(){
-  const c = store.get("sb_cfg") || {};
-  S.cfg = {...DEFAULTS, ...c};
-  applyTheme(S.cfg.theme);
-}
-function applyTheme(t){
-  document.documentElement.dataset.theme = t;
-  $('meta[name=theme-color]').content = t==="dark" ? "#1a1918" : "#f3f2f2";
-}
-function saveCfg(){ store.set("sb_cfg", S.cfg); }
-
-/* ============================================================
-   GAME CLOCK
-   ============================================================ */
-function fractionLeft(g){
-  if(!g) return 0;
-  if(g.state==="pre")  return 1;
-  if(g.state==="post") return 0;
-  if(g.period>4) return 0.03;
-  const [m,s] = String(g.clock||"0:00").split(":").map(Number);
-  const left = (isFinite(m)?m:0) + (isFinite(s)?s:0)/60 + (4-g.period)*15;
-  return clamp(left/60, 0.02, 1);
-}
-
-/* ============================================================
-   FETCH
-   ============================================================ */
-async function loadState(){
-  const st = await getJSON(`${SLEEPER}/v1/state/${SPORT}`);
-  S.curWeek = st.display_week || st.week || 1;
-  S.season  = st.season;
-  if(S.week==null) S.week = S.curWeek;
-}
-
-async function loadShell(){
-  const u = await getJSON(`${SLEEPER}/v1/user/${encodeURIComponent(S.cfg.username)}`);
-  if(!u || !u.user_id) throw new Error(`No Sleeper user named "${S.cfg.username}". Open settings to fix it`);
-  S.userId = u.user_id;
-  const lgs = await getJSON(`${SLEEPER}/v1/user/${S.userId}/leagues/${SPORT}/${S.season}`);
-  if(!lgs.length) throw new Error(`${S.cfg.username} has no ${S.season} leagues`);
-  const seen = {};
-  S.leagues = lgs.map((l,i)=>{
-    const name = (l.name||"League").trim();
-    let key = name.replace(/[^A-Za-z]/g,"")[0]?.toUpperCase() || "L";
-    if(seen[key]) key = name.replace(/[^A-Za-z]/g,"")[1]?.toUpperCase() || String(i+1);
-    seen[key]=1;
-    return { id:l.league_id, name, key, rec: l.scoring_settings?.rec ?? 1,
-             scoring: l.scoring_settings || {}, slots:l.roster_positions||[] };
-  });
-  if(S.league && !S.leagues.some(l=>l.id===S.league)){ S.league=null; S.view="home"; }
-}
-
-async function loadPlayers(needed){
-  const c = store.get("sb_players");
-  const fresh = c && (Date.now()-c.at) < 4*3600e3;          // injuries move; 4h cache
-  if(fresh && needed.every(p=>c.map[p])){ S.players=c.map; return; }
-  const all = await getJSON(`${SLEEPER}/v1/players/${SPORT}`); // ~5MB
-  const map = {};
-  for(const pid of needed){
-    const p = all[pid];
-    if(!p){ map[pid]={n:pid,pos:"",team:"",inj:""}; continue; }
-    map[pid] = {
-      n: p.position==="DEF" ? `${p.first_name||""} ${p.last_name||""}`.trim()+" D/ST"
-                            : (p.full_name || `${p.first_name||""} ${p.last_name||""}`.trim()),
-      pos:p.position||"", team:p.team||"",
-      inj:p.injury_status||"", body:p.injury_body_part||"",
-      num:p.number||"", age:p.age||"", exp:p.years_exp
-    };
-  }
-  S.players = map; store.set("sb_players",{at:Date.now(),map});
-}
-
-async function loadProjections(){
-  if(S.projWeek===S.week && Date.now()-S.lastProj<600e3 && Object.keys(S.proj).length) return;
-  const pos = ["QB","RB","WR","TE","K","DEF"].map(p=>`position[]=${p}`).join("&");
-  try{
-    const d = await getJSON(`${SLEEPER}/projections/${SPORT}/${S.season}/${S.week}?season_type=regular&${pos}`);
-    const m={}; for(const r of d){ const st=r?.stats||{}; m[String(r.player_id)]={ppr:st.pts_ppr,half:st.pts_half_ppr,std:st.pts_std}; }
-    S.proj=m; S.lastProj=Date.now(); S.projWeek=S.week;
-  }catch(e){ S.proj={}; }
-}
-const DEFAULT_PROJ = {QB:16,RB:9,WR:9,TE:6,K:8,DEF:7};
-function projFor(p, L){
-  const r = S.proj[p.pid];
-  if(!r) return DEFAULT_PROJ[p.pos] ?? 7;
-  const v = L?.rec>=1 ? r.ppr : L?.rec>=0.5 ? r.half : r.std;
-  return v ?? r.ppr ?? DEFAULT_PROJ[p.pos] ?? 7;
-}
-
-async function loadGames(){
-  try{
-    const r = await fetch(GQL,{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({query:`query{scores(sport:"nfl",season_type:"regular",season:"${S.season}",week:${S.week}){game_id status start_time metadata}}`})});
-    if(!r.ok) throw new Error("scores "+r.status);
-    const d = (await r.json())?.data?.scores || [];
-    S.games = d.map(g=>{ const m=g.metadata||{};
-      return { id:g.game_id, state:m.is_over?"post":(m.is_in_progress?"in":"pre"),
-        period:+m.quarter_num||0, clock:m.time_remaining||"15:00",
-        home:m.home_team, away:m.away_team, homeScore:+m.home_score||0, awayScore:+m.away_score||0,
-        start:new Date(+g.start_time||0), poss:(m.possession||"").trim(), dnd:(m.down_and_distance||"").trim() };
-    }).filter(g=>g.home&&g.away);
-  }catch(e){ S.games=[]; }
-  S.byTeam={}; for(const g of S.games){ S.byTeam[g.home]=g; S.byTeam[g.away]=g; }
-}
-
-async function loadLeague(L){
-  const [rosters,users,matchups] = await Promise.all([
-    getJSON(`${SLEEPER}/v1/league/${L.id}/rosters`),
-    getJSON(`${SLEEPER}/v1/league/${L.id}/users`),
-    getJSON(`${SLEEPER}/v1/league/${L.id}/matchups/${S.week}`).catch(()=>[])
-  ]);
-  L.userById = {}; for(const u of users) L.userById[u.user_id] = u;
-  L.rosters  = rosters; L.matchups = matchups; L.error = null;
-  L.teamName = r => { const u=r&&L.userById[r.owner_id]; return u?.metadata?.team_name || u?.display_name || "Team"; };
-  L.userName = r => L.userById[r?.owner_id]?.display_name || "";
-
-  const mine = rosters.find(r=>r.owner_id===S.userId || (r.co_owners||[]).includes(S.userId));
-  if(!mine){ L.error="You're not on a roster in this league"; L.mine=[]; L.them=[]; return; }
-  L.myRoster = mine;
-  const mm  = matchups.find(m=>m.roster_id===mine.roster_id);
-  const opp = mm ? matchups.find(m=>m.matchup_id===mm.matchup_id && m.roster_id!==mine.roster_id) : null;
-  const oppR = opp ? rosters.find(r=>r.roster_id===opp.roster_id) : null;
-  L.oppRoster = oppR;
-  L.myName=L.teamName(mine); L.oppName=oppR?L.teamName(oppR):null;
-  L.myPts=mm?.points??0; L.oppPts=opp?.points??0; L.hasMatchup=!!mm;
-  L.mine = buildSide(mm,mine,L); L.them = opp?buildSide(opp,oppR,L):[];
-  L.record = `${mine.settings?.wins??0}-${mine.settings?.losses??0}${mine.settings?.ties?`-${mine.settings.ties}`:""}`;
-}
-
-function buildSide(m, roster, L){
-  const startIds = m?.starters || roster?.starters || [];
-  const allIds   = m?.players  || roster?.players  || [];
-  const ptsMap   = m?.players_points || {};
-  const out=[], seen=new Set();
-  startIds.forEach((pid,i)=>{ if(!pid || pid==="0") out.push({pid:`empty-${i}`, name:"Empty "+(slotLabel(L.slots[i])||"")+" slot",
-    pos:L.slots[i]||"", team:"", starter:true, empty:true, pts:0, league:L, slot:L.slots[i], slotIndex:i}); });
-  for(const pid of allIds){
-    if(!pid||seen.has(pid)) continue; seen.add(pid);
-    const info=S.players[pid]||{n:pid,pos:"",team:"",inj:""};
-    const i=startIds.indexOf(pid);
-    out.push({pid, name:info.n, pos:info.pos, team:info.team, inj:info.inj, starter:i>=0,
-      slot:i>=0?L.slots[i]:"", slotIndex:i>=0?i:-1, pts:ptsMap[pid]??0, league:L});
-  }
-  return out;
-}
-
-/* ============================================================
-   MODELS: win probability, lineup alerts, best lineup
-   ============================================================ */
-function projectSide(players, L){
-  let rem=0, v=0, left=0, total=0;
-  for(const p of players){
-    if(!p.starter) continue; total++;
-    if(p.empty) continue;
-    const fr = fractionLeft(S.byTeam[p.team]);
-    if(fr<=0) continue;
-    if(isOut(p)) continue;
-    left++;
-    const pj=projFor(p,L); rem+=pj*fr; const sd=Math.max(3,pj*0.55)*Math.sqrt(fr); v+=sd*sd;
-  }
-  return {rem, sd:Math.sqrt(v), left, total};
-}
-function winProb(L){
-  if(!L.hasMatchup||!L.them.length) return null;
-  const a=projectSide(L.mine,L), b=projectSide(L.them,L);
-  const diff=(L.myPts+a.rem)-(L.oppPts+b.rem), sd=Math.sqrt(a.sd*a.sd+b.sd*b.sd);
-  const p = sd<0.5 ? (diff>0?1:diff<0?0:0.5) : normCdf(diff/sd);
-  return { p:clamp(p,0.001,0.999), projMe:L.myPts+a.rem, projOpp:L.oppPts+b.rem,
-           left:a.left, total:a.total, oppLeft:b.left, decided:a.left===0&&b.left===0, margin:L.myPts-L.oppPts };
-}
-const OUT = new Set(["Out","IR","PUP","Sus","COV","NA","Doubtful"]);
-const isOut = p => OUT.has(p.inj);
-
-const ELIG = {QB:["QB"],RB:["RB"],WR:["WR"],TE:["TE"],K:["K"],DEF:["DEF"],
-  FLEX:["RB","WR","TE"],SUPER_FLEX:["QB","RB","WR","TE"],REC_FLEX:["WR","TE"],WRRB_FLEX:["RB","WR"],
-  DL:["DL"],LB:["LB"],DB:["DB"],IDP_FLEX:["DL","LB","DB"]};
-
-/* the highest-scoring legal lineup out of everyone rostered, and who filled each slot */
-function bestLineup(players, slots){
-  const order = slots.map((s,i)=>({s,i})).filter(x=>ELIG[x.s])
-                     .sort((a,b)=>ELIG[a.s].length-ELIG[b.s].length);   // tightest slots first
-  const pool = players.filter(p=>!p.empty).sort((a,b)=>b.pts-a.pts);
-  const taken=new Set(); let total=0; const picks=[];
-  for(const {s,i} of order){
-    const pick = pool.find(p=>!taken.has(p.pid) && ELIG[s].includes(p.pos));
-    if(pick){ taken.add(pick.pid); total+=pick.pts; picks.push({slot:s, slotIndex:i, p:pick}); }
-  }
-  return {total, picks};
-}
-function benchStory(L){
-  const {total,picks} = bestLineup(L.mine||[], L.slots||[]);
-  const gain = total - (L.myPts||0);
-  const swaps = [];
-  for(const pk of picks){
-    if(pk.p.starter) continue;
-    const cur = (L.mine||[]).find(p=>p.starter && p.slotIndex===pk.slotIndex);
-    const who = !cur || cur.empty ? `the empty ${slotLabel(pk.slot)} slot` : cur.name;
-    swaps.push(`${pk.p.name} at ${slotLabel(pk.slot)} instead of ${who}`);
-  }
-  return {gain:Math.max(0,gain), swaps};
-}
-function benchPts(L){ return (L.mine||[]).filter(p=>!p.starter&&!p.empty).reduce((a,p)=>a+(p.pts||0),0); }
-
-/* who could still be swapped in for a slot, best projection first */
-function benchFor(L, slot){
-  const ok = ELIG[slot] || [];
-  return (L.mine||[]).filter(p=>!p.starter && !p.empty && ok.includes(p.pos) && !isOut(p)
-      && fractionLeft(S.byTeam[p.team])>0)
-    .sort((a,b)=>projFor(b,L)-projFor(a,L));
-}
-function lineupAlerts(L){
-  const out=[];
-  for(const p of L.mine||[]){
-    if(!p.starter) continue;
-    const g=S.byTeam[p.team];
-    if(g && g.state==="post") continue;               // too late to matter
-    const opts = benchFor(L, p.slot).slice(0,2).map(x=>x.name);
-    const bench = opts.length ? `bench has ${opts.join(" and ")}` : "nobody free on your bench";
-    if(p.empty) out.push({league:L, text:`Empty ${slotLabel(p.slot)||""} slot`.replace("  "," "),
-      sub:`Nobody assigned · ${bench}`});
-    else if(!g && p.team) out.push({league:L, text:`${p.name} is on bye`, sub:`${p.pos} · no game this week · ${bench}`});
-    else if(isOut(p)) out.push({league:L, text:`${p.name} is ${p.inj}`,
-      sub:`${[p.pos,p.team].filter(Boolean).join(" ")} · ${gameLabel(p.team).txt} · ${bench}`});
-  }
-  return out;
-}
-const allAlerts = () => S.leagues.flatMap(lineupAlerts);
-
-/* every league a player shows up in, on either side of my matchup */
-function ownership(){
-  const m={};
-  for(const L of S.leagues){
-    for(const p of L.mine||[]) if(!p.empty) (m[p.pid]=m[p.pid]||[]).push({L,mine:true,starter:p.starter,pts:p.pts});
-    for(const p of L.them||[]) if(!p.empty) (m[p.pid]=m[p.pid]||[]).push({L,mine:false,starter:p.starter,pts:p.pts});
-  }
-  return m;
-}
-/* the compact "· D" / "· VS D" tag that says a player is in play twice */
-function sharedTag(pid, L){
-  const e=(S.own[pid]||[]).filter(x=>x.L!==L);
-  if(!e.length) return "";
-  const vs = e.filter(x=>!x.mine && x.starter).map(x=>x.L.key);
-  if(vs.length) return " · VS "+vs.join("+");
-  const mine = e.filter(x=>x.mine).map(x=>x.L.key);
-  return mine.length ? " · "+mine.join("+") : "";
-}
-function rosteredText(pid, fallback){
-  const e=S.own[pid]||[];
-  if(!e.length) return fallback||"";
-  return e.map(x=> x.mine ? `${x.L.name} ${x.starter?"starting":"bench"}` : `against you in ${x.L.name}`).join(" · ");
-}
-
-/* ============================================================
-   STAT LINES
-   ============================================================ */
-const STAT_ORDER = {
-  QB:["pass_cmp","pass_att","pass_yd","pass_td","pass_int","pass_2pt","rush_att","rush_yd","rush_td","fum_lost"],
-  RB:["rush_att","rush_yd","rush_td","rec_tgt","rec","rec_yd","rec_td","fum_lost"],
-  WR:["rec_tgt","rec","rec_yd","rec_td","rush_att","rush_yd","rush_td","fum_lost"],
-  TE:["rec_tgt","rec","rec_yd","rec_td","fum_lost"],
-  K :["fgm","fga","fgm_50p","xpm","fgmiss","xpmiss"],
-  DEF:["sack","int","fum_rec","def_td","safe","blk_kick","pts_allow","yds_allow"],
-};
-const STAT_LABEL = {
-  pass_cmp:"completions", pass_att:"pass attempts", pass_yd:"passing yards", pass_td:"passing TD",
-  pass_int:"interceptions thrown", pass_2pt:"2-point pass", rush_att:"carries", rush_yd:"rushing yards",
-  rush_td:"rushing TD", rush_2pt:"2-point rush", rec:"receptions", rec_tgt:"targets", rec_yd:"receiving yards",
-  rec_td:"receiving TD", rec_2pt:"2-point catch", fum_lost:"fumbles lost", fum:"fumbles",
-  fgm:"field goals", fga:"attempts", fgm_50p:"from 50+", xpm:"extra points", fgmiss:"missed FG",
-  xpmiss:"missed XP", sack:"sacks", int:"interceptions", fum_rec:"fumble recoveries", def_td:"defensive TD",
-  safe:"safeties", blk_kick:"blocked kicks", pts_allow:"points allowed", yds_allow:"yards allowed",
-};
-const prettyStat = k => STAT_LABEL[k] || k.replace(/_/g," ");
-const fmtStat = v => Number.isInteger(v) ? String(v) : String(Math.round(v*10)/10);
-
-/* one line per stat, priced with this league's own scoring settings */
-function breakdown(p, L, st){
-  if(!st) return [];
-  const sc=(L&&L.scoring)||{}, out=[], used=new Set();
-  /* a stat the league doesn't price (carries, targets) is context, not points */
-  const push=k=>{ const v=st[k]; if(v==null||v===0||used.has(k)) return; used.add(k);
-    out.push({v:fmtStat(v), label:prettyStat(k), pts: sc[k] ? sc[k]*v : null}); };
-  for(const k of (STAT_ORDER[p.pos]||[])) push(k);
-  const extra = Object.keys(st).filter(k=>!used.has(k) && sc[k]!=null && st[k] && Math.abs(sc[k]*st[k])>=0.05 && !/^pts_/.test(k));
-  extra.sort((a,b)=>Math.abs(sc[b]*st[b])-Math.abs(sc[a]*st[a]));
-  for(const k of extra.slice(0,6)) out.push({v:fmtStat(st[k]), label:prettyStat(k), pts:sc[k]*st[k]});
-  if(st.off_snp && st.tm_off_snp) out.push({v:Math.round(100*st.off_snp/st.tm_off_snp)+"%", label:"of snaps", pts:null});
-  return out;
-}
-const statKey = pid => `${pid}:${S.week}`;
-async function statsFor(pid){
-  const k=statKey(pid);
-  if(S.statCache[k]!==undefined) return S.statCache[k];
-  try{
-    const d = await getJSON(`${SLEEPER}/stats/${SPORT}/player/${pid}?season_type=regular&season=${S.season}&grouping=week`);
-    return S.statCache[k] = (d?.[String(S.week)]?.stats || null);
-  }catch(e){ return S.statCache[k] = null; }
-}
-
-/* ============================================================
-   RENDER — shared pieces
-   ============================================================ */
-function gameLabel(team){
-  const g=S.byTeam[team];
-  if(!g) return {txt:team?"On bye":"No game", clock:"—", sub:"NO GAME", live:false, phase:"none", frac:0};
-  const line = g.state==="post" ? `Final · ${g.away} ${g.awayScore} ${g.home} ${g.homeScore}`
-    : g.state==="in" ? `${g.period>4?"OT":"Q"+g.period} ${g.clock} · ${g.away} ${g.awayScore} ${g.home} ${g.homeScore}`
-    : `Kicks ${hhmm(g.start)} · ${g.away} at ${g.home}`;
-  const other = team===g.home ? g.away : g.home;
-  const mineScore = team===g.home ? g.homeScore : g.awayScore;
-  const theirScore = team===g.home ? g.awayScore : g.homeScore;
-  return {
-    txt: line,
-    clock: g.state==="post" ? "FINAL" : g.state==="in" ? `${g.period>4?"OT":"Q"+g.period} ${g.clock}` : hhmm(g.start),
-    sub: g.state==="pre" ? `${g.away} AT ${g.home}` : `${mineScore} · ${theirScore} ${other}`,
-    live: g.state==="in", phase:g.state, frac:1-fractionLeft(g), game:g
-  };
-}
-function paceOf(p, proj){
-  const gl=gameLabel(p.team);
-  if(!proj) return "NO PROJECTION";
-  if(gl.phase==="none") return "NO GAME";
-  if(gl.phase==="pre")  return "NOT STARTED";
-  if(gl.phase==="post") return p.pts>=proj ? "BEAT PROJECTION" : "MISSED IT";
-  return p.pts >= proj*gl.frac ? "AHEAD OF PACE" : "BEHIND PACE";
-}
-
-function headerRow(label, value, strong){
-  const h=el("div","hdr"+(strong?" strong":"")); h.appendChild(lb(label));
-  const v=el("span","v",value); h.appendChild(v); return h;
-}
-function rowEl(o){
-  const b=el(o.onClick?"button":"div","row"+(o.on?" on":"")+(!o.on&&o.flag?" flag":""));
-  if(o.onClick) b.onclick=o.onClick;
-  const p=el("div","p n"+(o.wide?" wide":"")+(o.zero?" zero":""));
-  p.appendChild(el("span",null,o.pts));
-  if(o.delta) p.appendChild(el("span","dl",(o.delta>0?"+":"")+f1(o.delta)));
-  b.appendChild(p);
-  const mid=el("div","mid");
-  mid.appendChild(el("div","nm",o.name));
-  mid.appendChild(el("div","lb ell"+(o.metaAccent?" acc":""),o.meta));
-  b.appendChild(mid);
-  const c=el("div","clk");
-  c.appendChild(el("div","ck n"+(o.live?" live":"")+(o.bigClock?" rec":""),o.clock));
-  c.appendChild(lb(o.clockSub)); b.appendChild(c);
-  return b;
-}
-function toggle(key, pid){
-  if(S.open.has(key)) S.open.delete(key);
-  else{
-    S.open.add(key);
-    if(pid && S.statCache[statKey(pid)]===undefined) statsFor(pid).then(render);
-  }
-  render();
-}
-
-/* the drawer under a player row: score against projection, then the box score priced out */
-function playerPanel(p, L, ctx){
-  const w=el("div","exp");
-  const proj=projFor(p,L);
-  const top=el("div","exptop");
-  const a=el("div"); a.appendChild(lb("SCORED")); a.appendChild(el("div","big3 n",f1(p.pts))); top.appendChild(a);
-  const bar=el("div","expbar");
-  const hd=el("div","hd"); hd.appendChild(lb("VS PROJECTION "+f1(proj))); hd.appendChild(lb(paceOf(p,proj)));
-  bar.appendChild(hd);
-  const track=el("div","bar");
-  const fill=el("div","fill"+(proj&&p.pts>=proj?" beat":""));
-  fill.style.width=clamp(proj?(p.pts/proj)*100:0,0,100).toFixed(0)+"%";
-  track.appendChild(fill); track.appendChild(el("div","rest")); bar.appendChild(track);
-  top.appendChild(bar); w.appendChild(top);
-
-  const st=S.statCache[statKey(p.pid)];
-  const lines=breakdown(p,L,st);
-  const box=el("div","stats");
-  const bh=el("div","hd");
-  bh.appendChild(lb(st===undefined ? "LOADING BOX SCORE" : lines.length ? "POINT BREAKDOWN" : "NO BOX SCORE YET"));
-  if(lines.length){ const r=lb("PTS","r"); r.classList.add("r"); bh.appendChild(r); }
-  box.appendChild(bh);
-  for(const s of lines){
-    const r=el("div","sr");
-    r.appendChild(el("span","v",s.v));
-    r.appendChild(el("span","l",s.label));
-    r.appendChild(el("span","p"+(s.pts==null?" none":s.pts<0?" neg":""), s.pts==null?"—":f1(s.pts)));
-    box.appendChild(r);
-  }
-  if(lines.length){
-    const t=el("div","total"); t.appendChild(el("span","k","TOTAL SCORED"));
-    t.appendChild(el("span","v",f1(p.pts))); box.appendChild(t);
-  }
-  w.appendChild(box);
-
-  const foot=el("div","expfoot");
-  const g=el("div"); g.appendChild(lb("GAME")); g.appendChild(el("div","v n",gameLabel(p.team).txt)); foot.appendChild(g);
-  const r=el("div"); r.appendChild(lb("ROSTERED")); r.appendChild(el("div","v",rosteredText(p.pid,ctx)||"—")); foot.appendChild(r);
-  w.appendChild(foot);
-  return w;
-}
-
-/* ============================================================
-   RENDER — home
-   ============================================================ */
-function leagueCell(L){
-  const b=el("button","cell"+(S.wide && L.id===detailLeague().id ? " sel":""));
-  b.onclick=()=>openLeague(L.id);
-  const h=el("div","chead");
-  h.appendChild(lb(L.name.toUpperCase(),"acc"));
-  const rec=lb(L.record||""); rec.style.marginLeft="auto"; h.appendChild(rec);
-  b.appendChild(h);
-
-  if(L.error){ b.appendChild(el("div","cme n","—")); b.appendChild(el("div","lb",L.error)); return b; }
-  if(!L.hasMatchup){ b.appendChild(el("div","cme n","—")); b.appendChild(lb(`NO WEEK ${S.week} MATCHUP`)); return b; }
-
-  b.appendChild(el("div","cme n",f2(L.myPts)));
-  b.appendChild(el("div","cthem n",f2(L.oppPts)));
-
-  const w=winProb(L);
-  const on=w?Math.round(w.p*CELLS):0;
-  const m=el("div","matrix");
-  for(let i=0;i<CELLS;i++) m.appendChild(el("i",i<on?"on":null));
-  b.appendChild(m);
-  b.appendChild(lb(!w ? "NO MATCHUP"
-    : w.decided ? `FINAL · ${w.margin>=0?"WON":"LOST"} BY ${f1(Math.abs(w.margin))}`
-    : `${Math.round(w.p*100)}% TO WIN · ${on} OF ${CELLS}`));
-
-  const bs=benchStory(L);
-  const bp=lb(`BENCH ${f1(benchPts(L))} · +${f1(bs.gain)} LOST`); bp.classList.add("acc");
-  bp.style.marginTop="3px"; b.appendChild(bp);
-
-  const o=el("div","copen");
-  o.appendChild(el("span","o","OPEN"));
-  const ahead=L.myPts>=L.oppPts;
-  o.appendChild(el("span","s n",(ahead?"UP ":"DOWN ")+f1(Math.abs(L.myPts-L.oppPts))));
-  b.appendChild(o);
-  return b;
-}
-
-function liveStarters(){
-  const out=[], seen=new Set();
-  for(const L of S.leagues) for(const p of L.mine||[]){
-    if(!p.starter||p.empty||seen.has(p.pid)) continue;
-    const gl=gameLabel(p.team);
-    if(!gl.live) continue;
-    seen.add(p.pid); out.push({p,L,gl});
-  }
-  return out.sort((a,b)=>b.p.pts-a.p.pts);
-}
-function liveCell({p,L,gl}){
-  const b=el("button","pcell");
-  b.onclick=()=>openLeague(L.id,p.pid);
-  const h=el("div","chead");
-  h.appendChild(lb([p.pos,p.team].filter(Boolean).join(" ")+" · "+L.key+sharedTag(p.pid,L)));
-  h.appendChild(el("span","clock",gl.clock));
-  b.appendChild(h);
-  b.appendChild(el("div","nm ell",p.name));
-  b.appendChild(el("div","pt n",f1(p.pts)));
-  const t=el("div","track"); const i=el("i"); i.style.width=Math.round(gl.frac*100)+"%"; t.appendChild(i);
-  b.appendChild(t);
-  return b;
-}
-
-function renderHome(v){
-  const body=el("div","scroll");
-  body.style.flex="1";
-  const g=el("div","cells lgrid");
-  for(const L of S.leagues) g.appendChild(leagueCell(L));
-  body.appendChild(g);
-
-  const live=liveStarters();
-  const band=el("div","band"); band.appendChild(lb("ON THE FIELD NOW"));
-  const c=lb(live.length+" PLAYING"); c.style.marginLeft="auto"; band.appendChild(c);
-  body.appendChild(band);
-  if(live.length){
-    const lg=el("div","cells");
-    live.forEach(x=>lg.appendChild(liveCell(x)));
-    body.appendChild(lg);
-  }else{
-    body.appendChild(el("div","note", S.games.length ? "Nobody of yours is on the field right now."
-      : "Live game clocks are unreachable. The scores above still work."));
-  }
-  v.appendChild(body);
-
-  const foot=el("div","foot");
-  const next=[...S.games].filter(g=>g.state==="pre").sort((a,b)=>a.start-b.start)[0];
-  const main=el("div","main");
-  main.appendChild(lb(next?"NEXT KICK":"KICKOFFS"));
-  main.appendChild(el("div","v", next ? `${next.away} AT ${next.home} · ${hhmm(next.start)}`
-    : S.games.some(g=>g.state==="in") ? "EVERY GAME UNDER WAY" : "ALL GAMES FINAL"));
-  foot.appendChild(main);
-
-  const al=allAlerts();
-  const ab=el(al.length?"button":"div","alertbtn"+(al.length?"":" clear"));
-  ab.appendChild(el("div","k","LINEUP"));
-  ab.appendChild(el("div","v",al.length?`${al.length} ALERT${al.length>1?"S":""}`:"ALL SET"));
-  if(al.length) ab.onclick=()=>{ S.modal="alerts"; render(); };
-  foot.appendChild(ab);
-  v.appendChild(foot);
-}
-
-/* ============================================================
-   RENDER — league detail
-   ============================================================ */
-function detailLeague(){ return S.leagues.find(l=>l.id===S.league) || S.leagues[0]; }
-function openLeague(id, expandPid){
-  S.view="detail"; S.league=id; S.tab="mine"; S.open=new Set();
-  if(expandPid){
-    S.open.add(`${id}:${expandPid}`);
-    if(S.statCache[statKey(expandPid)]===undefined) statsFor(expandPid).then(render);
-  }
-  render();
-}
-
-function mineRows(L, host){
-  const st=(L.mine||[]).filter(p=>p.starter);
-  const bn=(L.mine||[]).filter(p=>!p.starter&&!p.empty).sort((a,b)=>b.pts-a.pts);
-  host.appendChild(headerRow(`STARTING ${st.length}`, `SCORED ${f2(L.myPts)}`));
-  st.forEach(p=>pushPlayer(host,p,L,`${L.id}:${p.pid}`));
-  if(bn.length){
-    host.appendChild(headerRow(`BENCH ${bn.length}`, `${f1(benchPts(L))} PTS SAT OUT`));
-    bn.forEach(p=>pushPlayer(host,p,L,`${L.id}:${p.pid}`));
-  }
-  const bs=benchStory(L);
-  host.appendChild(headerRow("LEFT ON THE BENCH", "+"+f1(bs.gain), true));
-  const w=winProb(L);
-  host.appendChild(el("div","note", bs.swaps.length
-    ? bs.swaps.slice(0,2).join(", ") + "."
-    : w && w.decided ? "You played your best possible lineup."
-    : "You're playing your best possible lineup so far."));
-}
-function pushPlayer(host,p,L,key){
-  const gl=gameLabel(p.team);
-  const proj=projFor(p,L);
-  const open=S.open.has(key);
-  const shared=sharedTag(p.pid,L);
-  const flag=p.empty||isOut(p)||!!shared;
-  const meta=[[p.pos,p.team].filter(Boolean).join(" "), p.inj||"", shared.replace(/^ · /,"")]
-    .filter(Boolean).join(" · ");
-  host.appendChild(rowEl({
-    pts:f1(p.pts), zero:!p.pts, delta:S.deltas[p.pid], name:p.name, meta, metaAccent:flag,
-    clock:gl.clock, clockSub:gl.sub, live:gl.live, on:open, flag,
-    onClick:()=>toggle(key,p.empty?null:p.pid)
-  }));
-  if(open) host.appendChild(playerPanel(p,L,p.empty?"Nobody assigned":""));
-}
-
-function clockRows(L, host){
-  if(!S.games.length){ host.appendChild(el("div","note","Live game clocks are unreachable right now.")); return; }
-  const mine={};
-  for(const lg of S.leagues) for(const p of lg.mine||[]){ if(p.empty||!p.team) continue;
-    (mine[p.team]=mine[p.team]||[]).push({p,lg}); }
-  const order={in:0,pre:1,post:2};
-  const count=g=>[...(mine[g.home]||[]),...(mine[g.away]||[])];
-  const games=[...S.games].sort((a,b)=>(order[a.state]-order[b.state])
-    || (count(b).filter(x=>x.p.starter).length-count(a).filter(x=>x.p.starter).length) || (a.start-b.start));
-  for(const g of games){
-    const key="clock:"+g.id, open=S.open.has(key);
-    const ps=count(g).sort((a,b)=>b.p.pts-a.p.pts);
-    const starters=ps.filter(x=>x.p.starter).length;
-    host.appendChild(rowEl({
-      pts:g.state==="pre"?"—":`${g.awayScore}-${g.homeScore}`, zero:g.state==="pre", wide:true,
-      name:`${g.away} AT ${g.home}`,
-      meta: g.state==="in" ? `${g.period>4?"OT":"Q"+g.period} ${g.clock}`+(g.dnd?` · ${g.dnd}`:"")+(g.poss?` · ${g.poss} ball`:"")
-        : g.state==="post" ? (g.period>4?"Final, overtime · ":"")+timeStr(g.start) : timeStr(g.start),
-      metaAccent:g.state==="in",
-      clock: g.state==="in"?"LIVE":g.state==="post"?"FINAL":"SOON", live:g.state==="in",
-      clockSub: `${starters} OF YOURS`, on:open,
-      onClick:()=>toggle(key)
-    }));
-    if(open){
-      const w=el("div","exp");
-      const box=el("div","stats"); box.style.marginTop="0";
-      const bh=el("div","hd"); bh.appendChild(lb(ps.length?"YOUR PLAYERS IN THIS GAME":"NOBODY OF YOURS IN THIS ONE"));
-      if(ps.length){ const r=lb("PTS"); r.classList.add("r"); bh.appendChild(r); }
-      box.appendChild(bh);
-      for(const {p,lg} of ps){
-        const r=el("div","sr");
-        r.appendChild(el("span","v",p.starter?lg.key:"—"));
-        r.appendChild(el("span","l",`${p.name} · ${[p.pos,p.team].filter(Boolean).join(" ")} · ${lg.name} ${p.starter?"starting":"bench"}`));
-        r.appendChild(el("span","p"+(p.pts?"":" none"),f1(p.pts)));
-        box.appendChild(r);
-      }
-      w.appendChild(box);
-      const foot=el("div","expfoot");
-      const a=el("div"); a.appendChild(lb("STATE")); a.appendChild(el("div","v n",
-        g.state==="in"?`${g.period>4?"OT":"Q"+g.period} ${g.clock}`:g.state==="post"?"Final":`Kicks ${hhmm(g.start)}`));
-      foot.appendChild(a);
-      const b=el("div"); b.appendChild(lb("SCORE")); b.appendChild(el("div","v n",
-        g.state==="pre"?"—":`${g.away} ${g.awayScore} · ${g.home} ${g.homeScore}`)); foot.appendChild(b);
-      w.appendChild(foot); host.appendChild(w);
-    }
-  }
-}
-
-function themRows(L, host){
-  const st=(L.them||[]).filter(p=>p.starter&&!p.empty).sort((a,b)=>b.pts-a.pts);
-  if(!st.length){ host.appendChild(el("div","note","No opponent lineup posted yet.")); return; }
-  host.appendChild(headerRow(`${(L.oppName||"OPPONENT").toUpperCase()} · ${st.length} STARTING`, `SCORED ${f2(L.oppPts)}`));
-  for(const p of st){
-    const key=`${L.id}:T:${p.pid}`, open=S.open.has(key), gl=gameLabel(p.team);
-    const mineToo=(S.own[p.pid]||[]).some(x=>x.mine);
-    const meta=[[p.pos,p.team].filter(Boolean).join(" "), p.inj||"", mineToo?"YOURS ELSEWHERE":""]
-      .filter(Boolean).join(" · ");
-    host.appendChild(rowEl({
-      pts:f1(p.pts), zero:!p.pts, delta:S.deltas[p.pid], name:p.name, meta, metaAccent:mineToo,
-      clock:gl.clock, clockSub:gl.sub, live:gl.live, on:open, flag:mineToo,
-      onClick:()=>toggle(key,p.pid)
-    }));
-    if(open) host.appendChild(playerPanel(p,L,`${L.oppName||"Opponent"} starting`));
-  }
-}
-
-function tableRows(L, host){
-  if(!L.rosters){ host.appendChild(el("div","note","Standings unavailable.")); return; }
-  const wk=r=>L.matchups.find(x=>x.roster_id===r.roster_id)?.points||0;
-  const rows=[...L.rosters].sort((a,b)=>{ const A=a.settings||{},B=b.settings||{};
-    return (B.wins-A.wins)||(A.losses-B.losses)
-      ||((B.fpts+(B.fpts_decimal||0)/100)-(A.fpts+(A.fpts_decimal||0)/100))||(wk(b)-wk(a)); });
-  host.appendChild(headerRow(`${L.name.toUpperCase()} · ${rows.length} TEAMS`, `WEEK ${S.week}`));
-  rows.forEach((r,i)=>{
-    const st=r.settings||{}, me=r.roster_id===L.myRoster?.roster_id;
-    host.appendChild(rowEl({
-      pts:String(i+1), name:L.teamName(r),
-      meta:`${L.userName(r)} · ${f1(wk(r))} pts`,
-      clock:`${st.wins??0}-${st.losses??0}`, clockSub:me?"YOU":"RECORD", bigClock:true, flag:me
-    }));
-  });
-}
-
-function renderDetail(d){
-  const L=detailLeague();
-
-  /* wide keeps home open beside this, so neither control has anything to do */
-  if(!S.wide){
-    const back=el("button","back");
-    back.onclick=()=>{ S.view="home"; S.open=new Set(); render(); };
-    back.appendChild(el("span","t","‹ ALL LEAGUES"));
-    const f=lb(L.name.toUpperCase()); f.style.marginLeft="auto"; back.appendChild(f);
-    d.appendChild(back);
-  }
-
-  if(!S.wide && S.leagues.length>1){
-    const sw=el("div","grid2 switch");
-    for(const x of S.leagues){
-      const b=el("button","sw"); b.setAttribute("aria-pressed",x.id===L.id);
-      b.onclick=()=>openLeague(x.id);
-      b.appendChild(el("div","nm",x.name.toUpperCase()));
-      const ahead=x.myPts>=x.oppPts;
-      b.appendChild(lb(`${x.record||"—"} · ${x.hasMatchup?(ahead?"UP ":"DOWN ")+f1(Math.abs(x.myPts-x.oppPts)):"NO MATCHUP"}`));
-      sw.appendChild(b);
-    }
-    d.appendChild(sw);
-  }
-
-  const w=winProb(L);
-  const sc=el("div","score");
-  const body=el("div","body");
-  if(L.error || !L.hasMatchup){
-    body.appendChild(lb("THIS LEAGUE"));
-    body.appendChild(el("div","big n","—"));
-    body.appendChild(lb(L.error || `NO WEEK ${S.week} MATCHUP POSTED`));
-  }else{
-    body.appendChild(lb(`ME · ${L.myName}`,"acc"));
-    body.appendChild(el("div","big n",f2(L.myPts)));
-    body.appendChild(lb(w?`PROJ ${f1(w.projMe)} · ${w.left} OF ${w.total} STARTERS LEFT`:"—"));
-    body.appendChild(el("div","srule"));
-    body.appendChild(lb(`THEM · ${L.oppName||"Opponent"}`));
-    body.appendChild(el("div","big them n",f2(L.oppPts)));
-    body.appendChild(lb(w?`PROJ ${f1(w.projOpp)} · ${w.oppLeft} LEFT`:"—"));
-  }
-  sc.appendChild(body);
-  if(w){
-    const g=el("div","gauge");
-    g.appendChild(lb(w.decided?(w.margin>=0?"WON BY "+f1(Math.abs(w.margin)):"LOST BY "+f1(Math.abs(w.margin)))
-      :"WIN "+Math.round(w.p*100)+"%"));
-    const on=Math.round(w.p*10);
-    for(let i=0;i<10;i++) g.appendChild(el("i", i>=10-on ? "on" : null));
-    sc.appendChild(g);
-  }
-  d.appendChild(sc);
-
-  const tabs=el("div","tabs");
-  [["MINE","mine"],["CLOCKS","clocks"],["VS ME","them"],["TABLE","table"]].forEach(([label,val])=>{
-    const b=el("button",null,label); b.setAttribute("aria-selected",S.tab===val); b.setAttribute("role","tab");
-    b.onclick=()=>{ S.tab=val; S.open=new Set(); render(); };
-    tabs.appendChild(b);
-  });
-  tabs.setAttribute("role","tablist");
-  d.appendChild(tabs);
-
-  const list=el("div","list scroll"+(S.wide?" wide":""));
-  ({mine:mineRows,clocks:clockRows,them:themRows,table:tableRows}[S.tab])(L,list);
-  d.appendChild(list);
-
-  const foot=el("div","footline");
-  const upd=el("button","main"); upd.style.padding="0"; upd.style.flex="0 1 auto";
-  upd.appendChild(lb(isCurrent()
-    ? `UPDATED ${hhmm(new Date())} · EVERY ${S.cfg.refresh}S`
-    : `WEEK ${S.week} · FINAL`));
-  upd.onclick=()=>refresh(false);
-  foot.appendChild(upd);
-  const liveN=S.games.filter(g=>g.state==="in").length;
-  foot.appendChild(el("span","livepill"+(liveN?"":" off"), liveN?`${liveN} GAME${liveN>1?"S":""} LIVE`:"NO GAMES LIVE"));
-  d.appendChild(foot);
-}
-
-/* ============================================================
-   RENDER — modals
-   ============================================================ */
-function closeModal(){ S.modal=null; render(); }
-function modalShell(title, build){
-  const layer=$("#layer"); layer.innerHTML="";
-  const back=el("div","backdrop"); back.onclick=closeModal; layer.appendChild(back);
-  const m=el("div","modal"); m.setAttribute("role","dialog"); m.setAttribute("aria-modal","true");
-  const h=el("div","mhead"); h.appendChild(el("h2",null,title));
-  const x=el("button","lb","CLOSE"); x.onclick=closeModal; h.appendChild(x);
-  m.appendChild(h); build(m); layer.appendChild(m);
-}
-function renderModal(){
-  const layer=$("#layer");
-  if(!S.modal){ layer.innerHTML=""; return; }
-  if(S.modal==="alerts") modalShell("Lineup alerts", m=>{
-    const al=allAlerts();
-    if(!al.length) m.appendChild(el("div","arow","Nothing to fix."));
-    for(const a of al){
-      const r=el("div","arow");
-      r.appendChild(lb(a.league.name.toUpperCase(),"acc"));
-      r.appendChild(el("div","t",a.text));
-      r.appendChild(lb(a.sub));
-      m.appendChild(r);
-    }
-    m.appendChild(el("div","note","Lineups still change in the Sleeper app — this read-only board just tells you what to fix."));
-  });
-  if(S.modal==="settings") modalShell("Settings", m=>{
-    const f1b=el("div","field");
-    const l1=el("label",null,"Sleeper username"); l1.htmlFor="un"; f1b.appendChild(l1);
-    const un=el("input","input"); un.id="un"; un.value=S.cfg.username; un.autocapitalize="off"; un.spellcheck=false;
-    f1b.appendChild(un); m.appendChild(f1b);
-
-    const f2b=el("div","field"); f2b.appendChild(el("label",null,"Refresh every"));
-    const seg=el("div","segbtns");
-    [[30,"30s"],[45,"45s"],[90,"90s"],[300,"5 min"]].forEach(([v,label])=>{
-      const b=el("button",null,label); b.setAttribute("aria-pressed",S.cfg.refresh===v);
-      b.onclick=()=>{ S.cfg.refresh=v; seg.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b)); };
-      seg.appendChild(b);
-    });
-    f2b.appendChild(seg); m.appendChild(f2b);
-
-    const f3=el("div","field"); f3.appendChild(el("label",null,"Look"));
-    const seg2=el("div","segbtns");
-    [["light","Light"],["dark","Dark"]].forEach(([v,label])=>{
-      const b=el("button",null,label); b.setAttribute("aria-pressed",S.cfg.theme===v);
-      b.onclick=()=>{ S.cfg.theme=v; applyTheme(v); seg2.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b)); };
-      seg2.appendChild(b);
-    });
-    f3.appendChild(seg2); m.appendChild(f3);
-
-    const save=el("button","btn btn-primary btn-block","Save");
-    save.onclick=()=>{
-      const changed=un.value.trim() && un.value.trim()!==S.cfg.username;
-      S.cfg.username=un.value.trim()||S.cfg.username;
-      saveCfg(); S.modal=null; restartTimer();
-      if(changed){ S.leagues=[]; S.league=null; S.view="home"; S.prevPts={}; refresh(true); } else render();
-    };
-    m.appendChild(save);
-
-    const rl=el("button","btn btn-secondary btn-block","Reload player database");
-    rl.onclick=()=>{ store.set("sb_players",null); S.modal=null; refresh(false); };
-    m.appendChild(rl);
-    m.appendChild(el("div","note","Everything here lives in this browser only. Sleeper's API is read-only, so lineups and waivers still happen in the Sleeper app."));
-  });
-}
-
-/* ============================================================
-   RENDER — root
-   ============================================================ */
-function syncHeader(){
-  $("#wklab").textContent = "W"+(S.week??"—");
-  $("#stamp").textContent = isCurrent() ? hhmm(new Date()) : "PAST WEEK";
-  $("#prev").disabled = !S.curWeek || S.week<=1;
-  $("#next").disabled = !S.curWeek || S.week>=S.curWeek;
-  const live = isCurrent() && S.games.some(g=>g.state==="in");
-  $("#blip").classList.toggle("off", !live);
-}
-function render(){
-  syncHeader();
-  const e=$("#err"); e.innerHTML="";
-  if(S.err){
-    const b=el("div","err"); b.appendChild(el("div","t","COULDN'T LOAD"));
-    b.appendChild(el("div","d",S.err)); e.appendChild(b);
-  }
-  const v=$("#view"); v.innerHTML=""; v.className="view"+(S.wide?" wide":"");
-  if(!S.leagues.length){
-    v.appendChild(el("div","loading lb", S.err ? "Open settings to fix it" : "Loading rosters and live scores"));
-    renderModal(); return;
-  }
-  S.own=ownership();
-  const home=()=>{ const p=el("div","pane home"); renderHome(p); return p; };
-  const detail=()=>{ const p=el("div","pane detail"+(S.wide?"":" enter")); renderDetail(p); return p; };
-  if(S.wide){ v.appendChild(home()); v.appendChild(detail()); }
-  else if(S.view==="detail" && S.leagues.some(l=>l.id===S.league)) v.appendChild(detail());
-  else { S.view="home"; v.appendChild(home()); }
-  renderModal();
-}
-
-/* ============================================================
-   ORCHESTRATION
-   ============================================================ */
-let busy=false, timer=null;
-function snapshotPts(){
-  const cur={};
-  for(const L of S.leagues){ cur[`team:${L.id}`]=L.myPts;
-    for(const p of [...(L.mine||[]),...(L.them||[])]) cur[p.pid]=Math.max(cur[p.pid]||0,p.pts); }
-  S.deltas={};
-  if(isCurrent()) for(const k in cur){ if(S.prevPts[k]!=null){ const d=cur[k]-S.prevPts[k]; if(Math.abs(d)>=0.05) S.deltas[k]=d; } }
-  S.prevPts=cur;
-}
-async function refresh(first){
-  if(busy) return; busy=true; $("#btn").disabled=true; $("#btn").classList.add("spin");
-  try{
-    await loadState();
-    if(first||!S.leagues.length) await loadShell();
-    await Promise.all([loadGames(), loadProjections()]);
-    const raw=await Promise.all(S.leagues.map(L=>getJSON(`${SLEEPER}/v1/league/${L.id}/rosters`)));
-    const need=new Set(); raw.flat().forEach(r=>(r.players||[]).forEach(p=>need.add(p)));
-    await loadPlayers([...need]);
-    await Promise.all(S.leagues.map(loadLeague));
-    snapshotPts();
-    S.err=null; render();
-  }catch(e){
-    S.err=e.message+"."; console.error(e); render();
-  }finally{ busy=false; $("#btn").disabled=false; $("#btn").classList.remove("spin"); }
-}
-function restartTimer(){
-  clearInterval(timer);
-  timer=setInterval(()=>{ if(!document.hidden && isCurrent() && !S.modal) refresh(false); }, S.cfg.refresh*1000);
-}
-function setWeek(w){
-  S.week=clamp(w,1,S.curWeek||w);
-  S.open=new Set(); S.statCache={}; S.prevPts={}; S.deltas={};
-  refresh(false);
-}
-
-$("#btn").onclick=()=>refresh(false);
-$("#gear").onclick=()=>{ S.modal="settings"; render(); };
-$("#prev").onclick=()=>setWeek(S.week-1);
-$("#next").onclick=()=>setWeek(S.week+1);
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&S.modal) closeModal(); });
-window.matchMedia("(min-width:900px)").addEventListener("change",e=>{ S.wide=e.matches; render(); });
-document.addEventListener("visibilitychange",()=>{ if(!document.hidden && isCurrent()) refresh(false); });
-
-loadCfg(); refresh(true); restartTimer();
+/* a returning visitor already has a username saved: fill it in */
+try{
+  var u=(JSON.parse(localStorage.getItem("sb_cfg"))||{}).username;
+  if(u){ document.getElementById("user").value=u;
+    document.querySelector(".start button").textContent="Open my scoreboard"; }
+}catch(e){}
 </script>
 </body>
 </html>
