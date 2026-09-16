@@ -1171,7 +1171,8 @@ function renderOnboard(v){
   const inp=el("input","input"); inp.id="ob"; inp.name="user"; inp.value=o.value; inp.required=true;
   inp.autocapitalize="off"; inp.autocomplete="off"; inp.spellcheck=false; inp.enterKeyHint="go";
   inp.oninput=()=>{ o.value=inp.value; };
-  inp.onkeydown=e=>{ if(e.key==="Enter"){ e.preventDefault(); if(!o.busy) startWith(inp.value); } };   // don't lean on implicit submit  row.appendChild(inp);
+  inp.onkeydown=e=>{ if(e.key==="Enter"){ e.preventDefault(); if(!o.busy) startWith(inp.value); } };   // don't lean on implicit submit
+  row.appendChild(inp);
   const go=el("button","btn btn-primary",o.busy?"Checking…":"Load my leagues"); go.type="submit"; go.disabled=o.busy;
   row.appendChild(go); f.appendChild(row);
   const err=el("div","lb acc fielderr",o.err||""); err.setAttribute("role","alert"); f.appendChild(err);
