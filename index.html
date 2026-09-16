@@ -34,8 +34,9 @@
   --color-accent-700:#ff9783; --color-accent-800:#ffc4b8;
 }
 
-html,body{margin:0;padding:0;height:100%}
-body{background:var(--ground);display:flex;justify-content:center;-webkit-font-smoothing:antialiased;
+html,body{margin:0;padding:0}
+body{background:var(--ground);display:flex;justify-content:center;align-items:flex-start;
+  min-height:100svh;padding:clamp(0px,2vw,24px);-webkit-font-smoothing:antialiased;
   overscroll-behavior-y:contain}
 button{font-family:inherit;color:inherit;font-size:inherit;background:none;border:0;padding:0}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -44,10 +45,15 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
 @keyframes blip{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-.app{width:100%;max-width:430px;height:100dvh;background:var(--color-bg);display:flex;flex-direction:column;
+.app{width:100%;max-width:430px;max-height:920px;height:calc(100svh - clamp(0px,4vw,48px));
+  background:var(--color-bg);border:2px solid var(--color-text);display:flex;flex-direction:column;
   overflow:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
-@media(min-width:466px){.app{border-left:2px solid var(--color-text);border-right:2px solid var(--color-text)}}
+/* ≥900px: one shell holding both panes, home pinned open as a sidebar */
+@media(min-width:900px){.app{max-width:1440px;max-height:none}}
 .view{flex:1;min-height:0;display:flex;flex-direction:column}
+.view.wide{flex-direction:row}
+.pane{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
+.view.wide .pane.home{width:min(38%,380px);flex:none;border-right:2px solid var(--color-divider)}
 .scroll{overflow-y:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .scroll::-webkit-scrollbar{display:none}
 .lb{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--color-neutral-700)}
@@ -80,24 +86,31 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
 .err .d{font-size:13px;color:var(--color-neutral-800)}
 .loading{padding:40px 14px;text-align:center}
 .grid2{display:grid;grid-template-columns:1fr 1fr}
-.grid2.one{grid-template-columns:1fr}
+.cells{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr))}
 .band{display:flex;align-items:center;gap:var(--space-2);padding:9px 14px;flex:none;
   background:var(--color-surface);border-bottom:2px solid var(--color-divider)}
 .note{padding:10px 14px 14px;border-bottom:1px solid var(--color-divider);font-size:13px;color:var(--color-neutral-800)}
 
 /* ---------- home: league cells ---------- */
 .lgrid{border-bottom:2px solid var(--color-divider);flex:none}
-.cell{padding:12px 12px 13px;text-align:left;cursor:pointer;background:var(--color-bg);width:100%;display:block}
-.cell:hover{background:var(--color-accent-100)}
-.grid2:not(.one) .cell:nth-child(2n){border-left:2px solid var(--color-divider)}
+.cell{padding:12px 12px 13px;text-align:left;cursor:pointer;background:var(--color-bg);width:100%;
+  display:flex;flex-direction:column}
+.cell:hover,.cell.sel{background:var(--color-accent-100)}
+.cells .cell:nth-child(2n){border-left:2px solid var(--color-divider)}
 .lgrid .cell:nth-child(n+3){border-top:2px solid var(--color-divider)}
+/* under two columns the vertical rules become horizontal ones */
+@media(max-width:359px){
+  .cells .cell:nth-child(2n),.cells .pcell:nth-child(2n){border-left:0}
+  .lgrid .cell+.cell{border-top:2px solid var(--color-divider)}
+}
 .chead{display:flex;align-items:baseline;gap:6px}
 .cme{font-size:30px;line-height:1.05;margin-top:3px}
 .cthem{font-size:20px;line-height:1.05;color:var(--color-neutral-600)}
 .matrix{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;margin-top:9px}
 .matrix i{aspect-ratio:1;display:block;background:var(--color-neutral-300)}
 .matrix i.on{background:var(--color-accent)}
-.copen{display:flex;align-items:center;gap:6px;margin-top:9px;padding-top:8px;border-top:1px solid var(--color-divider)}
+/* auto keeps the OPEN rule on the same line across cells of unequal text */
+.copen{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;border-top:1px solid var(--color-divider)}
 .copen .o{font-size:11px;font-weight:800;letter-spacing:.08em}
 .copen .s{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--color-neutral-700)}
 
@@ -105,7 +118,7 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
 .pcell{padding:11px 12px;text-align:left;cursor:pointer;background:var(--color-bg);width:100%;display:block;
   border-bottom:1px solid var(--color-divider)}
 .pcell:hover{background:var(--color-accent-100)}
-.grid2:not(.one) .pcell:nth-child(2n){border-left:1px solid var(--color-divider)}
+.cells .pcell:nth-child(2n){border-left:1px solid var(--color-divider)}
 .pcell .nm{font-size:14px;font-weight:600;margin-top:3px}
 .pcell .pt{font-size:26px;line-height:1.1}
 .pcell .clock{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--color-accent-700);
@@ -132,7 +145,8 @@ button.main:hover{background:var(--color-accent-100)}
 .footline{border-top:2px solid var(--color-divider);display:flex;align-items:center;gap:10px;padding:10px 14px;flex:none}
 
 /* ---------- detail ---------- */
-.detail{flex:1;display:flex;flex-direction:column;min-height:0;animation:slidein .22s ease-out}
+.detail{flex:1;display:flex;flex-direction:column;min-height:0}
+.detail.enter{animation:slidein .22s ease-out}   /* only when it arrives as a navigation */
 .back{display:flex;align-items:center;gap:8px;padding:10px 14px;width:100%;text-align:left;cursor:pointer;flex:none;
   border-bottom:1px solid var(--color-divider)}
 .back:hover{background:var(--color-accent-100)}
@@ -164,11 +178,15 @@ button.main:hover{background:var(--color-accent-100)}
   border-bottom:3px solid var(--color-accent);margin-bottom:-2px}
 
 /* ---------- rows ---------- */
+/* wide: rows flow into columns, but anything that organises them spans the lot */
+.list.wide{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));align-content:start}
+.list.wide .hdr,.list.wide .note,.list.wide .exp,.list.wide .row.on{grid-column:1/-1}
 .hdr{display:flex;align-items:baseline;gap:10px;padding:9px 14px;background:var(--color-surface);
   border-bottom:2px solid var(--color-divider)}
 .hdr .v{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:800;font-size:12px;letter-spacing:.06em}
 .hdr.strong{background:var(--color-accent)}
 .hdr.strong .lb,.hdr.strong .v{color:var(--color-bg)}
+.list{flex:1;min-height:0}
 .row{display:flex;align-items:center;gap:12px;padding:11px 14px;width:100%;text-align:left;min-height:56px;
   background:var(--color-bg);border-bottom:1px solid var(--color-divider)}
 button.row{cursor:pointer}
@@ -248,6 +266,7 @@ button.row:hover{background:var(--color-accent-100)}
     <button class="icon" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
     <span class="blip off" id="blip"></span>
   </header>
+  <div id="err"></div>
   <div class="view" id="view"><div class="loading lb">Loading rosters and live scores</div></div>
 </div>
 <div id="layer"></div>
@@ -276,6 +295,7 @@ const S = {
   leagues:[], players:{}, proj:{}, lastProj:0, projWeek:null,
   games:[], byTeam:{}, own:{},
   view:"home", league:null, tab:"mine", open:new Set(), modal:null,
+  wide: window.matchMedia("(min-width:900px)").matches,
   prevPts:{}, deltas:{}, statCache:{}, err:null, booted:false,
 };
 
@@ -706,7 +726,7 @@ function playerPanel(p, L, ctx){
    RENDER — home
    ============================================================ */
 function leagueCell(L){
-  const b=el("button","cell");
+  const b=el("button","cell"+(S.wide && L.id===detailLeague().id ? " sel":""));
   b.onclick=()=>openLeague(L.id);
   const h=el("div","chead");
   h.appendChild(lb(L.name.toUpperCase(),"acc"));
@@ -767,7 +787,7 @@ function liveCell({p,L,gl}){
 function renderHome(v){
   const body=el("div","scroll");
   body.style.flex="1";
-  const g=el("div","grid2 lgrid"+(S.leagues.length===1?" one":""));
+  const g=el("div","cells lgrid");
   for(const L of S.leagues) g.appendChild(leagueCell(L));
   body.appendChild(g);
 
@@ -776,7 +796,7 @@ function renderHome(v){
   const c=lb(live.length+" PLAYING"); c.style.marginLeft="auto"; band.appendChild(c);
   body.appendChild(band);
   if(live.length){
-    const lg=el("div","grid2"+(live.length===1?" one":""));
+    const lg=el("div","cells");
     live.forEach(x=>lg.appendChild(liveCell(x)));
     body.appendChild(lg);
   }else{
@@ -931,17 +951,19 @@ function tableRows(L, host){
   });
 }
 
-function renderDetail(v){
+function renderDetail(d){
   const L=detailLeague();
-  const d=el("div","detail");
 
-  const back=el("button","back");
-  back.onclick=()=>{ S.view="home"; S.open=new Set(); render(); };
-  back.appendChild(el("span","t","‹ ALL LEAGUES"));
-  const f=lb(L.name.toUpperCase()); f.style.marginLeft="auto"; back.appendChild(f);
-  d.appendChild(back);
+  /* wide keeps home open beside this, so neither control has anything to do */
+  if(!S.wide){
+    const back=el("button","back");
+    back.onclick=()=>{ S.view="home"; S.open=new Set(); render(); };
+    back.appendChild(el("span","t","‹ ALL LEAGUES"));
+    const f=lb(L.name.toUpperCase()); f.style.marginLeft="auto"; back.appendChild(f);
+    d.appendChild(back);
+  }
 
-  if(S.leagues.length>1){
+  if(!S.wide && S.leagues.length>1){
     const sw=el("div","grid2 switch");
     for(const x of S.leagues){
       const b=el("button","sw"); b.setAttribute("aria-pressed",x.id===L.id);
@@ -990,7 +1012,7 @@ function renderDetail(v){
   tabs.setAttribute("role","tablist");
   d.appendChild(tabs);
 
-  const list=el("div","scroll"); list.style.flex="1"; list.style.minHeight="0";
+  const list=el("div","list scroll"+(S.wide?" wide":""));
   ({mine:mineRows,clocks:clockRows,them:themRows,table:tableRows}[S.tab])(L,list);
   d.appendChild(list);
 
@@ -1004,8 +1026,6 @@ function renderDetail(v){
   const liveN=S.games.filter(g=>g.state==="in").length;
   foot.appendChild(el("span","livepill"+(liveN?"":" off"), liveN?`${liveN} GAME${liveN>1?"S":""} LIVE`:"NO GAMES LIVE"));
   d.appendChild(foot);
-
-  v.appendChild(d);
 }
 
 /* ============================================================
@@ -1088,18 +1108,22 @@ function syncHeader(){
 }
 function render(){
   syncHeader();
-  const v=$("#view"); v.innerHTML="";
+  const e=$("#err"); e.innerHTML="";
   if(S.err){
-    const e=el("div","err"); e.appendChild(el("div","t","COULDN'T LOAD"));
-    e.appendChild(el("div","d",S.err)); v.appendChild(e);
+    const b=el("div","err"); b.appendChild(el("div","t","COULDN'T LOAD"));
+    b.appendChild(el("div","d",S.err)); e.appendChild(b);
   }
+  const v=$("#view"); v.innerHTML=""; v.className="view"+(S.wide?" wide":"");
   if(!S.leagues.length){
     v.appendChild(el("div","loading lb", S.err ? "Open settings to fix it" : "Loading rosters and live scores"));
     renderModal(); return;
   }
   S.own=ownership();
-  if(S.view==="detail" && S.leagues.some(l=>l.id===S.league)) renderDetail(v);
-  else { S.view="home"; renderHome(v); }
+  const home=()=>{ const p=el("div","pane home"); renderHome(p); return p; };
+  const detail=()=>{ const p=el("div","pane detail"+(S.wide?"":" enter")); renderDetail(p); return p; };
+  if(S.wide){ v.appendChild(home()); v.appendChild(detail()); }
+  else if(S.view==="detail" && S.leagues.some(l=>l.id===S.league)) v.appendChild(detail());
+  else { S.view="home"; v.appendChild(home()); }
   renderModal();
 }
 
@@ -1146,6 +1170,7 @@ $("#gear").onclick=()=>{ S.modal="settings"; render(); };
 $("#prev").onclick=()=>setWeek(S.week-1);
 $("#next").onclick=()=>setWeek(S.week+1);
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&S.modal) closeModal(); });
+window.matchMedia("(min-width:900px)").addEventListener("change",e=>{ S.wide=e.matches; render(); });
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden && isCurrent()) refresh(false); });
 
 loadCfg(); refresh(true); restartTimer();
