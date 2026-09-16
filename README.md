@@ -1,7 +1,23 @@
 # Fantasy Scoreboard
 
 A single-page live scoreboard for people who play in more than one Sleeper league.
-No build step, no server, no API keys — one static HTML file.
+No build step, no server, no API keys — static HTML and one stylesheet.
+
+## Layout
+
+- `index.html` — the whole app: markup, app styles, and the Sleeper data layer.
+- `ds/modernist/styles.css` — the Modernist design system (tokens and component
+  classes), vendored from the Claude Design project that the interface was
+  designed in. Colors, type, spacing and radii all come from its variables;
+  the app never hard-codes a hex. Re-sync this file rather than editing it.
+
+Two screens. The home screen is every league at once: a cell per league with
+the score, a 20-square win-probability matrix and what your bench is costing
+you, then the players of yours who are on the field right now. Tapping a
+league opens the detail screen — full matchup, win gauge, and four tabs (your
+lineup, game clocks, your opponent, the standings). Any player row opens a
+point-by-point breakdown of how their score was earned, priced with that
+league's own scoring settings.
 
 ## Run it locally
 
@@ -22,8 +38,9 @@ read-only: this app can never change a lineup or submit a waiver claim.
 
 ## Configuration
 
-Open the gear icon in the app. Username, refresh cadence, and light/dark are
-stored in the browser's localStorage, not in this repo.
+Open the gear icon in the header. Username, refresh cadence, and light/dark are
+stored in the browser's localStorage, not in this repo. Modernist is a
+light-only system; the dark theme redefines its tokens in `index.html`.
 
 ## Privacy
 
