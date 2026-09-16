@@ -51,22 +51,22 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
 .ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ---------- header ---------- */
-.top{display:flex;align-items:center;gap:var(--space-2);padding:11px 14px;flex:none;
+.top{display:flex;align-items:center;gap:2px;padding:4px 8px 4px 14px;flex:none;
   border-bottom:2px solid var(--color-divider)}
 .brand{font-size:13px;font-weight:800;letter-spacing:.14em;white-space:nowrap}
 .wk{margin-left:auto;display:flex;align-items:center;gap:2px;flex:none}
-.step{width:20px;height:22px;display:grid;place-items:center;cursor:pointer;
+.step{width:32px;height:40px;display:grid;place-items:center;cursor:pointer;
   color:var(--color-neutral-700);font-size:16px;line-height:1}
 .step:hover:not(:disabled){color:var(--color-accent)}
 .step:disabled{opacity:.3;cursor:default}
-.stamp{white-space:nowrap}
+.stamp{white-space:nowrap;margin:0 6px}
 @media(max-width:379px){.stamp{display:none}}
-.icon{width:22px;height:22px;display:grid;place-items:center;cursor:pointer;color:var(--color-neutral-700);flex:none}
+.icon{width:40px;height:40px;display:grid;place-items:center;cursor:pointer;color:var(--color-neutral-700);flex:none}
 .icon:hover:not(:disabled){color:var(--color-accent)}
 .icon:disabled{opacity:.45;cursor:default}
 .icon svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
 .icon.spin svg{animation:spin .8s linear infinite}
-.blip{width:8px;height:8px;background:var(--color-accent);display:block;flex:none;animation:blip 2s ease-in-out infinite}
+.blip{width:8px;height:8px;margin:0 8px 0 4px;background:var(--color-accent);display:block;flex:none;animation:blip 2s ease-in-out infinite}
 .blip.off{background:var(--color-neutral-400);animation:none}
 
 /* ---------- shared bits ---------- */
@@ -101,7 +101,12 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
 /* auto keeps the OPEN rule on the same line across cells of unequal text */
 .copen{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;border-top:1px solid var(--color-divider)}
 .copen .o{font-size:11px;font-weight:800;letter-spacing:.08em}
-.copen .s{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--color-neutral-700)}
+.copen .s{margin-left:auto;font-size:18px;line-height:1;color:var(--color-neutral-600)}
+.cell.sel .copen .s{color:var(--color-accent)}
+/* a league's letter, which also marks its players in other leagues' lists */
+.key{display:inline-grid;place-items:center;min-width:15px;height:15px;padding:0 3px;flex:none;align-self:center;
+  font-size:9px;font-weight:800;letter-spacing:0;background:var(--color-text);color:var(--color-bg)}
+.chead .lb.ell{min-width:0}
 
 /* ---------- home: live cells ---------- */
 .pcell{padding:11px 12px;text-align:left;cursor:pointer;background:var(--color-bg);width:100%;display:block;
@@ -153,23 +158,57 @@ button.main:hover{background:var(--color-accent-100)}
 .big{font-size:clamp(46px,13.5vw,66px);line-height:.86;letter-spacing:-.035em}
 .big.them{font-size:clamp(32px,9vw,44px);line-height:.88;letter-spacing:-.03em;color:var(--color-neutral-600)}
 .srule{height:2px;background:var(--color-divider);margin:12px 0}
-.gauge{width:58px;flex:none;border-left:2px solid var(--color-divider);display:flex;flex-direction:column;
+.gauge{width:64px;flex:none;border-left:2px solid var(--color-divider);display:flex;flex-direction:column;
   padding:10px 0;gap:3px;align-items:center}
-.gauge .lb{writing-mode:vertical-rl;letter-spacing:.18em;margin-bottom:6px}
+.gauge .gp{font-size:19px;line-height:1;letter-spacing:-.02em}
+.gauge .lb{font-size:9px;margin:3px 0 8px}
 .gauge i{width:22px;height:9px;flex:none;display:block;background:var(--color-neutral-300)}
 .gauge i.on{background:var(--color-accent)}
-.tabs{display:flex;gap:16px;padding:0 14px;flex:none;
+.tabs{display:flex;gap:18px;padding:0 14px;flex:none;overflow-x:auto;scrollbar-width:none;
   border-top:2px solid var(--color-divider);border-bottom:2px solid var(--color-divider)}
-.tabs button{padding:11px 0 9px;cursor:pointer;font-size:12px;letter-spacing:.08em;font-weight:600;
+.tabs button{flex:none;white-space:nowrap;padding:12px 0 10px;cursor:pointer;font-size:12px;letter-spacing:.08em;font-weight:600;
   color:var(--color-neutral-600)}
 .tabs button:hover{color:var(--color-accent)}
 .tabs button[aria-selected=true]{font-weight:800;color:var(--color-text);
   border-bottom:3px solid var(--color-accent);margin-bottom:-2px}
 
 /* ---------- rows ---------- */
-/* wide: rows flow into columns, but anything that organises them spans the lot */
-.list.wide{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));align-content:start}
-.list.wide .hdr,.list.wide .note,.list.wide .exp,.list.wide .row.on{grid-column:1/-1}
+/* wide: games flow into columns; an open one spans them */
+.list.wide .flow{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));align-content:start}
+.list.wide .flow .exp,.list.wide .flow .row.on{grid-column:1/-1}
+/* lineup: starters and bench stacked, side by side when wide, each reading straight down */
+.cols{display:grid;grid-template-columns:minmax(0,1fr);align-items:start}
+.cols .col{min-width:0}
+.list.wide .cols{grid-template-columns:repeat(2,minmax(0,1fr))}
+.list.wide .cols .col+.col{border-left:2px solid var(--color-divider)}
+/* matchup: one row per lineup slot, you on the left, them on the right */
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr);border-bottom:1px solid var(--color-divider)}
+.mside{display:flex;align-items:center;gap:10px;padding:10px 12px;min-width:0;min-height:56px;width:100%;
+  text-align:left;background:var(--color-bg)}
+.mside.b{flex-direction:row-reverse;text-align:right}
+button.mside{cursor:pointer}
+button.mside:hover,.mside.on{background:var(--color-accent-100)}
+.mside .mt{flex:1;min-width:0}
+.mside .nm{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mside .nm .short{display:none}
+.mp{font-size:21px;line-height:1;width:48px;flex:none;color:var(--color-neutral-600)}
+.mside.b .mp{text-align:right}
+.mp.lead{color:var(--color-text)}
+.mp.zero{color:var(--color-neutral-500)}
+.mslot{display:grid;place-items:center;font-size:10px;font-weight:800;letter-spacing:.06em;color:var(--color-neutral-700);
+  background:var(--color-surface);border-left:1px solid var(--color-divider);border-right:1px solid var(--color-divider)}
+@media(max-width:599px){
+  .mside{gap:6px;padding:9px 8px}
+  .mside .nm{font-size:14px}
+  .mside .nm .full{display:none}
+  .mside .nm .short{display:inline}
+  .mp{font-size:17px;width:38px}
+  .mrow{grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr)}
+}
+.list.wide .mwrap,.list.wide .stand{max-width:1040px;border-right:2px solid var(--color-divider);min-height:100%}
+/* up next: kickoffs that involve your starters */
+.row.up{min-height:0;gap:14px}
+.row.up .clk{width:auto;min-width:64px}
 .hdr{display:flex;align-items:baseline;gap:10px;padding:9px 14px;background:var(--color-surface);
   border-bottom:2px solid var(--color-divider)}
 .hdr .v{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:800;font-size:12px;letter-spacing:.06em}
@@ -187,8 +226,8 @@ button.row:hover{background:var(--color-accent-100)}
 .row .p .dl{font-size:10px;font-weight:800;letter-spacing:.04em;color:var(--color-accent);margin-top:3px}
 .row .mid{flex:1;min-width:0}
 .row .nm{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .clk{width:78px;flex:none;text-align:left}
-.row .clk .lb{white-space:nowrap}
+.row .clk{width:104px;flex:none;text-align:left;min-width:0}
+.row .clk .lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .ck{font-size:13px;font-weight:800;letter-spacing:.02em;font-variant-numeric:tabular-nums}
 .row .ck.live{color:var(--color-accent)}
 .row .ck.rec{font-size:15px}
@@ -300,7 +339,7 @@ const S = {
   view:"home", league:null, tab:"mine", open:new Set(), modal:null,
   onboard:{value:"", err:null, busy:false},
   wide: window.matchMedia("(min-width:900px)").matches,
-  prevPts:{}, deltas:{}, statCache:{}, err:null, booted:false,
+  prevPts:{}, deltas:{}, statCache:{}, err:null, booted:false, updated:null, anim:false,
 };
 
 /* ---------- helpers ---------- */
@@ -326,6 +365,17 @@ const isCurrent = () => S.week === S.curWeek;
 const timeStr = d => d.toLocaleTimeString([], {weekday:"short",hour:"numeric",minute:"2-digit"});
 const hhmm    = d => d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
 const slotLabel = s => String(s||"").replace(/_/g," ");
+const SLOT_SHORT = {FLEX:"FLX",SUPER_FLEX:"SF",REC_FLEX:"W/T",WRRB_FLEX:"W/R",IDP_FLEX:"IDP"};
+const SLOT_NAME  = {FLEX:"FLEX",SUPER_FLEX:"SUPERFLEX",REC_FLEX:"WR/TE FLEX",WRRB_FLEX:"WR/RB FLEX",IDP_FLEX:"IDP FLEX"};
+const slotShort = s => SLOT_SHORT[s] || slotLabel(s);
+const sameDay = (a,b) => a.toDateString()===b.toDateString();
+/* "TODAY", "TOMORROW", or "THU" — a kickoff time means little without its day */
+function dayOf(d){
+  const now=new Date(), tmr=new Date(now); tmr.setDate(now.getDate()+1);
+  return sameDay(d,now) ? "TODAY" : sameDay(d,tmr) ? "TOMORROW"
+    : d.toLocaleDateString([], {weekday:"short"}).toUpperCase();
+}
+const whenStr = d => sameDay(d,new Date()) ? hhmm(d) : `${d.toLocaleDateString([], {weekday:"short"})} ${hhmm(d)}`;
 
 /* ---------- config ---------- */
 function loadCfg(){
@@ -661,14 +711,14 @@ function gameLabel(team){
   if(!g) return {txt:team?"On bye":"No game", clock:"—", sub:"NO GAME", live:false, phase:"none", frac:0};
   const line = g.state==="post" ? `Final · ${g.away} ${g.awayScore} ${g.home} ${g.homeScore}`
     : g.state==="in" ? `${g.period>4?"OT":"Q"+g.period} ${g.clock} · ${g.away} ${g.awayScore} ${g.home} ${g.homeScore}`
-    : `Kicks ${hhmm(g.start)} · ${g.away} at ${g.home}`;
+    : `Kicks ${whenStr(g.start)} · ${g.away} at ${g.home}`;
   const other = team===g.home ? g.away : g.home;
   const mineScore = team===g.home ? g.homeScore : g.awayScore;
   const theirScore = team===g.home ? g.awayScore : g.homeScore;
   return {
     txt: line,
     clock: g.state==="post" ? "FINAL" : g.state==="in" ? `${g.period>4?"OT":"Q"+g.period} ${g.clock}` : hhmm(g.start),
-    sub: g.state==="pre" ? `${g.away} AT ${g.home}` : `${mineScore} · ${theirScore} ${other}`,
+    sub: g.state==="pre" ? `${dayOf(g.start).slice(0,3)} · ${g.away} AT ${g.home}` : `${mineScore} · ${theirScore} ${other}`,
     live: g.state==="in", phase:g.state, frac:1-fractionLeft(g), game:g
   };
 }
@@ -759,8 +809,9 @@ function leagueCell(L){
   const b=el("button","cell"+(S.wide && L.id===detailLeague().id ? " sel":""));
   b.onclick=()=>openLeague(L.id);
   const h=el("div","chead");
-  h.appendChild(lb(L.name.toUpperCase(),"acc"));
-  const rec=lb(L.record||""); rec.style.marginLeft="auto"; h.appendChild(rec);
+  h.appendChild(el("span","key",L.key));
+  h.appendChild(lb(L.name.toUpperCase(),"acc ell"));
+  const rec=lb(L.record||""); rec.style.marginLeft="auto"; rec.style.flex="none"; h.appendChild(rec);
   b.appendChild(h);
 
   if(L.error){ b.appendChild(el("div","cme n","—")); b.appendChild(el("div","lb",L.error)); return b; }
@@ -774,20 +825,40 @@ function leagueCell(L){
   const m=el("div","matrix");
   for(let i=0;i<CELLS;i++) m.appendChild(el("i",i<on?"on":null));
   b.appendChild(m);
-  b.appendChild(lb(!w ? "NO MATCHUP"
-    : w.decided ? `FINAL · ${w.margin>=0?"WON":"LOST"} BY ${f1(Math.abs(w.margin))}`
-    : `${Math.round(w.p*100)}% TO WIN · ${on} OF ${CELLS}`));
+  b.appendChild(lb(!w ? "NO MATCHUP" : w.decided ? "FINAL" : `${Math.round(w.p*100)}% TO WIN`));
 
-  const bs=benchStory(L);
-  const bp=lb(`BENCH ${f1(benchPts(L))} · +${f1(bs.gain)} LOST`); bp.classList.add("acc");
+  /* before kickoff there's no bench story to tell, so show what's projected instead */
+  let bp;
+  if(!started(L)) bp=lb(w ? `PROJECTED ${f1(w.projMe)} – ${f1(w.projOpp)}` : "NOT STARTED");
+  else{
+    const bs=benchStory(L);
+    bp=lb(`BENCH ${f1(benchPts(L))} · ${bs.gain>=0.05 ? "+"+f1(bs.gain)+" LEFT" : "NONE LEFT"}`, bs.gain>=0.05?"acc":null);
+  }
   bp.style.marginTop="3px"; b.appendChild(bp);
 
   const o=el("div","copen");
-  o.appendChild(el("span","o","OPEN"));
-  const ahead=L.myPts>=L.oppPts;
-  o.appendChild(el("span","s n",(ahead?"UP ":"DOWN ")+f1(Math.abs(L.myPts-L.oppPts))));
+  o.appendChild(el("span","o n",statusOf(L)));
+  o.appendChild(el("span","s","›"));
   b.appendChild(o);
   return b;
+}
+
+const started = L => !!(L.myPts || L.oppPts || [...(L.mine||[]),...(L.them||[])].some(p=>p.pts));
+function statusOf(L){
+  if(!L.hasMatchup) return "NO MATCHUP";
+  const d=L.myPts-L.oppPts, w=winProb(L);
+  if(w && w.decided) return Math.abs(d)<0.005 ? "TIED" : `${d>0?"WON":"LOST"} BY ${f1(Math.abs(d))}`;
+  if(Math.abs(d)<0.05) return "TIED";
+  return `${d>0?"UP":"DOWN"} ${f1(Math.abs(d))}`;
+}
+/* the next kickoffs that involve any of your starters */
+function upNext(){
+  const mine={};
+  for(const L of S.leagues) for(const p of L.mine||[])
+    if(p.starter && !p.empty && p.team) (mine[p.team]=mine[p.team]||new Map()).set(p.pid,p);
+  return S.games.filter(g=>g.state==="pre").sort((a,b)=>a.start-b.start)
+    .map(g=>({g, ps:[...(mine[g.away]||new Map()).values(), ...(mine[g.home]||new Map()).values()]}))
+    .filter(x=>x.ps.length).slice(0,8);
 }
 
 function liveStarters(){
@@ -816,30 +887,45 @@ function liveCell({p,L,gl}){
 
 function renderHome(v){
   const body=el("div","scroll");
-  body.style.flex="1";
+  body.style.flex="1"; body.dataset.k="home";
   const g=el("div","cells lgrid");
   for(const L of S.leagues) g.appendChild(leagueCell(L));
   body.appendChild(g);
 
   const live=liveStarters();
-  const band=el("div","band"); band.appendChild(lb("ON THE FIELD NOW"));
-  const c=lb(live.length+" PLAYING"); c.style.marginLeft="auto"; band.appendChild(c);
+  const up=live.length || !isCurrent() ? [] : upNext();
+  const band=el("div","band");
+  band.appendChild(lb(live.length || !up.length ? "ON THE FIELD NOW" : "UP NEXT · YOUR STARTERS"));
+  const c=lb(live.length || !up.length ? live.length+" PLAYING" : up.length+(up.length>1?" GAMES":" GAME"));
+  c.style.marginLeft="auto"; band.appendChild(c);
   body.appendChild(band);
   if(live.length){
     const lg=el("div","cells");
     live.forEach(x=>lg.appendChild(liveCell(x)));
     body.appendChild(lg);
+  }else if(up.length){
+    for(const {g,ps} of up){
+      const r=el("div","row up");
+      const t=el("div","clk"); t.appendChild(el("div","ck n",hhmm(g.start))); t.appendChild(lb(dayOf(g.start)));
+      r.appendChild(t);
+      const mid=el("div","mid");
+      mid.appendChild(el("div","nm",`${g.away} at ${g.home}`));
+      mid.appendChild(el("div","lb ell",ps.map(p=>p.name).join(" · ")));
+      r.appendChild(mid);
+      body.appendChild(r);
+    }
   }else{
-    body.appendChild(el("div","note", S.games.length ? "Nobody of yours is on the field right now."
-      : "Live game clocks are unreachable. The scores above still work."));
+    body.appendChild(el("div","note", !S.games.length ? "Live game clocks are unreachable. The scores above still work."
+      : S.games.every(g=>g.state==="post") ? "Every game this week is final."
+      : "Nobody of yours is on the field right now."));
   }
   v.appendChild(body);
 
   const foot=el("div","foot");
   const next=[...S.games].filter(g=>g.state==="pre").sort((a,b)=>a.start-b.start)[0];
   const main=el("div","main");
-  main.appendChild(lb(next?"NEXT KICK":"KICKOFFS"));
-  main.appendChild(el("div","v", next ? `${next.away} AT ${next.home} · ${hhmm(next.start)}`
+  main.appendChild(lb(next?"NEXT KICKOFF":"KICKOFFS"));
+  main.appendChild(el("div","v", next ? `${next.away} AT ${next.home} · ${whenStr(next.start).toUpperCase()}`
     : S.games.some(g=>g.state==="in") ? "EVERY GAME UNDER WAY" : "ALL GAMES FINAL"));
   foot.appendChild(main);
 
@@ -857,7 +943,7 @@ function renderHome(v){
    ============================================================ */
 function detailLeague(){ return S.leagues.find(l=>l.id===S.league) || S.leagues[0]; }
 function openLeague(id, expandPid){
-  S.view="detail"; S.league=id; S.tab="mine"; S.open=new Set();
+  S.view="detail"; S.league=id; S.tab="mine"; S.open=new Set(); S.anim=true;
   if(expandPid){
     S.open.add(`${id}:${expandPid}`);
     if(S.statCache[statKey(expandPid)]===undefined) statsFor(expandPid).then(render);
@@ -868,17 +954,30 @@ function openLeague(id, expandPid){
 function mineRows(L, host){
   const st=(L.mine||[]).filter(p=>p.starter);
   const bn=(L.mine||[]).filter(p=>!p.starter&&!p.empty).sort((a,b)=>b.pts-a.pts);
-  host.appendChild(headerRow(`STARTING ${st.length}`, `SCORED ${f2(L.myPts)}`));
-  st.forEach(p=>pushPlayer(host,p,L,`${L.id}:${p.pid}`));
+  const cols=el("div","cols");
+  const a=el("div","col");
+  a.appendChild(headerRow(`STARTING ${st.length}`, `SCORED ${f2(L.myPts)}`));
+  st.forEach(p=>pushPlayer(a,p,L,`${L.id}:${p.pid}`));
+  cols.appendChild(a);
   if(bn.length){
-    host.appendChild(headerRow(`BENCH ${bn.length}`, `${f1(benchPts(L))} PTS SAT OUT`));
-    bn.forEach(p=>pushPlayer(host,p,L,`${L.id}:${p.pid}`));
+    const b=el("div","col");
+    b.appendChild(headerRow(`BENCH ${bn.length}`, started(L) ? `${f1(benchPts(L))} PTS SAT OUT` : "NOT STARTED"));
+    bn.forEach(p=>pushPlayer(b,p,L,`${L.id}:${p.pid}`));
+    cols.appendChild(b);
+  }
+  host.appendChild(cols);
+
+  const w=winProb(L);
+  if(!started(L)){
+    host.appendChild(headerRow("LEFT ON THE BENCH", "—"));
+    host.appendChild(el("div","note","Nothing has been scored yet. Once games start, this shows how many more points your best possible lineup would have scored."));
+    return;
   }
   const bs=benchStory(L);
-  host.appendChild(headerRow("LEFT ON THE BENCH", "+"+f1(bs.gain), true));
-  const w=winProb(L);
-  host.appendChild(el("div","note", bs.swaps.length
-    ? bs.swaps.slice(0,2).join(", ") + "."
+  const gain=bs.gain>=0.05;
+  host.appendChild(headerRow("LEFT ON THE BENCH", gain ? "+"+f1(bs.gain) : "NONE", gain));
+  host.appendChild(el("div","note", gain && bs.swaps.length
+    ? "Best lineup: " + bs.swaps.slice(0,3).join(", ") + "."
     : w && w.decided ? "You played your best possible lineup."
     : "You're playing your best possible lineup so far."));
 }
@@ -888,7 +987,8 @@ function pushPlayer(host,p,L,key){
   const open=S.open.has(key);
   const shared=sharedTag(p.pid,L);
   const flag=p.empty||isOut(p)||!!shared;
-  const meta=[[p.pos,p.team].filter(Boolean).join(" "), p.inj||"", shared.replace(/^ · /,"")]
+  const slot = p.starter && !p.empty && p.slot && p.slot!==p.pos ? (SLOT_NAME[p.slot]||slotLabel(p.slot)) : "";
+  const meta=[slot, [p.pos,p.team].filter(Boolean).join(" "), p.inj||"", shared.replace(/^ · /,"ALSO ")]
     .filter(Boolean).join(" · ");
   host.appendChild(rowEl({
     pts:f1(p.pts), zero:!p.pts, delta:S.deltas[p.pid], name:p.name, meta, metaAccent:flag,
@@ -946,22 +1046,48 @@ function clockRows(L, host){
   }
 }
 
+/* head to head: each lineup slot as one row, you on the left and them on the right */
 function themRows(L, host){
-  const st=(L.them||[]).filter(p=>p.starter&&!p.empty).sort((a,b)=>b.pts-a.pts);
-  if(!st.length){ host.appendChild(el("div","note","No opponent lineup posted yet.")); return; }
-  host.appendChild(headerRow(`${(L.oppName||"OPPONENT").toUpperCase()} · ${st.length} STARTING`, `SCORED ${f2(L.oppPts)}`));
-  for(const p of st){
-    const key=`${L.id}:T:${p.pid}`, open=S.open.has(key), gl=gameLabel(p.team);
-    const mineToo=(S.own[p.pid]||[]).some(x=>x.mine);
-    const meta=[[p.pos,p.team].filter(Boolean).join(" "), p.inj||"", mineToo?"YOURS ELSEWHERE":""]
-      .filter(Boolean).join(" · ");
-    host.appendChild(rowEl({
-      pts:f1(p.pts), zero:!p.pts, delta:S.deltas[p.pid], name:p.name, meta, metaAccent:mineToo,
-      clock:gl.clock, clockSub:gl.sub, live:gl.live, on:open, flag:mineToo,
-      onClick:()=>toggle(key,p.pid)
-    }));
-    if(open) host.appendChild(playerPanel(p,L,`${L.oppName||"Opponent"} starting`));
+  if(!(L.them||[]).length){ host.appendChild(el("div","note","No opponent this week.")); return; }
+  const bySlot=side=>{ const m=new Map(); for(const p of side||[]) if(p.starter) m.set(p.slotIndex,p); return m; };
+  const A=bySlot(L.mine), B=bySlot(L.them);
+  const idx=[...new Set([...A.keys(),...B.keys()])].sort((x,y)=>x-y);
+  const wrap=el("div","mwrap");
+  wrap.appendChild(headerRow(`${(L.myName||"You").toUpperCase()} VS ${(L.oppName||"Opponent").toUpperCase()}`,
+    `${f2(L.myPts)} – ${f2(L.oppPts)}`));
+  for(const i of idx){
+    const a=A.get(i), b=B.get(i);
+    const lead = a && b && started(L) ? (a.pts>b.pts+0.04 ? "a" : b.pts>a.pts+0.04 ? "b" : "") : "";
+    const r=el("div","mrow");
+    r.appendChild(matchSide(a,L,"a",lead==="a"));
+    r.appendChild(el("div","mslot",slotShort(L.slots[i]||a?.slot||b?.slot)));
+    r.appendChild(matchSide(b,L,"b",lead==="b"));
+    wrap.appendChild(r);
+    for(const [p,k] of [[a,"M"],[b,"T"]]){
+      if(!p || p.empty || !S.open.has(`${L.id}:${k}:${p.pid}`)) continue;
+      wrap.appendChild(playerPanel(p,L,k==="M" ? "" : `${L.oppName||"Opponent"} starting`));
+    }
   }
+  host.appendChild(wrap);
+}
+function matchSide(p, L, side, lead){
+  if(!p) return el("div","mside "+side);
+  const key=`${L.id}:${side==="a"?"M":"T"}:${p.pid}`;
+  const b=el(p.empty?"div":"button","mside "+side+(S.open.has(key)?" on":""));
+  if(!p.empty) b.onclick=()=>toggle(key,p.pid);
+  b.appendChild(el("div","mp n"+(lead?" lead":"")+(p.pts?"":" zero"), p.empty?"—":f1(p.pts)));
+  const t=el("div","mt");
+  const nm=el("div","nm");
+  const parts=String(p.name||"").split(" ");
+  nm.appendChild(el("span","full",p.empty?"Empty slot":p.name));
+  nm.appendChild(el("span","short",p.empty?"Empty":parts.length>1 && p.pos!=="DEF" ? `${parts[0][0]}. ${parts.slice(1).join(" ")}` : p.name));
+  t.appendChild(nm);
+  const gl=gameLabel(p.team);
+  const mineElsewhere = side==="b" && (S.own[p.pid]||[]).some(x=>x.mine);
+  t.appendChild(el("div","lb ell"+(isOut(p)||mineElsewhere?" acc":""), p.empty ? "NOBODY" :
+    [[p.pos,p.team].filter(Boolean).join(" "), isOut(p)?p.inj:"", mineElsewhere?"YOURS":"", gl.clock].filter(Boolean).join(" · ")));
+  b.appendChild(t);
+  return b;
 }
 
 function tableRows(L, host){
@@ -970,12 +1096,13 @@ function tableRows(L, host){
   const rows=[...L.rosters].sort((a,b)=>{ const A=a.settings||{},B=b.settings||{};
     return (B.wins-A.wins)||(A.losses-B.losses)
       ||((B.fpts+(B.fpts_decimal||0)/100)-(A.fpts+(A.fpts_decimal||0)/100))||(wk(b)-wk(a)); });
+  const t=el("div","stand"); host.appendChild(t); host=t;
   host.appendChild(headerRow(`${L.name.toUpperCase()} · ${rows.length} TEAMS`, `WEEK ${S.week}`));
   rows.forEach((r,i)=>{
     const st=r.settings||{}, me=r.roster_id===L.myRoster?.roster_id;
     host.appendChild(rowEl({
       pts:String(i+1), name:L.teamName(r),
-      meta:`${L.userName(r)} · ${f1(wk(r))} pts`,
+      meta:`${L.userName(r)} · ${f1((st.fpts||0)+(st.fpts_decimal||0)/100)} PF · ${f1(wk(r))} THIS WEEK`,
       clock:`${st.wins??0}-${st.losses??0}`, clockSub:me?"YOU":"RECORD", bigClock:true, flag:me
     }));
   });
@@ -999,8 +1126,7 @@ function renderDetail(d){
       const b=el("button","sw"); b.setAttribute("aria-pressed",x.id===L.id);
       b.onclick=()=>openLeague(x.id);
       b.appendChild(el("div","nm",x.name.toUpperCase()));
-      const ahead=x.myPts>=x.oppPts;
-      b.appendChild(lb(`${x.record||"—"} · ${x.hasMatchup?(ahead?"UP ":"DOWN ")+f1(Math.abs(x.myPts-x.oppPts)):"NO MATCHUP"}`));
+      b.appendChild(lb(`${x.record||"—"} · ${statusOf(x)}`));
       sw.appendChild(b);
     }
     d.appendChild(sw);
@@ -1025,8 +1151,8 @@ function renderDetail(d){
   sc.appendChild(body);
   if(w){
     const g=el("div","gauge");
-    g.appendChild(lb(w.decided?(w.margin>=0?"WON BY "+f1(Math.abs(w.margin)):"LOST BY "+f1(Math.abs(w.margin)))
-      :"WIN "+Math.round(w.p*100)+"%"));
+    g.appendChild(el("div","gp n", w.decided ? (w.margin>0?"WON":w.margin<0?"LOST":"TIE") : Math.round(w.p*100)+"%"));
+    g.appendChild(lb(w.decided ? "FINAL" : "TO WIN"));
     const on=Math.round(w.p*10);
     for(let i=0;i<10;i++) g.appendChild(el("i", i>=10-on ? "on" : null));
     sc.appendChild(g);
@@ -1034,7 +1160,7 @@ function renderDetail(d){
   d.appendChild(sc);
 
   const tabs=el("div","tabs");
-  [["MINE","mine"],["CLOCKS","clocks"],["VS ME","them"],["TABLE","table"]].forEach(([label,val])=>{
+  [["LINEUP","mine"],["MATCHUP","them"],["GAMES","clocks"],["STANDINGS","table"]].forEach(([label,val])=>{
     const b=el("button",null,label); b.setAttribute("aria-selected",S.tab===val); b.setAttribute("role","tab");
     b.onclick=()=>{ S.tab=val; S.open=new Set(); render(); };
     tabs.appendChild(b);
@@ -1043,13 +1169,15 @@ function renderDetail(d){
   d.appendChild(tabs);
 
   const list=el("div","list scroll"+(S.wide?" wide":""));
-  ({mine:mineRows,clocks:clockRows,them:themRows,table:tableRows}[S.tab])(L,list);
+  list.dataset.k=`list:${L.id}:${S.tab}`;
+  const host = S.tab==="clocks" ? list.appendChild(el("div","flow")) : list;
+  ({mine:mineRows,clocks:clockRows,them:themRows,table:tableRows}[S.tab])(L,host);
   d.appendChild(list);
 
   const foot=el("div","footline");
   const upd=el("button","main"); upd.style.padding="0"; upd.style.flex="0 1 auto";
   upd.appendChild(lb(isCurrent()
-    ? `UPDATED ${hhmm(new Date())} · EVERY ${S.cfg.refresh}S`
+    ? `UPDATED ${hhmm(S.updated||new Date())} · EVERY ${S.cfg.refresh}S`
     : `WEEK ${S.week} · FINAL`));
   upd.onclick=()=>refresh(false);
   foot.appendChild(upd);
@@ -1192,11 +1320,12 @@ async function startWith(name){
    ============================================================ */
 function syncHeader(){
   $("#wklab").textContent = "W"+(S.week??"—");
-  $("#stamp").textContent = isCurrent() ? hhmm(new Date()) : "PAST WEEK";
+  $("#stamp").textContent = !isCurrent() ? "PAST WEEK" : S.updated ? hhmm(S.updated) : "";
   $("#prev").disabled = !S.curWeek || S.week<=1;
   $("#next").disabled = !S.curWeek || S.week>=S.curWeek;
   const live = isCurrent() && S.games.some(g=>g.state==="in");
   $("#blip").classList.toggle("off", !live);
+  $("#blip").title = live ? "Games are live" : "No games live";
 }
 function render(){
   syncHeader();
@@ -1205,7 +1334,10 @@ function render(){
     const b=el("div","err"); b.appendChild(el("div","t","COULDN'T LOAD"));
     b.appendChild(el("div","d",S.err)); e.appendChild(b);
   }
-  const v=$("#view"); v.innerHTML=""; v.className="view"+(S.wide?" wide":"");
+  const v=$("#view");
+  /* a refresh rebuilds everything; put each scrolled list back where the reader left it */
+  const keep={}; v.querySelectorAll("[data-k]").forEach(n=>{ keep[n.dataset.k]=n.scrollTop; });
+  v.innerHTML=""; v.className="view"+(S.wide?" wide":"");
   if(!S.cfg.username){ renderOnboard(v); renderModal(); return; }
   if(!S.leagues.length){
     v.appendChild(el("div","loading lb", S.err ? "Open settings to fix it" : "Loading rosters and live scores"));
@@ -1213,10 +1345,12 @@ function render(){
   }
   S.own=ownership();
   const home=()=>{ const p=el("div","pane home"); renderHome(p); return p; };
-  const detail=()=>{ const p=el("div","pane detail"+(S.wide?"":" enter")); renderDetail(p); return p; };
+  const detail=()=>{ const p=el("div","pane detail"+(S.wide||!S.anim?"":" enter")); renderDetail(p); return p; };
   if(S.wide){ v.appendChild(home()); v.appendChild(detail()); }
   else if(S.view==="detail" && S.leagues.some(l=>l.id===S.league)) v.appendChild(detail());
   else { S.view="home"; v.appendChild(home()); }
+  v.querySelectorAll("[data-k]").forEach(n=>{ if(keep[n.dataset.k]) n.scrollTop=keep[n.dataset.k]; });
+  S.anim=false;
   renderModal();
 }
 
@@ -1246,7 +1380,7 @@ async function refresh(first){
     await loadPlayers([...need]);
     await Promise.all(S.leagues.map(loadLeague));
     snapshotPts();
-    S.err=null; render();
+    S.updated=new Date(); S.err=null; render();
   }catch(e){
     S.err=e.message+"."; console.error(e); render();
   }finally{
