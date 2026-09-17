@@ -2,6 +2,7 @@
 <html lang="en-US" data-theme="light">
 <head>
 <meta charset="utf-8">
+<script src="/assets/analytics.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AllRosters: A Live Scoreboard for Every Sleeper League</title>
 <meta name="description" content="Follow all your Sleeper fantasy football leagues on one live scoreboard: scores, win probability, game clocks, and the points your bench is costing you. Free, no login.">
@@ -174,9 +175,16 @@ body{-webkit-font-smoothing:antialiased}
 
 /* product picture, drawn with the scoreboard's own parts: league colors, lead-sized scores, the way in */
 .shot{border:2px solid var(--color-text);background:var(--color-bg)}
-.shot .bar{display:flex;align-items:center;gap:10px;padding:8px 12px 8px 14px;border-bottom:2px solid var(--color-divider)}
-.shot .bar b{font-size:12px;letter-spacing:.14em}
-.shot .bar .wk{margin-left:auto}
+.shot .bar{display:flex;align-items:center;gap:8px;padding:7px 10px 7px 12px;border-bottom:2px solid var(--color-divider)}
+.mbrand{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.14em;white-space:nowrap}
+.mbrand svg{width:18px;height:18px;display:block;flex:none}
+/* the week stepper, as the scoreboard draws it */
+.mwk{margin-left:auto;display:flex;align-items:stretch;height:30px;border:1px solid var(--color-divider);flex:none}
+.mwk span{display:grid;place-items:center;width:26px;font-size:17px;line-height:1}
+.mwk .wl{width:auto;min-width:64px;padding:0 6px;font-size:11px;font-weight:800;letter-spacing:.08em;
+  border-left:1px solid var(--color-divider);border-right:1px solid var(--color-divider)}
+.mwk .off{opacity:.3}
+@media(max-width:419px){.mbrand span{display:none}}
 .livetag{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;background:var(--color-accent);color:var(--color-bg);
   font-size:10px;font-weight:800;letter-spacing:.12em;white-space:nowrap}
 .livetag i{width:6px;height:6px;background:currentColor}
@@ -290,7 +298,7 @@ footer .dis{flex-basis:100%}
 
       <figure class="shot">
         <div aria-hidden="true">
-          <div class="bar"><b>SCOREBOARD</b><span class="lb wk">‹ W2 ›</span><span class="livetag"><i></i>2 LIVE</span></div>
+          <div class="bar"><b class="mbrand"><svg viewBox="0 0 32 32"><rect width="32" height="32" fill="var(--color-text)"/><rect x="5" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="5" y="17" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="17" width="10" height="10" fill="var(--color-neutral-600)"/></svg><span>SCOREBOARD</span></b><span class="mwk"><span>‹</span><span class="wl">WEEK 2</span><span class="off">›</span></span><span class="livetag"><i></i>2 LIVE</span></div>
           <div class="cells">
             <div class="cell lg0 sel">
               <div class="hd"><span class="key">H</span><span class="lb lgc">Home league</span><span class="lb">1-0</span></div>
@@ -369,7 +377,7 @@ footer .dis{flex-basis:100%}
         <dt>Lineup slots</dt>
         <dd>QB, RB, WR, TE, K, DEF, FLEX, Superflex, WR/TE and WR/RB flex, and IDP slots.</dd>
         <dt>Privacy</dt>
-        <dd>Your username and preferences are saved only in your browser. There are no accounts and nothing is stored on a server.</dd>
+        <dd>There are no accounts. Your username and preferences are saved only in your browser. Anonymous analytics count visits and which features get used, never your username, and you can turn them off in settings. <a href="/privacy">Privacy details</a>.</dd>
       </dl>
     </div>
   </section>
@@ -407,10 +415,16 @@ footer .dis{flex-basis:100%}
     <span>© 2026 AllRosters</span>
     <a href="/scoreboard">Scoreboard</a>
     <a href="#faq">FAQ</a>
+    <a href="/privacy">Privacy</a>
     <span class="dis">AllRosters is an independent project and is not affiliated with, sponsored by or endorsed by Sleeper or the NFL.</span>
   </div>
 </footer>
 <script>
+/* which way in people take: the hero form, the header button or the closing call */
+document.querySelector(".start").addEventListener("submit",function(){ window.arTrack && arTrack("username_form_submitted",{location:"hero"}); });
+document.querySelectorAll('a[href="/scoreboard"]').forEach(function(a){
+  a.addEventListener("click",function(){ window.arTrack && arTrack("open_scoreboard_click",{location: a.closest("header")?"header":a.closest("footer")?"footer":"closer"}); });
+});
 /* a returning visitor already has a username saved: fill it in */
 try{
   var u=(JSON.parse(localStorage.getItem("sb_cfg"))||{}).username;

@@ -9,6 +9,7 @@ https://allrosters.com. No build step, no server, no API keys — static HTML.
 |---|---|---|
 | `/` | `index.html` | Homepage: what it is, how it works, FAQ. The page meant to rank. |
 | `/scoreboard` | `scoreboard/index.html` | The whole app: markup, app styles, and the Sleeper data layer. `noindex, follow`. |
+| `/privacy` | `privacy.html` | What's stored, what goes to Sleeper, and the analytics. |
 | (any miss) | `404.html` | |
 
 - `ds/modernist/styles.css` — the Modernist design system (tokens and component
@@ -75,6 +76,23 @@ nothing. For those cases, Settings shows each visitor a personal
 `/scoreboard?user=name` link to bookmark or open on another device, plus a
 button to switch to a different account. Modernist is a
 light-only system; the dark theme redefines its tokens in `index.html`.
+
+## Analytics
+
+Google Analytics 4 (`G-Q6NDEXXP11`) is loaded by `assets/analytics.js`, which every page
+includes first in `<head>`. It only sends from allrosters.com. Ads storage is always denied;
+analytics storage defaults to denied in the EEA, UK and Switzerland; Global Privacy Control or
+the opt-out in settings (and on `/privacy`) stops the tag loading at all. The `?user=` value is
+stripped from page addresses, and no event carries a username, league or player name.
+
+Pages call `arTrack(name, params)`. Events: `username_submitted` (found, source),
+`leagues_loaded` (league_bucket, leagues, hidden), `league_opened` (from, league_bucket, week),
+`tab_viewed`, `week_changed`, `player_expanded`, `game_expanded`, `leagues_hidden`, and on the
+homepage `username_form_submitted` and `open_scoreboard_click` (location).
+
+To watch events locally without sending anything, run
+`localStorage.setItem("ar_analytics_debug","1")` in the console and reload. If the list of
+events or what's collected changes, update `/privacy` to match.
 
 ## Search and privacy
 

@@ -2,6 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
+<script src="/assets/analytics.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f3f2f2">
 <meta name="mobile-web-app-capable" content="yes">
@@ -439,6 +440,9 @@ const isCurrent = () => S.week === S.curWeek;
 const timeStr = d => d.toLocaleTimeString([], {weekday:"short",hour:"numeric",minute:"2-digit"});
 const hhmm    = d => d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
 const slotLabel = s => String(s||"").replace(/_/g," ");
+/* analytics: what happened, never whose leagues (see /assets/analytics.js) */
+const track = (name, params) => { try{ window.arTrack && window.arTrack(name, params); }catch(e){} };
+const bucket = n => n<=1 ? "1" : n<=4 ? "2-4" : n<=9 ? "5-9" : "10+";
 const SLOT_SHORT = {FLEX:"FLX",SUPER_FLEX:"SF",REC_FLEX:"W/T",WRRB_FLEX:"W/R",IDP_FLEX:"IDP"};
 const SLOT_NAME  = {FLEX:"FLEX",SUPER_FLEX:"SUPERFLEX",REC_FLEX:"WR/TE FLEX",WRRB_FLEX:"WR/RB FLEX",IDP_FLEX:"IDP FLEX"};
 const slotShort = s => SLOT_SHORT[s] || slotLabel(s);
@@ -465,12 +469,13 @@ function saveCfg(){ store.set("sb_cfg", S.cfg); }
 
 /* Check a username against Sleeper before it replaces the saved one, so a typo
    never wipes out leagues that were working. Returns an error message, or null. */
-async function adoptUser(name){
+async function adoptUser(name, source){
   name = String(name||"").trim().replace(/^@/,"");
   if(!name) return "Enter your Sleeper username.";
   let u;
   try{ u = await getJSON(`${SLEEPER}/v1/user/${encodeURIComponent(name)}`); }
   catch(e){ return "Couldn't reach Sleeper. Check your connection and try again."; }
+  track("username_submitted", {found: !!(u && u.user_id), source: source||"onboarding"});
   if(!u || !u.user_id) return `Sleeper has no user named "${name}".`;
   S.cfg.username = u.username || name;
   saveCfg();
@@ -542,6 +547,10 @@ async function loadShell(){
              scoring: l.scoring_settings || {}, slots:l.roster_positions||[] };
   });
   if(S.league && !S.leagues.some(l=>l.id===S.league)){ S.league=null; S.view="home"; }
+  if(!S.tracked){
+    S.tracked=true;
+    track("leagues_loaded", {league_bucket: bucket(S.leagues.length), leagues: S.leagues.length, hidden: lgs.length-S.leagues.length});
+  }
 }
 
 async function loadPlayers(needed){
@@ -859,6 +868,7 @@ function rowEl(o){
 function toggle(key, pid){
   if(S.open.has(key)) S.open.delete(key);
   else{
+    track(pid ? "player_expanded" : "game_expanded", {tab: {mine:"lineup",them:"matchup",clocks:"games",table:"standings"}[S.tab]||S.tab});
     S.open.add(key);
     if(pid && S.statCache[statKey(pid)]===undefined) statsFor(pid).then(render);
   }
@@ -912,7 +922,7 @@ function playerPanel(p, L, ctx){
    ============================================================ */
 function leagueCell(L){
   const b=el("button","cell lg"+L.ci+(S.wide && L.id===detailLeague().id ? " sel":""));
-  b.onclick=()=>openLeague(L.id);
+  b.onclick=()=>openLeague(L.id,null,"card");
   const h=el("div","chead");
   h.appendChild(chip(L));
   h.lastChild.title=L.name;
@@ -978,7 +988,7 @@ function leagueSummary(){
 function leagueRow(L){
   const sel = S.wide && L.id===detailLeague().id;
   const b=el("button","lrow lg"+L.ci+(sel?" sel":""));
-  b.onclick=()=>openLeague(L.id);
+  b.onclick=()=>openLeague(L.id,null,"row");
   b.appendChild(chip(L));
   const mid=el("div","lmid");
   mid.appendChild(el("div","lname",L.name));
@@ -1030,7 +1040,7 @@ function liveStarters(){
 }
 function liveCell({p,L,gl}){
   const b=el("button","pcell");
-  b.onclick=()=>openLeague(L.id,p.pid);
+  b.onclick=()=>openLeague(L.id,p.pid,"live_player");
   const h=el("div","chead");
   h.appendChild(lb([p.pos,p.team].filter(Boolean).join(" ")));
   const ch=leagueChips(p.pid,null,true); if(ch) h.appendChild(ch);
@@ -1114,7 +1124,8 @@ function renderHome(v){
    RENDER — league detail
    ============================================================ */
 function detailLeague(){ return S.leagues.find(l=>l.id===S.league) || S.leagues[0]; }
-function openLeague(id, expandPid){
+function openLeague(id, expandPid, from){
+  track("league_opened", {from: from||"card", league_bucket: bucket(S.leagues.length), week: isCurrent() ? "current" : "past"});
   S.view="detail"; S.league=id; S.tab="mine"; S.open=new Set(); S.anim=true;
   if(expandPid){
     S.open.add(`${id}:${expandPid}`);
@@ -1299,7 +1310,7 @@ function renderDetail(d){
     sw.dataset.x="switch";
     for(const x of S.leagues){
       const b=el("button","sw lg"+x.ci); b.setAttribute("aria-pressed",x.id===L.id);
-      b.onclick=()=>openLeague(x.id);
+      b.onclick=()=>openLeague(x.id,null,"switcher");
       const nm=el("div","nm"); nm.appendChild(chip(x)); nm.appendChild(el("span","ell",x.name.toUpperCase()));
       b.appendChild(nm);
       b.appendChild(lb(`${x.record||"—"} · ${statusOf(x)}`));
@@ -1351,7 +1362,7 @@ function renderDetail(d){
   const tabs=el("div","tabs");
   [["LINEUP","mine"],["MATCHUP","them"],["GAMES","clocks"],["STANDINGS","table"]].forEach(([label,val])=>{
     const b=el("button",null,label); b.setAttribute("aria-selected",S.tab===val); b.setAttribute("role","tab");
-    b.onclick=()=>{ S.tab=val; S.open=new Set(); render(); };
+    b.onclick=()=>{ if(S.tab!==val) track("tab_viewed", {tab: label.toLowerCase()}); S.tab=val; S.open=new Set(); render(); };
     tabs.appendChild(b);
   });
   tabs.setAttribute("role","tablist");
@@ -1419,6 +1430,26 @@ function renderModal(){
     });
     f3.appendChild(seg2); m.appendChild(f3);
 
+    if(window.arAnalytics){
+      const fa=el("div","field"); fa.appendChild(el("label",null,"Anonymous usage analytics"));
+      const st=window.arAnalytics.state();
+      if(st==="gpc"){
+        fa.appendChild(el("div","hint","Off. Your browser sends Global Privacy Control, so AllRosters doesn't load analytics."));
+      }else{
+        const seg3=el("div","segbtns");
+        [[true,"On"],[false,"Off"]].forEach(([v,label])=>{
+          const b=el("button",null,label); b.setAttribute("aria-pressed",(st==="on")===v);
+          b.onclick=()=>{ window.arAnalytics.set(v); seg3.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b)); };
+          seg3.appendChild(b);
+        });
+        fa.appendChild(seg3);
+        const h=el("div","hint","Counts visits and which features get used, never your username. ");
+        const a=el("a",null,"Privacy"); a.href="/privacy"; h.appendChild(a);
+        fa.appendChild(h);
+      }
+      m.appendChild(fa);
+    }
+
     /* hardcore players carry mock drafts, best ball and dead leagues; hidden ones aren't even fetched */
     let lgBox=null, lgErr=null;
     if((S.allLeagues||[]).length>1){
@@ -1441,7 +1472,7 @@ function renderModal(){
       restartTimer();
       if(name && name.toLowerCase()!==S.cfg.username.toLowerCase()){
         save.disabled=true; save.textContent="Checking username…"; unErr.textContent="";
-        const err=await adoptUser(name);          // saves everything and closes on success
+        const err=await adoptUser(name, "settings");   // saves everything and closes on success
         if(err){ unErr.textContent=err; save.disabled=false; save.textContent="Save"; }
         return;
       }
@@ -1449,6 +1480,7 @@ function renderModal(){
         const nextHidden=[...lgBox.querySelectorAll("input")].filter(c=>!c.checked).map(c=>c.dataset.id);
         if(nextHidden.length===S.allLeagues.length){ lgErr.textContent="Keep at least one league."; return; }
         if([...nextHidden].sort().join()!==[...(S.cfg.hidden||[])].sort().join()){
+          track("leagues_hidden", {hidden: nextHidden.length, total: S.allLeagues.length});
           S.cfg.hidden=nextHidden; saveCfg(); S.modal=null;
           S.leagues=[]; S.league=null; S.view="home"; S.open=new Set(); render(); refresh(true);
           return;
@@ -1484,7 +1516,7 @@ function renderModal(){
       const fg=el("button","btn btn-secondary btn-block","Use a different Sleeper account");
       fg.onclick=forgetUser; m.appendChild(fg);
     }
-    m.appendChild(el("div","note","Everything here lives in this browser only. Sleeper's API is read-only, so lineups and waivers still happen in the Sleeper app."));
+    m.appendChild(el("div","note","These settings live in this browser only. Sleeper's API is read-only, so lineups and waivers still happen in the Sleeper app."));
   });
 }
 
@@ -1513,9 +1545,9 @@ function renderOnboard(v){
   wrap.appendChild(f); v.appendChild(wrap);
   if(!o.busy && !matchMedia("(pointer:coarse)").matches) setTimeout(()=>inp.focus(),0);
 }
-async function startWith(name){
+async function startWith(name, source){
   S.onboard={value:name, err:null, busy:true}; render();
-  const err=await adoptUser(name);
+  const err=await adoptUser(name, source);
   if(err){ S.onboard={value:name, err, busy:false}; render(); }
 }
 
@@ -1619,9 +1651,9 @@ function setWeek(w){
 
 $("#btn").onclick=()=>refresh(false);
 $("#gear").onclick=()=>{ S.modal="settings"; render(); };
-$("#prev").onclick=()=>setWeek(S.week-1);
-$("#next").onclick=()=>setWeek(S.week+1);
-$("#now").onclick=()=>setWeek(S.curWeek);
+$("#prev").onclick=()=>{ track("week_changed",{direction:"previous"}); setWeek(S.week-1); };
+$("#next").onclick=()=>{ track("week_changed",{direction:"next"}); setWeek(S.week+1); };
+$("#now").onclick=()=>{ track("week_changed",{direction:"this_week"}); setWeek(S.curWeek); };
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&S.modal) closeModal(); });
 window.matchMedia("(min-width:900px)").addEventListener("change",e=>{ S.wide=e.matches; render(); });
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden && isCurrent()) refresh(false); });
@@ -1631,7 +1663,7 @@ loadCfg();
    then the address goes back to plain /scoreboard and the saved username takes over */
 const fromLink=(new URLSearchParams(location.search).get("user")||"").trim();
 if(fromLink) history.replaceState(null,"",location.pathname+location.hash);
-if(fromLink && fromLink.toLowerCase()!==S.cfg.username.toLowerCase()) startWith(fromLink);
+if(fromLink && fromLink.toLowerCase()!==S.cfg.username.toLowerCase()) startWith(fromLink, "link");
 else refresh(true);
 restartTimer();
 </script>
