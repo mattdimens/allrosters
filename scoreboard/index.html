@@ -373,6 +373,19 @@ button.row:hover{background:var(--color-accent-100)}
 /* ---------- expanded ---------- */
 .exp{animation:fan .22s ease-out;background:var(--color-surface);padding:12px 14px 13px;
   border-bottom:2px solid var(--color-divider)}
+/* Spotlight: whatever is open comes forward (a bar in the league's color and a lift that joins the
+   row to its drawer) and everything else in the list steps back. Faded, not blurred, so the rest
+   stays readable and any of it is one tap away. */
+.list .row,.list .mrow,.list .gcard,.list .hdr,.list .note{transition:opacity .2s ease}
+.list.has-open .row:not(.focus),.list.has-open .mrow:not(.focus),.list.has-open .gcard:not(.focus){opacity:.38}
+.list.has-open .hdr:not(.focus),.list.has-open .note{opacity:.55}
+.list.has-open .row:not(.focus):hover,.list.has-open .mrow:not(.focus):hover,.list.has-open .gcard:not(.focus):hover{opacity:.8}
+.row.focus,.row.on.focus,.mrow.focus.on,.gcard.focus{position:relative;z-index:3;background:var(--color-bg);
+  box-shadow:inset 4px 0 0 var(--lg,var(--color-accent)),var(--shadow-md)}
+.mrow.focus{position:relative;z-index:3}
+.mrow.focus:has(.mside.on){box-shadow:inset 4px 0 0 var(--lg,var(--color-accent)),var(--shadow-md)}
+.exp.focus{position:relative;z-index:2;box-shadow:inset 4px 0 0 var(--lg,var(--color-accent)),var(--shadow-lg)}
+@media(prefers-reduced-motion:reduce){.list .row,.list .mrow,.list .gcard{transition:none}}
 .exptop{display:flex;align-items:flex-end;gap:14px}
 .exptop .big3{font-size:40px;line-height:.9}
 .expbar{flex:1;min-width:0;padding-bottom:3px}
@@ -946,8 +959,10 @@ function headerRow(label, value, strong){
   const v=el("span","v",value); h.appendChild(v); return h;
 }
 function rowEl(o){
-  const b=el(o.onClick?"button":"div","row"+(o.on?" on":"")+(!o.on&&o.flag?" flag":""));
+  const b=el(o.onClick?"button":"div","row"+(o.on?" on focus":"")+(!o.on&&o.flag?" flag":""));
   if(o.onClick) b.onclick=o.onClick;
+  if(o.key) b.dataset.key=o.key;
+  if(o.onClick && o.key) b.setAttribute("aria-expanded", !!o.on);
   const p=el("div","p n"+(o.wide?" wide":"")+(o.zero?" zero":""));
   p.appendChild(el("span",null,o.pts));
   if(o.delta) p.appendChild(el("span","dl",(o.delta>0?"+":"")+f1(o.delta)));
@@ -962,14 +977,49 @@ function rowEl(o){
   c.appendChild(lb(o.clockSub)); b.appendChild(c);
   return b;
 }
-function toggle(key, pid){
-  if(S.open.has(key)) S.open.delete(key);
-  else{
-    track(pid ? "player_expanded" : "game_expanded", {tab: {mine:"lineup",them:"matchup",league:"league",clocks:"nfl",table:"standings"}[S.tab]||S.tab});
+/* One thing open at a time. A key like "card/a:pid" lives inside "card", so opening a player in an
+   opened matchup keeps the matchup open; opening anything else closes the rest. */
+function toggle(key, pid, ev){
+  if(S.open.has(key)){
+    for(const k of [...S.open]) if(k===key || k.startsWith(key+"/")) S.open.delete(k);
+  }else{
+    if(ev) track(ev.name, ev.params);
+    else track(pid ? "player_expanded" : "game_expanded", {tab: {mine:"lineup",them:"matchup",league:"league",clocks:"nfl",table:"standings"}[S.tab]||S.tab});
+    for(const k of [...S.open]) if(!key.startsWith(k+"/")) S.open.delete(k);
     S.open.add(key);
-    if(pid && S.statCache[statKey(pid)]===undefined) statsFor(pid).then(render);
+    S.reveal={key, mode:"nearest"};
+    /* the box score arrives after the drawer opens and makes it taller, so check again then */
+    if(pid && S.statCache[statKey(pid)]===undefined)
+      statsFor(pid).then(()=>{ if(S.open.has(key)) S.reveal={key, mode:"nearest"}; render(); });
   }
   render();
+}
+
+/* Scroll an opened item into view: "top" puts it just under the pinned tabs (arriving from the home
+   screen), "nearest" moves only as far as needed to show the row and its whole drawer. */
+function reveal({key, mode}){
+  const t=document.querySelector(`#view [data-key="${CSS.escape(key)}"]`);
+  if(!t) return;
+  const row=t.closest(".mrow")||t;
+  const c=row.closest(".pane.detail.flowy")||row.closest(".list.scroll");
+  if(!c) return;
+  let end=row;
+  for(let n=row.nextElementSibling; n && (n.classList.contains("exp")||n.classList.contains("gopen")); n=n.nextElementSibling) end=n;
+  const cr=c.getBoundingClientRect();
+  const top=row.getBoundingClientRect().top-cr.top+c.scrollTop;
+  const bottom=end.getBoundingClientRect().bottom-cr.top+c.scrollTop;
+  const flowy=c.classList.contains("flowy"), cover=flowy?84:0, pad=8;
+  let target=null;
+  if(mode==="top") target=top-cover-pad;
+  else{
+    const viewTop=c.scrollTop+cover, viewBottom=c.scrollTop+c.clientHeight;
+    if(top<viewTop) target=top-cover-pad;
+    else if(bottom>viewBottom) target=Math.min(top-cover-pad, bottom-c.clientHeight+pad);
+  }
+  if(target==null) return;
+  if(flowy && mode==="top") target=Math.max(target, c._tabTop());   // tuck the scores away so the drawer has room
+  /* arriving from home, jump: the pane is already sliding in, and the box score's re-render would cut a smooth scroll short */
+  c.scrollTo({top:Math.max(0,target), behavior: mode==="top" ? "auto" : "smooth"});
 }
 
 /* the drawer under a player row: score against projection, then the box score priced out */
@@ -1292,8 +1342,11 @@ function openLeague(id, expandPid, from){
   track("league_opened", {from: from||"card", league_bucket: bucket(S.leagues.length), week: isCurrent() ? "current" : "past"});
   S.view="detail"; S.league=id; S.tab="mine"; S.open=new Set(); S.anim=true;
   if(expandPid){
-    S.open.add(`${id}:${expandPid}`);
-    if(S.statCache[statKey(expandPid)]===undefined) statsFor(expandPid).then(render);
+    const key=`${id}:${expandPid}`;
+    S.open.add(key);
+    S.reveal={key, mode:"top"};
+    if(S.statCache[statKey(expandPid)]===undefined)
+      statsFor(expandPid).then(()=>{ if(S.open.has(key)) S.reveal={key, mode:"top"}; render(); });
   }
   render();
 }
@@ -1339,10 +1392,10 @@ function pushPlayer(host,p,L,key){
   host.appendChild(rowEl({
     pts:f1(p.pts), zero:!p.pts, delta:S.deltas[p.pid], name:p.name, meta, metaAccent:flag,
     chips:p.empty?null:leagueChips(p.pid,L),
-    clock:gl.clock, clockSub:gl.sub, live:gl.live, on:open, flag,
+    clock:gl.clock, clockSub:gl.sub, live:gl.live, on:open, flag, key,
     onClick:()=>toggle(key,p.empty?null:p.pid)
   }));
-  if(open) host.appendChild(playerPanel(p,L,p.empty?"Nobody assigned":""));
+  if(open){ const pp=playerPanel(p,L,p.empty?"Nobody assigned":""); pp.classList.add("focus"); host.appendChild(pp); }
 }
 
 function clockRows(L, host){
@@ -1365,11 +1418,11 @@ function clockRows(L, host){
         : g.state==="post" ? (g.period>4?"Final, overtime · ":"")+timeStr(g.start) : timeStr(g.start),
       metaAccent:g.state==="in", metaWrap:true,
       clock: g.state==="in"?"LIVE":g.state==="post"?"FINAL":"SOON", live:g.state==="in",
-      clockSub: `${starters} OF YOURS`, on:open,
+      clockSub: `${starters} OF YOURS`, on:open, key,
       onClick:()=>toggle(key)
     }));
     if(open){
-      const w=el("div","exp");
+      const w=el("div","exp focus");
       const box=el("div","stats"); box.style.marginTop="0";
       const bh=el("div","hd"); bh.appendChild(lb(ps.length?"YOUR PLAYERS IN THIS GAME":"NOBODY OF YOURS IN THIS ONE"));
       if(ps.length){ const r=lb("PTS"); r.classList.add("r"); bh.appendChild(r); }
@@ -1400,18 +1453,25 @@ function headToHead(L, A, B, o){
   const idx=[...new Set([...SA.keys(),...SB.keys()])].sort((x,y)=>x-y);
   const scored=[...(A||[]),...(B||[])].some(p=>p.pts);
   const wrap=el("div","mwrap");
-  if(o.header) wrap.appendChild(headerRow(`${(o.nameA||"Team").toUpperCase()} VS ${(o.nameB||"Team").toUpperCase()}`, `${f2(o.ptsA)} – ${f2(o.ptsB)}`));
+  const isOpen=(p,k)=>!!p && !p.empty && S.open.has(`${k}:${p.pid}`);
+  /* inside an opened matchup card with no player open, the whole matchup is the thing in focus */
+  const allFocus = o.focusAll && !idx.some(i=>isOpen(SA.get(i),o.keyA)||isOpen(SB.get(i),o.keyB));
+  if(o.header){
+    const h=headerRow(`${(o.nameA||"Team").toUpperCase()} VS ${(o.nameB||"Team").toUpperCase()}`, `${f2(o.ptsA)} – ${f2(o.ptsB)}`);
+    if(allFocus) h.classList.add("focus");
+    wrap.appendChild(h);
+  }
   for(const i of idx){
     const a=SA.get(i), b=SB.get(i);
     const lead = a && b && scored ? (a.pts>b.pts+0.04 ? "a" : b.pts>a.pts+0.04 ? "b" : "") : "";
-    const r=el("div","mrow");
+    const r=el("div","mrow"+(allFocus||isOpen(a,o.keyA)||isOpen(b,o.keyB)?" focus":""));
     r.appendChild(matchSide(a,L,"a",lead==="a",o.keyA));
     r.appendChild(el("div","mslot",slotShort(L.slots[i]||a?.slot||b?.slot)));
     r.appendChild(matchSide(b,L,"b",lead==="b",o.keyB));
     wrap.appendChild(r);
     for(const [p,k,ctx] of [[a,o.keyA,o.ctxA],[b,o.keyB,o.ctxB]]){
-      if(!p || p.empty || !S.open.has(`${k}:${p.pid}`)) continue;
-      wrap.appendChild(playerPanel(p,L,ctx||""));
+      if(!isOpen(p,k)) continue;
+      const pp=playerPanel(p,L,ctx||""); pp.classList.add("focus"); wrap.appendChild(pp);
     }
   }
   return wrap;
@@ -1433,8 +1493,8 @@ function leagueRows(L, host){
     grid.appendChild(matchCard(L,pr,key,open));
     const [A,B]=pr.teams;
     if(open && B){
-      const w=headToHead(L, A.side, B.side, {header:true, nameA:A.name, nameB:B.name, ptsA:A.pts, ptsB:B.pts,
-        keyA:`${key}a`, keyB:`${key}b`, ctxA:A.mine?"":`${A.name} starting`, ctxB:`${B.name} starting`});
+      const w=headToHead(L, A.side, B.side, {header:true, focusAll:true, nameA:A.name, nameB:B.name, ptsA:A.pts, ptsB:B.pts,
+        keyA:`${key}/a`, keyB:`${key}/b`, ctxA:A.mine?"":`${A.name} starting`, ctxB:`${B.name} starting`});
       w.classList.add("gopen"); grid.appendChild(w);
     }
   }
@@ -1443,13 +1503,10 @@ function leagueRows(L, host){
 }
 function matchCard(L, pr, key, open){
   const [A,B]=pr.teams;
-  const card=el("button","gcard"+(pr.mine?" mine":"")+(open?" on":""));
+  const card=el("button","gcard"+(pr.mine?" mine":"")+(open?" on focus":""));
   card.setAttribute("aria-expanded", open);
-  card.onclick=()=>{
-    if(S.open.has(key)) S.open.delete(key);
-    else{ S.open.add(key); track("matchup_expanded",{mine:pr.mine}); }
-    render();
-  };
+  card.dataset.key=key;
+  card.onclick=()=>toggle(key, null, {name:"matchup_expanded", params:{mine:pr.mine}});
   const d = B ? Math.round((A.pts-B.pts)*100) : 0;
   const team=(t,side)=>{
     const row=el("div","gt");
@@ -1493,6 +1550,7 @@ function matchSide(p, L, side, lead, prefix){
   if(!p) return el("div","mside "+side);
   const key=`${prefix}:${p.pid}`;
   const b=el(p.empty?"div":"button","mside "+side+(S.open.has(key)?" on":""));
+  b.dataset.key=key;
   if(!p.empty) b.onclick=()=>toggle(key,p.pid);
   b.appendChild(el("div","mp n"+(lead?" lead":"")+(p.pts?"":" zero"), p.empty?"—":f1(p.pts)));
   const t=el("div","mt");
@@ -1646,6 +1704,7 @@ function renderDetail(d){
   if(!flowy) list.dataset.k=`list:${L.id}:${S.tab}`;
   const host = S.tab==="clocks" ? list.appendChild(el("div","flow")) : list;
   ({mine:mineRows,clocks:clockRows,them:themRows,league:leagueRows,table:tableRows}[S.tab])(L,host);
+  if(list.querySelector(".focus")) list.classList.add("has-open");
   d.appendChild(list);
 
 }
@@ -1913,6 +1972,7 @@ function render(){
     dp._sync();
   }
   S.tabJump=null;
+  if(S.reveal){ const r=S.reveal; S.reveal=null; requestAnimationFrame(()=>reveal(r)); }
   const strip=v.querySelector(".switch.strip");
   if(strip){
     const on=strip.querySelector("[aria-pressed=true]");
@@ -2016,7 +2076,11 @@ $("#gear").onclick=()=>{ S.modal="settings"; render(); };
 $("#prev").onclick=()=>{ track("week_changed",{direction:"previous"}); setWeek(S.week-1); };
 $("#next").onclick=()=>{ track("week_changed",{direction:"next"}); setWeek(S.week+1); };
 $("#now").onclick=()=>{ track("week_changed",{direction:"this_week"}); setWeek(S.curWeek); };
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&S.modal) closeModal(); });
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Escape") return;
+  if(S.modal) closeModal();
+  else if(S.open.size){ S.open=new Set(); render(); }
+});
 window.matchMedia("(min-width:900px)").addEventListener("change",e=>{ S.wide=e.matches; render(); });
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden && isCurrent()) refresh(false); });
 

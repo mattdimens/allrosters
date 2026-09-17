@@ -219,12 +219,23 @@ body{-webkit-font-smoothing:antialiased}
 .shot .band{padding:8px 14px;background:var(--color-surface);border-top:2px solid var(--color-divider);
   border-bottom:2px solid var(--color-divider);display:flex}
 .shot .band .lb:last-child{margin-left:auto}
-.row{display:flex;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--color-divider)}
+/* player rows as the scoreboard draws them: clock and game progress, who, points */
+.row{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid var(--color-divider)}
 .row:last-child{border-bottom:0}
-.row .p{width:48px;font-size:20px}
+.row .clk{width:58px;flex:none}
+.row .clk>*,.row .mid>.sub,.row .p .dl{display:block}
+.row .mid{display:flex;flex-direction:column;gap:2px}
+.row .ck{font-size:12px;font-weight:800;color:var(--color-accent);white-space:nowrap;font-variant-numeric:tabular-nums}
+.row .ck.pre{color:var(--color-text)}
+.row .track{display:block;height:3px;margin-top:5px;background:var(--color-neutral-300)}
+.row .track b{display:block;height:3px;background:var(--color-accent)}
+.row .mid{flex:1;min-width:0}
+.row .nmr{display:flex;align-items:center;gap:6px}
 .row .nm{font-size:14px;font-weight:600}
 .row .chips{display:inline-flex;gap:3px}
-.row .ck{margin-left:auto;text-align:right;font-size:12px;font-weight:800;color:var(--color-accent)}
+.row .sub{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--color-neutral-700);white-space:nowrap}
+.row .p{margin-left:auto;text-align:right;font-size:20px;line-height:1}
+.row .p .dl{display:block;font-size:9px;font-weight:800;color:var(--color-accent);margin-top:2px}
 .shot figcaption{padding:8px 14px;margin:0;border-top:2px solid var(--color-divider)}
 
 /* sections */
@@ -322,9 +333,11 @@ footer .dis{flex-basis:100%}
               <div class="cgo"><span>Matchup &amp; stats</span><span>→</span></div>
             </div>
           </div>
-          <div class="band"><span class="lb">On the field now</span><span class="lb">3 playing</span></div>
-          <div class="row"><span class="p n">18.4</span><span class="nm">Your QB</span><span class="chips"><span class="key lg0">H</span><span class="key lg1">D</span></span><span class="ck">Q3 6:12</span></div>
-          <div class="row"><span class="p n">11.7</span><span class="nm">Your WR1</span><span class="chips"><span class="key lg1">D</span></span><span class="ck">Q2 0:48</span></div>
+          <div class="band"><span class="lb">On the field now</span><span class="lb">2 playing</span></div>
+          <div class="row"><span class="clk"><span class="ck">Q3 6:12</span><i class="track"><b style="width:65%"></b></i></span><span class="mid"><span class="nmr"><span class="nm">Your QB</span><span class="chips"><span class="key lg0">H</span><span class="key lg1">D</span></span></span><span class="sub">QB · BUF 17–13 MIA</span></span><span class="p n">18.4<span class="dl">+6.0</span></span></div>
+          <div class="row"><span class="clk"><span class="ck">Q2 0:48</span><i class="track"><b style="width:49%"></b></i></span><span class="mid"><span class="nmr"><span class="nm">Your WR1</span><span class="chips"><span class="key lg1">D</span></span></span><span class="sub">WR · SF 10–14 LAR</span></span><span class="p n">11.7</span></div>
+          <div class="band"><span class="lb">Up next · your starters</span><span class="lb">1 game</span></div>
+          <div class="row"><span class="clk"><span class="ck pre">4:25 PM</span><span class="sub">Sun</span></span><span class="mid"><span class="nmr"><span class="nm">DAL at GB</span></span><span class="nmr"><span class="sub">Your RB1</span><span class="chips"><span class="key lg0">H</span></span></span></span></div>
         </div>
         <figcaption class="lb">Two leagues, live, each in its own color. Sample numbers.</figcaption>
       </figure>
@@ -342,8 +355,8 @@ footer .dis{flex-basis:100%}
         <div><p class="lb">03</p><h3>Live win probability</h3><p>A 20-square meter per league shows how likely you are to win right now, and whoever's ahead gets the bigger score.</p></div>
         <div><p class="lb">04</p><h3>Points left on the bench</h3><p>How many more points your best possible lineup would have scored, and exactly which swaps would have done it.</p></div>
         <div><p class="lb">05</p><h3>See which league every player is in</h3><p>A colored letter beside a player marks each league where they're yours. An outlined one flags a player starting against you somewhere else.</p></div>
-        <div><p class="lb">06</p><h3>On the field now, and up next</h3><p>Every starter of yours in a live game, with the clock. Between games, the next kickoffs that involve your starters, by day and time.</p></div>
-        <div><p class="lb">07</p><h3>Scoring broken down</h3><p>Open any player to see each stat and what it was worth, priced with that league's own scoring settings, against their projection.</p></div>
+        <div><p class="lb">06</p><h3>On the field now, and up next</h3><p>Every starter of yours in a live game in one list, with the clock and game score, followed by the next kickoffs that involve your starters.</p></div>
+        <div><p class="lb">07</p><h3>Scoring broken down</h3><p>Tap any player and they come forward with each stat and what it was worth, priced with that league's own scoring settings, against their projection.</p></div>
         <div><p class="lb">08</p><h3>Lineup alerts</h3><p>Injured, inactive and bye-week starters and empty slots, flagged before kickoff, with the bench players who could replace them.</p></div>
       </div>
     </div>
