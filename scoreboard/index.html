@@ -406,8 +406,16 @@ button.row:hover{background:var(--color-accent-100)}
 .total{display:flex;align-items:baseline;gap:10px;padding:7px 0 0;border-top:2px solid var(--color-text)}
 .total .k{font-size:11px;font-weight:800;letter-spacing:.1em}
 .total .v{margin-left:auto;font-size:20px;width:58px;text-align:right;font-variant-numeric:tabular-nums;font-weight:800}
-.expfoot{margin-top:11px;padding-top:9px;border-top:1px solid var(--color-divider);display:flex;gap:12px}
+.expfoot{margin-top:11px;padding-top:9px;border-top:1px solid var(--color-divider);display:flex;flex-wrap:wrap;gap:12px}
 .expfoot > div{flex:1;min-width:0}
+.expfoot > .full{flex-basis:100%}
+/* rostered: a line per league, name on the left, status on the right */
+.roster{margin-top:4px}
+.rl{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--color-divider)}
+.rl:first-child{border-top:0;padding-top:2px}
+.rl .n{flex:1;min-width:0;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rl .lb{flex:none}
+.rl.vs .lb{color:var(--color-accent-700);font-weight:800}
 .expfoot .v{font-size:13px;font-weight:600;letter-spacing:.02em}
 
 /* ---------- modals ---------- */
@@ -878,10 +886,25 @@ function leagueChips(pid, except, startersOnly){
   }
   return box;
 }
-function rosteredText(pid, fallback){
-  const e=S.own[pid]||[];
-  if(!e.length) return fallback||"";
-  return e.map(x=> x.mine ? `${x.L.name} ${x.starter?"starting":"bench"}` : `against you in ${x.L.name}`).join(" · ");
+/* Where a player sits across your leagues, one league per line: its chip, its name, and a short status.
+   The league you're looking at comes first. `team` names the fantasy team when the player belongs to
+   someone other than you or your opponent (the league tab), `note` covers an empty slot. */
+function rosteredList(p, L, o={}){
+  const box=el("div","roster");
+  const own=[...(S.own[p.pid]||[])].sort((a,b)=>(b.L===L)-(a.L===L));
+  const lines=[];
+  if(o.team && !own.some(x=>x.L===L)) lines.push({L, name:o.team, status:p.starter?"STARTING":"BENCH"});
+  for(const x of own) lines.push({L:x.L, name:x.L.name, vs:!x.mine,
+    status: x.mine ? (x.starter?"YOUR STARTER":"YOUR BENCH") : (x.starter?"AGAINST YOU":"OPPONENT'S BENCH")});
+  if(!lines.length){ box.appendChild(el("div","v",o.note||"Not on your team or your opponent's")); return box; }
+  for(const ln of lines){
+    const r=el("div","rl"+(ln.vs && ln.status==="AGAINST YOU"?" vs":""));
+    r.appendChild(chip(ln.L, ln.vs));
+    r.appendChild(el("span","n",ln.name));
+    r.appendChild(lb(ln.status));
+    box.appendChild(r);
+  }
+  return box;
 }
 
 /* ============================================================
@@ -1064,7 +1087,7 @@ function playerPanel(p, L, ctx){
 
   const foot=el("div","expfoot");
   const g=el("div"); g.appendChild(lb("GAME")); g.appendChild(el("div","v n",gameLabel(p.team).txt)); foot.appendChild(g);
-  const r=el("div"); r.appendChild(lb("ROSTERED")); r.appendChild(el("div","v",rosteredText(p.pid,ctx)||"—")); foot.appendChild(r);
+  const r=el("div","full"); r.appendChild(lb("ROSTERED")); r.appendChild(rosteredList(p,L,ctx||{})); foot.appendChild(r);
   w.appendChild(foot);
   return w;
 }
@@ -1400,7 +1423,7 @@ function pushPlayer(host,p,L,key){
     clock:gl.clock, clockSub:gl.sub, live:gl.live, on:open, flag, key,
     onClick:()=>toggle(key,p.empty?null:p.pid)
   }));
-  if(open){ const pp=playerPanel(p,L,p.empty?"Nobody assigned":""); pp.classList.add("focus"); host.appendChild(pp); }
+  if(open){ const pp=playerPanel(p,L,p.empty?{note:"Nobody assigned"}:{}); pp.classList.add("focus"); host.appendChild(pp); }
 }
 
 function clockRows(L, host){
@@ -1476,7 +1499,7 @@ function headToHead(L, A, B, o){
     wrap.appendChild(r);
     for(const [p,k,ctx] of [[a,o.keyA,o.ctxA],[b,o.keyB,o.ctxB]]){
       if(!isOpen(p,k)) continue;
-      const pp=playerPanel(p,L,ctx||""); pp.classList.add("focus"); wrap.appendChild(pp);
+      const pp=playerPanel(p,L,ctx||{}); pp.classList.add("focus"); wrap.appendChild(pp);
     }
   }
   return wrap;
@@ -1484,7 +1507,7 @@ function headToHead(L, A, B, o){
 function themRows(L, host){
   if(!(L.them||[]).length){ host.appendChild(el("div","note","No opponent this week.")); return; }
   host.appendChild(headToHead(L, L.mine, L.them, {header:true, nameA:L.myName||"You", nameB:L.oppName||"Opponent",
-    ptsA:L.myPts, ptsB:L.oppPts, keyA:`${L.id}:M`, keyB:`${L.id}:T`, ctxA:"", ctxB:`${L.oppName||"Opponent"} starting`}));
+    ptsA:L.myPts, ptsB:L.oppPts, keyA:`${L.id}:M`, keyB:`${L.id}:T`, ctxA:{}, ctxB:{team:L.oppName||"Opponent"}}));
 }
 
 /* the week across the league: a card per matchup, yours first; tap one to open its head to head */
@@ -1499,7 +1522,7 @@ function leagueRows(L, host){
     const [A,B]=pr.teams;
     if(open && B){
       const w=headToHead(L, A.side, B.side, {header:true, focusAll:true, nameA:A.name, nameB:B.name, ptsA:A.pts, ptsB:B.pts,
-        keyA:`${key}/a`, keyB:`${key}/b`, ctxA:A.mine?"":`${A.name} starting`, ctxB:`${B.name} starting`});
+        keyA:`${key}/a`, keyB:`${key}/b`, ctxA:A.mine?{}:{team:A.name}, ctxB:{team:B.name}});
       w.classList.add("gopen"); grid.appendChild(w);
     }
   }
