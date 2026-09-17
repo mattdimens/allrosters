@@ -77,6 +77,18 @@ nothing. For those cases, Settings shows each visitor a personal
 button to switch to a different account. Modernist is a
 light-only system; the dark theme redefines its tokens in `index.html`.
 
+## Add to home screen
+
+On phones and tablets, from the second visit with leagues loaded, a strip above the home
+footer suggests adding AllRosters to the home screen. Android Chrome and Edge get the real
+install prompt (`beforeinstallprompt`); iPhone and iPad get illustrated steps, since Safari
+has no API. "×" hides it for three weeks, and three dismissals end it. Settings always has
+the option. Visits and dismissals live in `sb_install`.
+
+An iPhone home-screen app keeps its own storage, separate from Safari's, so while the steps
+are open the address carries `?user=`, which the new app adopts on first launch. If it opens
+without one, the welcome screen asks for the username "once more" instead of starting cold.
+
 ## Analytics
 
 Google Analytics 4 (`G-Q6NDEXXP11`) is loaded by `assets/analytics.js`, which every page
@@ -87,7 +99,9 @@ stripped from page addresses, and no event carries a username, league or player 
 
 Pages call `arTrack(name, params)`. Events: `username_submitted` (found, source),
 `leagues_loaded` (league_bucket, leagues, hidden), `league_opened` (from, league_bucket, week),
-`tab_viewed`, `week_changed`, `player_expanded`, `game_expanded`, `leagues_hidden`, and on the
+`tab_viewed`, `week_changed`, `player_expanded`, `game_expanded`, `leagues_hidden`,
+`install_banner_shown`, `install_banner_dismissed`, `install_steps_opened`, `install_prompt_opened`,
+`install_prompt_result`, `app_installed`, and on the
 homepage `username_form_submitted` and `open_scoreboard_click` (location).
 
 To watch events locally without sending anything, run
