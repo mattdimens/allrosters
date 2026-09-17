@@ -499,6 +499,8 @@ const S = {
   wide: window.matchMedia("(min-width:900px)").matches,
   prevPts:{}, deltas:{}, statCache:{}, err:null, booted:false, updated:null, anim:false,
   demo: new URLSearchParams(location.search).get("demo")==="live",
+  /* ?demo=live&leagues=N swaps your leagues for N sample ones (1–12) */
+  demoN: new URLSearchParams(location.search).get("demo")==="live" ? Math.min(12, Math.max(0, parseInt(new URLSearchParams(location.search).get("leagues"),10)||0)) : 0,
 };
 
 /* ---------- helpers ---------- */
@@ -658,7 +660,7 @@ async function loadPlayers(needed){
       num:p.number||"", age:p.age||"", exp:p.years_exp
     };
   }
-  S.players = map; store.set("sb_players",{at:Date.now(),map});
+  S.players = map; if(!S.demo) store.set("sb_players",{at:Date.now(),map});
 }
 
 async function loadProjections(){
@@ -700,6 +702,9 @@ async function loadLeague(L){
     getJSON(`${SLEEPER}/v1/league/${L.id}/users`),
     getJSON(`${SLEEPER}/v1/league/${L.id}/matchups/${S.week}`).catch(()=>[])
   ]);
+  hydrateLeague(L, rosters, users, matchups);
+}
+function hydrateLeague(L, rosters, users, matchups){
   L.userById = {}; for(const u of users) L.userById[u.user_id] = u;
   L.rosters  = rosters; L.matchups = matchups; L.error = null;
   L.teamName = r => { const u=r&&L.userById[r.owner_id]; return u?.metadata?.team_name || u?.display_name || "Team"; };
@@ -1934,8 +1939,8 @@ function syncHeader(){
   $("#now").title = "Back to this week";
   $("#stamp").textContent = past ? "" : S.updated ? "UPDATED "+hhmm(S.updated) : "";
   $("#btn").title = S.updated ? `Refresh · updated ${hhmm(S.updated)}, and every ${S.cfg.refresh}s while this week is on` : "Refresh";
-  $("#prev").disabled = !S.curWeek || S.week<=1;
-  $("#next").disabled = !S.curWeek || S.week>=S.curWeek;
+  $("#prev").disabled = !!S.demoN || !S.curWeek || S.week<=1;
+  $("#next").disabled = !!S.demoN || !S.curWeek || S.week>=S.curWeek;
   const n = isCurrent() ? S.games.filter(g=>g.state==="in").length : 0;
   $("#live").hidden = !n;
   $("#liven").textContent = `${n} LIVE`;
@@ -1999,19 +2004,21 @@ function snapshotPts(){
    DEMO — /scoreboard?demo=live
    A Sunday afternoon on your real leagues, for checking the live layout on any
    device or taking screenshots. The earliest game is final, Sunday 1pm games are
-   in the second half, late games in the first half, night games not started.
+   in the fourth quarter, late games in the second or third, night games not started.
    Clocks and points are made up but deterministic, so refreshes agree, and they
    run two game minutes per real minute. Nothing is saved or tracked.
    ============================================================ */
+const demoHash = k => { let h=2166136261; for(const c of String(k)){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); } return ((h>>>0)%10000)/10000; };
 function simulateLive(){
   if(!S.demo || !isCurrent() || !S.games.length) return;
   S.demoStart = S.demoStart || Date.now();
   const adv = (Date.now()-S.demoStart)/60000*2;
-  const hash = k => { let h=2166136261; for(const c of String(k)){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); } return ((h>>>0)%10000)/10000; };
+  const hash = demoHash;
   const games=[...S.games].sort((a,b)=>a.start-b.start), first=games[0].start;
   for(const g of games){
     const day=g.start.getDay(), hr=g.start.getHours()+g.start.getMinutes()/60;
-    let played = g.start-first < 3600e3 ? 60 : day===0 && hr<14 ? 32+hash(g.id+"q")*24 : day===0 && hr<17 ? 3+hash(g.id+"q")*24 : -1;
+    /* about 5:30pm ET on a Sunday: early games in the fourth quarter, late games in the second or third */
+    let played = g.start-first < 3600e3 ? 60 : day===0 && hr<14 ? 46+hash(g.id+"q")*11 : day===0 && hr<17 ? 20+hash(g.id+"q")*16 : -1;
     if(played<0){ Object.assign(g,{state:"pre",period:0,clock:"15:00",homeScore:0,awayScore:0,poss:"",dnd:""}); continue; }
     played=Math.min(60, played+adv);
     const f=played/60;
@@ -2024,7 +2031,7 @@ function simulateLive(){
   }
   S.byTeam={}; for(const g of S.games){ S.byTeam[g.home]=g; S.byTeam[g.away]=g; }
   const ptsFor=(p,L)=>{ const g=S.byTeam[p.team]; if(p.empty||!g||g.state==="pre") return 0;
-    const f=g.state==="post"?1:1-fractionLeft(g); return Math.round(projFor(p,L)*f*(0.35+hash(p.pid+"x")*1.4)*10)/10; };
+    const f=g.state==="post"?1:1-fractionLeft(g); return Math.round(projFor(p,L)*f*(0.6+hash(p.pid+"x")*0.85)*10)/10; };   // 60–145% of pace: real swings, not absurd ones
   for(const L of S.leagues){
     if(L.error) continue;
     const sides=new Set([L.mine,L.them,...(L.pairs||[]).flatMap(pr=>pr.teams.map(t=>t.side))]);
@@ -2035,6 +2042,100 @@ function simulateLive(){
   }
 }
 
+/* ============================================================
+   SAMPLE LEAGUES — /scoreboard?demo=live&leagues=N (or /demo/N)
+   For showing what a 4-, 7- or 10-league player sees without their username.
+   Everything real that can be: this week's NFL games, players and projections.
+   Everything else is invented: league names and formats, team and user names,
+   and rosters from a seeded draft, so a given N always looks the same. The demo
+   user keeps drafting the same core of favorites, so players overlap across
+   leagues the way they do for people in many leagues.
+   ============================================================ */
+const DEMO_LEAGUES = [
+  {name:"Sunday Funday",      teams:12, rec:1,   slots:["QB","RB","RB","WR","WR","TE","FLEX","K","DEF"], me:"Touchback Tacos"},
+  {name:"Dynasty Degens",     teams:12, rec:0.5, slots:["QB","RB","RB","WR","WR","WR","TE","FLEX","SUPER_FLEX"], me:"Victory Formation"},
+  {name:"Work League",        teams:10, rec:0,   slots:["QB","RB","RB","WR","WR","TE","FLEX","K","DEF"], me:"Clock Killers"},
+  {name:"Family Bowl",        teams:10, rec:1,   slots:["QB","RB","RB","WR","WR","TE","FLEX","FLEX","K","DEF"], me:"Garbage Time Legends"},
+  {name:"Best Ball Mania",    teams:12, rec:1,   slots:["QB","RB","RB","WR","WR","WR","TE","FLEX"], me:"Trick Play Troupe"},
+  {name:"Superflex Society",  teams:12, rec:0.5, slots:["QB","RB","RB","WR","WR","TE","FLEX","SUPER_FLEX","DEF"], me:"Double Coverage"},
+  {name:"Guillotine",         teams:12, rec:1,   slots:["QB","RB","RB","WR","WR","TE","FLEX","K","DEF"], me:"Two-Minute Drill"},
+  {name:"College Buddies",    teams:10, rec:0.5, slots:["QB","RB","RB","WR","WR","TE","WRRB_FLEX","K","DEF"], me:"End Zone Dancers"},
+  {name:"High Stakes",        teams:12, rec:1,   slots:["QB","RB","RB","WR","WR","WR","TE","FLEX","FLEX","DEF"], me:"Goal Line Stand"},
+  {name:"Commish Cup",        teams:12, rec:0,   slots:["QB","RB","RB","WR","WR","TE","REC_FLEX","K","DEF"], me:"Fourth Quarter Comeback"},
+  {name:"Neighborhood League",teams:10, rec:1,   slots:["QB","RB","RB","WR","WR","TE","FLEX","K","DEF"], me:"Hail Mary Heroes"},
+  {name:"Group Chat",         teams:12, rec:0.5, slots:["QB","RB","RB","WR","WR","TE","FLEX","FLEX","DEF"], me:"Blindside Blockers"},
+];
+const DEMO_TEAMS = ["Sunday Scaries","Red Zone Regulars","Pylon Pushers","Blitz Brigade","Two-Point Tries","The Audibles",
+  "Snap Count","Fair Catch Club","Onside Kicks","Pick Sixers","Screen Pass Society","Hurry-Up Offense","Nickel Package",
+  "Play Action Heroes","Punt Formation","Waiver Wire Wizards","Taco Tuesday","Gridiron Goats","The Replacements","Bench Mob"];
+const DEMO_SCORING = {pass_yd:0.04, pass_td:4, pass_int:-1, pass_2pt:2, rush_yd:0.1, rush_td:6, rush_2pt:2, rec_yd:0.1, rec_td:6,
+  rec_2pt:2, fum_lost:-2, fgm:3, fgm_50p:2, xpm:1, fgmiss:-1, xpmiss:-1, sack:1, int:2, fum_rec:2, def_td:6, safe:2, blk_kick:2};
+const seeded = seed => () => { seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; };
+
+async function buildDemoLeagues(n){
+  /* the pool: everyone with a projection this week, best first, by position */
+  const ids=Object.keys(S.proj).filter(id=>(S.proj[id].ppr||0)>0.5);
+  await loadPlayers(ids);
+  const pool={QB:[],RB:[],WR:[],TE:[],K:[],DEF:[]};
+  for(const id of ids){ const p=S.players[id]; if(p && pool[p.pos] && p.team) pool[p.pos].push(id); }
+  const cap={QB:36,RB:84,WR:110,TE:36,K:30,DEF:32};
+  for(const k in pool) pool[k]=pool[k].sort((a,b)=>(S.proj[b].ppr||0)-(S.proj[a].ppr||0)).slice(0,cap[k]);
+
+  /* the demo user's core: good players spread across kickoff windows, so some of their points are
+     banked, some are on the field and some are still to come, like a real Sunday */
+  const kick=id=>S.byTeam[S.players[id]?.team]?.start?.getTime() ?? Infinity;
+  const spread=(ids,k)=>{ const byTime=[...ids].sort((a,b)=>kick(a)-kick(b)); return [...Array(k)].map((_,j)=>byTime[Math.floor((j+0.5)*byTime.length/k)]); };
+  /* a player scores the same in every league, so a core that all has an off day sinks every league at
+     once; for the showcase the core is players having at least a normal day */
+  const onPace=id=>demoHash(id+"x")>=0.3;
+  const favorites=[["QB",12,2],["RB",30,5],["WR",36,6],["TE",12,2]].flatMap(([pos,top,k])=>spread(pool[pos].slice(0,top).filter(onPace),k));
+
+  const configs=DEMO_LEAGUES.slice(0,n), keys=leagueKeys(configs.map(c=>c.name));
+  const played=Math.max(0,(S.curWeek||1)-1);
+  S.userId="demo";
+  S.leagues=configs.map((cfg,i)=>{
+    const rng=seeded(1000+i*97), T=cfg.teams, taken=new Set();
+    const pick=(t,elig)=>{
+      const cands=elig.flatMap(pos=>pool[pos].filter(id=>!taken.has(id))).sort((a,b)=>(S.proj[b].ppr||0)-(S.proj[a].ppr||0));
+      /* the demo user reaches for a favorite only when it's close to the best on the board, so their
+         teams overlap across leagues without being weaker than everyone else's */
+      if(t===0 && cands.length){
+        const floor=(S.proj[cands[0]].ppr||0)*0.85;
+        const fav=favorites.find(id=>!taken.has(id) && elig.includes(S.players[id].pos) && (S.proj[id].ppr||0)>=floor);
+        if(fav){ taken.add(fav); return fav; }
+      }
+      const id=cands[Math.min(cands.length-1, Math.floor(rng()*rng()*7))];
+      if(id) taken.add(id); return id||"0";
+    };
+    const teams=[...Array(T)].map(()=>({starters:[],bench:[]}));
+    const order=[...Array(T).keys()];
+    cfg.slots.forEach((slot,si)=>{ for(const t of (si%2?[...order].reverse():order)) teams[t].starters[si]=pick(t, ELIG[slot]||[slot]); });
+    [["RB"],["WR"],["RB","WR"],["QB"],["TE"],["RB","WR","TE"]].forEach((elig,ri)=>{
+      for(const t of (ri%2?order:[...order].reverse())) teams[t].bench.push(pick(t,elig));
+    });
+
+    const names=[...DEMO_TEAMS].sort(()=>rng()-0.5);
+    const users=teams.map((_,t)=> t===0
+      ? {user_id:"demo", display_name:"demo_player", metadata:{team_name:cfg.me}}
+      : {user_id:`u${i}_${t}`, display_name:names[t].toLowerCase().replace(/[^a-z]/g,"")+Math.floor(rng()*90+10), metadata:{team_name:names[t]}});
+    const rosters=teams.map((tm,t)=>{
+      const wins=[...Array(played)].filter(()=>rng()<0.5).length;
+      const fpts=Math.round([...Array(played)].reduce(a=>a+85+rng()*65,0)*100)/100;
+      return {roster_id:t+1, owner_id:users[t].user_id, starters:tm.starters, players:[...tm.starters,...tm.bench],
+              settings:{wins, losses:played-wins, fpts:Math.floor(fpts), fpts_decimal:Math.round((fpts%1)*100)}};
+    });
+    const seatOrder=[0,...order.slice(1).sort(()=>rng()-0.5)];
+    const matchups=rosters.map(r=>({roster_id:r.roster_id, matchup_id:Math.floor(seatOrder.indexOf(r.roster_id-1)/2)+1,
+      points:0, starters:r.starters, players:r.players, players_points:{}}));
+
+    const L={id:`demo-${i+1}`, name:cfg.name, key:keys[i], ci:i%8, avatar:null, rec:cfg.rec,
+             scoring:{...DEMO_SCORING, rec:cfg.rec}, slots:cfg.slots};
+    hydrateLeague(L, rosters, users, matchups);
+    return L;
+  });
+  S.allLeagues=S.leagues.map(L=>({id:L.id, name:L.name}));
+}
+
 let again=false;
 async function refresh(first){
   if(!S.cfg.username){ render(); return; }
@@ -2042,12 +2143,18 @@ async function refresh(first){
   busy=true; $("#btn").disabled=true; $("#btn").classList.add("spin");
   try{
     await loadState();
-    if(first||!S.leagues.length) await loadShell();
-    await Promise.all([loadGames(), loadProjections()]);
-    const raw=await Promise.all(S.leagues.map(L=>getJSON(`${SLEEPER}/v1/league/${L.id}/rosters`)));
-    const need=new Set(); raw.flat().forEach(r=>(r.players||[]).forEach(p=>need.add(p)));
-    await loadPlayers([...need]);
-    await Promise.all(S.leagues.map(loadLeague));
+    if(S.demoN){
+      S.week=S.curWeek;
+      await Promise.all([loadGames(), loadProjections()]);
+      if(!S.leagues.length) await buildDemoLeagues(S.demoN);
+    }else{
+      if(first||!S.leagues.length) await loadShell();
+      await Promise.all([loadGames(), loadProjections()]);
+      const raw=await Promise.all(S.leagues.map(L=>getJSON(`${SLEEPER}/v1/league/${L.id}/rosters`)));
+      const need=new Set(); raw.flat().forEach(r=>(r.players||[]).forEach(p=>need.add(p)));
+      await loadPlayers([...need]);
+      await Promise.all(S.leagues.map(loadLeague));
+    }
     simulateLive();
     const firstLook = S.demo && !Object.keys(S.prevPts).length;
     snapshotPts();
@@ -2089,8 +2196,14 @@ loadCfg();
    then the address goes back to plain /scoreboard and the saved username takes over */
 const fromLink=(new URLSearchParams(location.search).get("user")||"").trim();
 if(fromLink){ const u=new URL(location.href); u.searchParams.delete("user"); history.replaceState(null,"",u.pathname+u.search+u.hash); }
-if(S.demo) $("#demobar").hidden=false;
-if(fromLink && fromLink.toLowerCase()!==S.cfg.username.toLowerCase()) startWith(fromLink, "link");
+if(S.demo){
+  $("#demobar").hidden=false;
+  if(S.demoN){
+    S.cfg.username="demo";                       // in memory only; a demo never saves
+    $("#demobar span").innerHTML=`<b>DEMO</b> · ${S.demoN} sample league${S.demoN>1?"s":""}, simulated live scores`;
+  }
+}
+if(fromLink && !S.demoN && fromLink.toLowerCase()!==S.cfg.username.toLowerCase()) startWith(fromLink, "link");
 else refresh(true);
 restartTimer();
 </script>

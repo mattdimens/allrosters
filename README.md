@@ -81,11 +81,20 @@ light-only system; the dark theme redefines its tokens in `index.html`.
 
 `/scoreboard?demo=live` shows a Sunday afternoon on the saved (or `?user=`) leagues, so the
 live layout can be checked on any device or captured for screenshots. The earliest game of
-the week is final, Sunday 1pm games are in the second half, late games in the first half, and
+the week is final, Sunday 1pm games are in the fourth quarter, late games in the second or third, and
 night games haven't started. Clocks and points are made up but deterministic (projections times
 the share of each game played), and advance two game minutes per real minute. Only the current
 week is simulated. A demo saves nothing, sends no analytics, and hides the add-to-home-screen
 strip; a black DEMO bar under the header links back to the real scoreboard.
+
+Sample leagues: `/scoreboard?demo=live&leagues=N` (short links `/demo/4`, `/demo/7`, `/demo/10`;
+any N from 1 to 12) replaces the user's leagues with N invented ones, no username needed. The
+NFL games, players and projections are this week's real ones. League names and formats (PPR,
+half and standard; superflex, extra flex and WR/RB flex; 10 and 12 teams), team and user names,
+and rosters from a seeded snake draft are made up, so a given N looks the same every time. The demo
+user drafts a core of favorites spread across kickoff windows, taking one only when it's within
+15% of the best player available, so rosters overlap across leagues without being weaker than
+opponents'. Week arrows are off. Past four leagues the home screen shows league rows.
 
 ## Add to home screen
 
