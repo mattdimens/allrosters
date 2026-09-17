@@ -81,6 +81,18 @@ nothing. For those cases, Settings shows each visitor a personal
 button to switch to a different account. Modernist is a
 light-only system; the dark theme redefines its tokens in `index.html`.
 
+## Weekly awards
+
+When every game of the viewed week is final, the home screen swaps "every game is final" for
+that week's awards, a block per league (closed by default past three leagues, with what you
+won in the header), and the League tab shows them above the matchups. The same eight every
+week: high score, MVP (top starter), blowout, nail-biter, heartbreaker (highest score in a
+loss), lucky win (lowest score in a win), bench blunder (most left on the bench against the
+best legal lineup) and rock bottom. They use only league-wide final results (team points,
+matchups, player points), never projections or your point of view, and ties go to the lower
+roster id, so everyone in a league sees the same winners. NFL stat corrections can still
+move scores until midweek, which the section says.
+
 ## Demo mode
 
 `/scoreboard?demo=live` shows a Sunday afternoon on the saved (or `?user=`) leagues, so the

@@ -98,6 +98,7 @@ try{
         "Your starters currently on the field, and upcoming kickoffs for your starters",
         "Point-by-point scoring breakdowns using each league's settings",
         "League standings",
+        "Weekly league awards decided by final scores",
         "Compact view and league filtering for players in many leagues",
         "Lineup alerts for injured, bye-week and empty starters"
       ]
@@ -118,6 +119,8 @@ try{
           "acceptedAnswer": { "@type": "Answer", "text": "Yes. With up to four leagues each one gets a card; past four, every league becomes a compact row with its score, win odds and status, under a count of how many you're up, down or tied in. Each league keeps its own color and short code, and settings let you hide mock drafts, best ball or leagues you've left so they aren't loaded." } },
         { "@type": "Question", "name": "Can I add AllRosters to my phone's home screen?",
           "acceptedAnswer": { "@type": "Answer", "text": "Yes. On iPhone or iPad, open the scoreboard in Safari, tap the Share button, then Add to Home Screen. On Android, Chrome offers to install it, or use the browser menu's Add to Home screen. It then opens full screen from its own icon, straight to your leagues, and the scoreboard shows these steps too." } },
+        { "@type": "Question", "name": "How do the weekly league awards work?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Once every game of the week is final, AllRosters hands out the same eight awards in each of your leagues: high score, MVP (the top-scoring starter), blowout, nail-biter, heartbreaker (the highest score in a loss), lucky win (the lowest score in a win), bench blunder (the most points left on a bench) and rock bottom. They come only from the league's final scores, so everyone in the league sees the same winners. NFL stat corrections can still change them until midweek." } },
         { "@type": "Question", "name": "Can AllRosters change my lineup or make waiver claims?",
           "acceptedAnswer": { "@type": "Answer", "text": "No. Sleeper's public API is read-only, so AllRosters can only show your leagues. Lineup changes, trades and waivers still happen in the Sleeper app." } },
         { "@type": "Question", "name": "Does it work with ESPN, Yahoo or NFL.com leagues?",
@@ -358,6 +361,7 @@ footer .dis{flex-basis:100%}
         <div><p class="lb">06</p><h3>On the field now, and up next</h3><p>Every starter of yours in a live game in one list, with the clock and game score, followed by the next kickoffs that involve your starters.</p></div>
         <div><p class="lb">07</p><h3>Scoring broken down</h3><p>Tap any player and they come forward with each stat and what it was worth, priced with that league's own scoring settings, against their projection.</p></div>
         <div><p class="lb">08</p><h3>Lineup alerts</h3><p>Injured, inactive and bye-week starters and empty slots, flagged before kickoff, with the bench players who could replace them.</p></div>
+        <div><p class="lb">09</p><h3>Weekly league awards</h3><p>When the week is done, every league gets its awards: high score, MVP, blowout, nail-biter, heartbreaker, lucky win, bench blunder and rock bottom. Same results for everyone in the league.</p></div>
       </div>
     </div>
   </section>
@@ -409,6 +413,7 @@ footer .dis{flex-basis:100%}
         <details><summary>What if the same player is on my roster in more than one league?</summary><p>Each league gets its own color and letter. Beside a player's name, a solid letter marks every other league where that player is yours, and an outlined letter marks a league where they're starting against you. On the home screen, upcoming kickoffs list your starters with the same letters.</p></details>
         <details><summary>Does AllRosters work if I play in 10 or more leagues?</summary><p>Yes. With up to four leagues each one gets a card; past four, every league becomes a compact row with its score, win odds and status, under a count of how many you're up, down or tied in. Each league keeps its own color and short code, and settings let you hide mock drafts, best ball or leagues you've left so they aren't loaded.</p></details>
         <details><summary>Can I add AllRosters to my phone's home screen?</summary><p>Yes. On iPhone or iPad, open the scoreboard in Safari, tap the Share button, then Add to Home Screen. On Android, Chrome offers to install it, or use the browser menu's Add to Home screen. It then opens full screen from its own icon, straight to your leagues, and the scoreboard shows these steps too.</p></details>
+        <details><summary>How do the weekly league awards work?</summary><p>Once every game of the week is final, AllRosters hands out the same eight awards in each of your leagues: high score, MVP (the top-scoring starter), blowout, nail-biter, heartbreaker (the highest score in a loss), lucky win (the lowest score in a win), bench blunder (the most points left on a bench) and rock bottom. They come only from the league's final scores, so everyone in the league sees the same winners. NFL stat corrections can still change them until midweek.</p></details>
         <details><summary>Can AllRosters change my lineup or make waiver claims?</summary><p>No. Sleeper's public API is read-only, so AllRosters can only show your leagues. Lineup changes, trades and waivers still happen in the Sleeper app.</p></details>
         <details><summary>Does it work with ESPN, Yahoo or NFL.com leagues?</summary><p>Not today. AllRosters works with Sleeper NFL leagues only.</p></details>
         <details><summary>How is win probability calculated?</summary><p>For each starter still to play, AllRosters takes their projection and scales it by the share of their game left. Adding that to the points already scored gives a projected final for both teams. The uncertainty of each remaining starter is combined, and the chance your projected margin stays above zero on a normal curve is your win probability. Injured and inactive players count for nothing.</p></details>
