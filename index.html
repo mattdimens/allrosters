@@ -95,6 +95,7 @@ try{
         "Your starters currently on the field, and upcoming kickoffs for your starters",
         "Point-by-point scoring breakdowns using each league's settings",
         "League standings",
+        "Compact view and league filtering for players in many leagues",
         "Lineup alerts for injured, bye-week and empty starters"
       ]
     },
@@ -110,6 +111,8 @@ try{
           "acceptedAnswer": { "@type": "Answer", "text": "Yes. Your username is saved in the browser you used, so the scoreboard opens straight to your leagues. Settings also gives you a personal link that brings them back on any other phone or computer, or if your browser's data gets cleared." } },
         { "@type": "Question", "name": "What if the same player is on my roster in more than one league?",
           "acceptedAnswer": { "@type": "Answer", "text": "Each league gets its own color and letter. Beside a player's name, a solid letter marks every other league where that player is yours, and an outlined letter marks a league where they're starting against you. On the home screen, upcoming kickoffs list your starters with the same letters." } },
+        { "@type": "Question", "name": "Does AllRosters work if I play in 10 or more leagues?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. With up to four leagues each one gets a card; past four, every league becomes a compact row with its score, win odds and status, under a count of how many you're up, down or tied in. Each league keeps its own color and short code, and settings let you hide mock drafts, best ball or leagues you've left so they aren't loaded." } },
         { "@type": "Question", "name": "Can AllRosters change my lineup or make waiver claims?",
           "acceptedAnswer": { "@type": "Answer", "text": "No. Sleeper's public API is read-only, so AllRosters can only show your leagues. Lineup changes, trades and waivers still happen in the Sleeper app." } },
         { "@type": "Question", "name": "Does it work with ESPN, Yahoo or NFL.com leagues?",
@@ -341,7 +344,7 @@ footer .dis{flex-basis:100%}
       <ol class="steps grid">
         <li><h3>Open AllRosters</h3><p>It runs in any browser on your phone or computer. Nothing to install, though you can add it to your home screen.</p></li>
         <li><h3>Enter your Sleeper username</h3><p>Type the username from your Sleeper profile. AllRosters finds every NFL league you're in this season and remembers you in that browser.</p></li>
-        <li><h3>Leave it open on game day</h3><p>Scores refresh every 45 seconds, and a live tag in the header counts the games in progress. Step back through past weeks with the arrows beside it.</p></li>
+        <li><h3>Leave it open on game day</h3><p>Scores refresh every 45 seconds, and a live tag in the header counts the games in progress. The week control beside it steps back through past weeks.</p></li>
       </ol>
     </div>
   </section>
@@ -379,6 +382,7 @@ footer .dis{flex-basis:100%}
         <details><summary>Do I have to log in to Sleeper or share my password?</summary><p>No. AllRosters only needs your public Sleeper username. It reads the same public data anyone can see about a Sleeper league, and never asks for a password.</p></details>
         <details><summary>Will it remember my leagues next time?</summary><p>Yes. Your username is saved in the browser you used, so the scoreboard opens straight to your leagues. Settings also gives you a personal link that brings them back on any other phone or computer, or if your browser's data gets cleared.</p></details>
         <details><summary>What if the same player is on my roster in more than one league?</summary><p>Each league gets its own color and letter. Beside a player's name, a solid letter marks every other league where that player is yours, and an outlined letter marks a league where they're starting against you. On the home screen, upcoming kickoffs list your starters with the same letters.</p></details>
+        <details><summary>Does AllRosters work if I play in 10 or more leagues?</summary><p>Yes. With up to four leagues each one gets a card; past four, every league becomes a compact row with its score, win odds and status, under a count of how many you're up, down or tied in. Each league keeps its own color and short code, and settings let you hide mock drafts, best ball or leagues you've left so they aren't loaded.</p></details>
         <details><summary>Can AllRosters change my lineup or make waiver claims?</summary><p>No. Sleeper's public API is read-only, so AllRosters can only show your leagues. Lineup changes, trades and waivers still happen in the Sleeper app.</p></details>
         <details><summary>Does it work with ESPN, Yahoo or NFL.com leagues?</summary><p>Not today. AllRosters works with Sleeper NFL leagues only.</p></details>
         <details><summary>How is win probability calculated?</summary><p>For each starter still to play, AllRosters takes their projection and scales it by the share of their game left. Adding that to the points already scored gives a projected final for both teams. The uncertainty of each remaining starter is combined, and the chance your projected margin stays above zero on a normal curve is your win probability. Injured and inactive players count for nothing.</p></details>

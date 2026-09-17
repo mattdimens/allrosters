@@ -54,15 +54,27 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
 /* ---------- header ---------- */
 .top{display:flex;align-items:center;gap:2px;padding:4px 8px 4px 14px;flex:none;
   border-bottom:2px solid var(--color-divider)}
-.brand{font-size:13px;font-weight:800;letter-spacing:.14em;white-space:nowrap}
-.wk{margin-left:auto;display:flex;align-items:center;gap:2px;flex:none}
-.step{width:32px;height:40px;display:grid;place-items:center;cursor:pointer;
+.brand{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:800;letter-spacing:.14em;white-space:nowrap}
+.brand svg{width:20px;height:20px;display:block;flex:none}
+/* the week control: a labeled stepper, and a way home when you've gone back in time */
+.wk{margin-left:auto;display:flex;align-items:stretch;flex:none;height:36px;border:1px solid var(--color-divider)}
+.wklab{display:grid;place-items:center;min-width:76px;padding:0 6px;font-size:12px;font-weight:800;letter-spacing:.08em;
+  white-space:nowrap;font-variant-numeric:tabular-nums;border-left:1px solid var(--color-divider);border-right:1px solid var(--color-divider)}
+.wk.past{border-color:var(--color-accent)}
+.wk.past .wklab{color:var(--color-accent-700);border-color:var(--color-accent)}
+.nowbtn{flex:none;height:36px;margin-left:6px;padding:0 10px;cursor:pointer;background:var(--color-accent);color:var(--color-bg);
+  font-size:11px;font-weight:800;letter-spacing:.08em;white-space:nowrap}
+.nowbtn:hover{background:var(--color-accent-600)}
+.nowbtn[hidden]{display:none}
+.step{width:34px;height:34px;font-size:20px;display:grid;place-items:center;cursor:pointer;
   color:var(--color-neutral-700);font-size:16px;line-height:1}
 .step:hover:not(:disabled){color:var(--color-accent)}
 .step:disabled{opacity:.3;cursor:default}
 .stamp{white-space:nowrap;margin:0 6px}
 @media(max-width:479px){.stamp{display:none}}
-@media(max-width:399px){.brand{font-size:12px;letter-spacing:.08em}.step{width:26px}.icon{width:36px}.livetag{padding:4px 6px;margin:0 2px 0 4px;letter-spacing:.08em}}
+@media(max-width:519px){.brand .word{display:none}}
+@media(max-width:399px){.step{width:28px}.wklab{min-width:66px;font-size:11px}.icon{width:36px}.nowbtn{padding:0 7px}
+  .livetag{padding:4px 6px;margin:0 2px 0 4px;letter-spacing:.08em}}
 .icon{width:40px;height:40px;display:grid;place-items:center;cursor:pointer;color:var(--color-neutral-700);flex:none}
 .icon:hover:not(:disabled){color:var(--color-accent)}
 .icon:disabled{opacity:.45;cursor:default}
@@ -107,11 +119,29 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
 .cs .lb{font-size:9px}
 .cs.first{margin-top:3px}
 .cme{font-size:30px;line-height:1.05;margin-top:3px}
-.matrix{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;margin-top:9px}
+.matrix{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;margin-top:9px;max-width:260px}
 .matrix i{aspect-ratio:1;display:block;background:var(--color-neutral-300)}
 .matrix i.on{background:var(--color-accent)}
 /* auto keeps the OPEN rule on the same line across cells of unequal text */
 .cst{font-weight:800;color:var(--color-text)}
+/* league rows: the many-leagues home */
+.lrows{border-bottom:2px solid var(--color-divider);flex:none}
+.lrow{display:flex;align-items:center;gap:10px;width:100%;min-height:64px;padding:10px 12px 10px 14px;text-align:left;cursor:pointer;
+  background:var(--color-bg);border-bottom:1px solid var(--color-divider);box-shadow:inset 4px 0 0 var(--lg)}
+.lrow:last-child{border-bottom:0}
+.lrow:hover,.lrow:active,.lrow.sel{background:var(--lg-tint)}
+.lrow>.key{min-width:22px;height:18px;font-size:10px}
+.lrow .lmid{flex:1;min-width:0}
+.lrow .lname{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow .lmid .lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.wbar{height:3px;background:var(--color-neutral-300);margin-top:6px;max-width:160px}
+.wbar i{display:block;height:3px;background:var(--color-accent)}
+.lsc{flex:none;text-align:right;font-variant-numeric:tabular-nums}
+.lsc .v{font-size:18px;line-height:1.1;font-weight:800}
+.lsc .v.trail{font-size:14px;color:var(--color-neutral-600)}
+.lsc .v.tie{font-size:16px}
+.lrow .ar{flex:none;width:16px;font-size:17px;color:var(--lg);transition:transform .15s}
+.lrow:hover .ar{transform:translateX(3px)}
 /* the card's way in: a full-width bar in the league's color, pinned to the bottom so cards line up */
 .cgo{display:flex;align-items:center;gap:8px;margin:10px -12px -13px;margin-top:auto;padding:11px 12px;min-height:40px;
   border-top:1px solid var(--color-divider);color:var(--lg);font-size:11px;font-weight:800;letter-spacing:.08em}
@@ -125,6 +155,8 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
   font-size:9px;font-weight:800;letter-spacing:0;line-height:1;text-transform:uppercase;
   background:var(--lg,var(--color-text));color:var(--on-league)}
 .key.vs{background:transparent;color:var(--lg);box-shadow:inset 0 0 0 1.5px var(--lg)}
+.key.more{background:var(--color-surface);color:var(--color-neutral-800);box-shadow:inset 0 0 0 1px var(--color-divider)}
+.nmrow .nm{flex:0 1 auto}
 .chips{display:inline-flex;gap:3px;flex:none;align-items:center}
 .nmrow{display:flex;align-items:center;gap:6px;min-width:0}
 .nmrow .nm{min-width:0}
@@ -164,6 +196,12 @@ button.main:hover{background:var(--color-accent-100)}
 .back:hover{background:var(--color-accent-100)}
 .back .t{font-size:11px;font-weight:800;letter-spacing:.1em}
 .switch{border-bottom:2px solid var(--color-divider);flex:none}
+/* more than two leagues: one row that scrolls sideways, the open league brought into view */
+.switch.strip{display:flex;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity}
+.switch.strip::-webkit-scrollbar{display:none}
+.switch.strip .sw{flex:none;width:auto;min-width:132px;max-width:210px;scroll-snap-align:start}
+.switch.strip .sw+.sw{border-left:1px solid var(--color-divider)}
+.sw .nm .ell{min-width:0}
 .sw{padding:11px 14px;text-align:left;cursor:pointer;min-height:48px;background:var(--color-bg);
   color:var(--color-neutral-600);display:block;width:100%}
 .sw .nm{font-size:11px;font-weight:800;letter-spacing:.1em}
@@ -318,6 +356,11 @@ button.row:hover{background:var(--color-accent-100)}
 .obrow .input{flex:1 1 200px;min-height:46px;font-size:16px}
 .obrow .btn{flex:none;min-height:46px;padding:0 18px;font-size:15px}
 @media(max-width:379px){.obrow .btn{flex:1 1 100%}}
+.lglist{border:1px solid var(--color-divider);max-height:220px;overflow-y:auto}
+.lgopt{display:flex;align-items:center;gap:10px;padding:9px 10px;cursor:pointer;font-size:14px}
+.lgopt+.lgopt{border-top:1px solid var(--color-divider)}
+.lgopt input{width:18px;height:18px;accent-color:var(--color-accent);flex:none;margin:0}
+.lgopt:hover{background:color-mix(in srgb,var(--color-text) 5%,transparent)}
 .modal .note{padding:12px 0 0;border:0;color:var(--color-neutral-700);line-height:1.6}
 </style>
 </head>
@@ -325,12 +368,13 @@ button.row:hover{background:var(--color-accent-100)}
 
 <div class="app">
   <header class="top">
-    <span class="brand">SCOREBOARD</span>
-    <div class="wk">
+    <span class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" fill="var(--color-text)"/><rect x="5" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="5" y="17" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="17" width="10" height="10" fill="var(--color-neutral-600)"/></svg><span class="word">SCOREBOARD</span></span>
+    <div class="wk" role="group" aria-label="Week">
       <button class="step" id="prev" aria-label="Previous week">‹</button>
-      <span class="lb" id="wklab">W—</span>
+      <span class="wklab" id="wklab" aria-live="polite">WEEK —</span>
       <button class="step" id="next" aria-label="Next week">›</button>
     </div>
+    <button class="nowbtn" id="now" hidden>THIS WEEK</button>
     <span class="lb stamp" id="stamp"></span>
     <button class="icon" id="btn" aria-label="Refresh"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
     <button class="icon" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
@@ -466,19 +510,33 @@ async function loadState(){
   if(S.week==null) S.week = S.curWeek;
 }
 
+/* a short, unique code per league: "D", then "D2" for "Dynasty 2", "DO" for "Degens Only", "DE"… */
+function leagueKeys(names){
+  const used=new Set();
+  return names.map((n,i)=>{
+    const up=n.toUpperCase(), words=up.split(/[^A-Z0-9]+/).filter(Boolean);
+    const letters=up.replace(/[^A-Z]/g,""), first=letters[0]||"L", digit=(up.match(/\d/)||[])[0];
+    const k=[first, digit&&first+digit, words[1]&&first+words[1][0], letters.slice(0,2), first+(i+1)]
+      .find(c=>c && !used.has(c)) || String(i+1);
+    used.add(k); return k;
+  });
+}
+
 async function loadShell(){
   const u = await getJSON(`${SLEEPER}/v1/user/${encodeURIComponent(S.cfg.username)}`);
   if(!u || !u.user_id) throw new Error(`No Sleeper user named "${S.cfg.username}". Open settings to fix it`);
   S.userId = u.user_id;
   const lgs = await getJSON(`${SLEEPER}/v1/user/${S.userId}/leagues/${SPORT}/${S.season}`);
   if(!lgs.length) throw new Error(`${S.cfg.username} has no ${S.season} leagues`);
-  const seen = {};
-  S.leagues = lgs.map((l,i)=>{
+  S.allLeagues = lgs.map(l=>({id:l.league_id, name:(l.name||"League").trim()}));
+  const hidden = new Set(S.cfg.hidden||[]);
+  let shown = lgs.filter(l=>!hidden.has(l.league_id));
+  if(!shown.length) shown = lgs;
+  const keys = leagueKeys(shown.map(l=>(l.name||"League").trim()));
+  S.leagues = shown.map((l,i)=>{
     const name = (l.name||"League").trim();
-    let key = name.replace(/[^A-Za-z]/g,"")[0]?.toUpperCase() || "L";
-    if(seen[key]) key = name.replace(/[^A-Za-z]/g,"")[1]?.toUpperCase() || String(i+1);
-    seen[key]=1;
-    return { id:l.league_id, name, key, ci:i%4, avatar:l.avatar||null, rec: l.scoring_settings?.rec ?? 1,
+    const key = keys[i];
+    return { id:l.league_id, name, key, ci:i%8, avatar:l.avatar||null, rec: l.scoring_settings?.rec ?? 1,
              scoring: l.scoring_settings || {}, slots:l.roster_positions||[] };
   });
   if(S.league && !S.leagues.some(l=>l.id===S.league)){ S.league=null; S.view="home"; }
@@ -677,13 +735,22 @@ function chip(L, vs){
 }
 /* chips for every league a player matters in: all of them, or all but `except` */
 function leagueChips(pid, except, startersOnly){
-  const box=el("span","chips"), seen=new Set();
+  const list=[], seen=new Set();
   for(const x of S.own[pid]||[]){
     if(x.L===except || seen.has(x.L)) continue;
-    if(x.mine && (x.starter || !startersOnly)){ box.appendChild(chip(x.L,false)); seen.add(x.L); }
-    else if(!x.mine && x.starter){ box.appendChild(chip(x.L,true)); seen.add(x.L); }
+    if(x.mine && (x.starter || !startersOnly)){ list.push([x.L,false]); seen.add(x.L); }
+    else if(!x.mine && x.starter){ list.push([x.L,true]); seen.add(x.L); }
   }
-  return box.childNodes.length ? box : null;
+  if(!list.length || S.leagues.length<2) return null;
+  /* a player in ten leagues shouldn't push his own name off the row: two chips, then a count */
+  const box=el("span","chips"), max=3, cut=list.length>max ? max-1 : list.length;
+  for(const [L,vs] of list.slice(0,cut)) box.appendChild(chip(L,vs));
+  if(list.length>cut){
+    const more=el("span","key more","+"+(list.length-cut));
+    more.title=list.slice(cut).map(([L,vs])=>(vs?"Against you in ":"Yours in ")+L.name).join("\n");
+    box.appendChild(more);
+  }
+  return box;
 }
 function rosteredText(pid, fallback){
   const e=S.own[pid]||[];
@@ -895,6 +962,41 @@ function leader(L){
   const d=Math.round((L.myPts-L.oppPts)*100);
   return d>0 ? "me" : d<0 ? "them" : "tie";
 }
+const ROWS_AFTER = 4;
+function leagueSummary(){
+  const n={up:0,down:0,tie:0};
+  for(const L of S.leagues){ if(!L.hasMatchup) continue; const l=leader(L); n[l==="me"?"up":l==="them"?"down":"tie"]++; }
+  const final = S.games.length && S.games.every(g=>g.state==="post");
+  const band=el("div","band");
+  band.appendChild(lb(`${S.leagues.length} LEAGUES`));
+  const t=lb([n.up&&`${n.up} ${final?"WON":"UP"}`, n.down&&`${n.down} ${final?"LOST":"DOWN"}`, n.tie&&`${n.tie} TIED`].filter(Boolean).join(" · ")||"—");
+  t.style.marginLeft="auto"; t.classList.add("cst"); band.appendChild(t);
+  return band;
+}
+function leagueRow(L){
+  const sel = S.wide && L.id===detailLeague().id;
+  const b=el("button","lrow lg"+L.ci+(sel?" sel":""));
+  b.onclick=()=>openLeague(L.id);
+  b.appendChild(chip(L));
+  const mid=el("div","lmid");
+  mid.appendChild(el("div","lname",L.name));
+  const w=L.hasMatchup ? winProb(L) : null;
+  const meta=lb(L.error ? L.error : !L.hasMatchup ? `${L.record||""} · NO MATCHUP`
+    : `${L.record} · ${w ? (w.decided ? "FINAL" : Math.round(w.p*100)+"% TO WIN") : ""} · `);
+  if(!L.error && L.hasMatchup) meta.appendChild(el("span","cst",statusOf(L)));
+  mid.appendChild(meta);
+  if(w && !w.decided){ const t=el("div","wbar"); const i=el("i"); i.style.width=Math.round(w.p*100)+"%"; t.appendChild(i); mid.appendChild(t); }
+  b.appendChild(mid);
+  if(L.hasMatchup && !L.error){
+    const lead=leader(L), sc=el("div","lsc");
+    const line=(pts,side)=>el("div","v n "+(lead==="tie"?"tie":lead===side?"lead":"trail"),f2(pts));
+    sc.appendChild(line(L.myPts,"me")); sc.appendChild(line(L.oppPts,"them"));
+    b.appendChild(sc);
+  }
+  b.appendChild(el("span","ar",sel?"":"→"));
+  b.setAttribute("aria-label", `${L.name}: ${f2(L.myPts)} to ${f2(L.oppPts)}, ${statusOf(L).toLowerCase()}. Open matchup and player stats`);
+  return b;
+}
 const started = L => !!(L.myPts || L.oppPts || [...(L.mine||[]),...(L.them||[])].some(p=>p.pts));
 function statusOf(L){
   if(!L.hasMatchup) return "NO MATCHUP";
@@ -942,9 +1044,17 @@ function liveCell({p,L,gl}){
 function renderHome(v){
   const body=el("div","scroll");
   body.style.flex="1"; body.dataset.k="home";
-  const g=el("div","cells lgrid");
-  for(const L of S.leagues) g.appendChild(leagueCell(L));
-  body.appendChild(g);
+  /* up to four leagues get cards; more than that and cards would bury everything else, so each league is a row */
+  if(S.leagues.length>ROWS_AFTER){
+    body.appendChild(leagueSummary());
+    const list=el("div","lrows");
+    for(const L of S.leagues) list.appendChild(leagueRow(L));
+    body.appendChild(list);
+  }else{
+    const g=el("div","cells lgrid");
+    for(const L of S.leagues) g.appendChild(leagueCell(L));
+    body.appendChild(g);
+  }
 
   const live=liveStarters();
   const up=live.length || !isCurrent() ? [] : upNext();
@@ -1183,7 +1293,8 @@ function renderDetail(d){
   }
 
   if(!S.wide && S.leagues.length>1){
-    const sw=el("div","grid2 switch");
+    const sw=el("div",(S.leagues.length>2?"strip":"grid2")+" switch");
+    sw.dataset.x="switch";
     for(const x of S.leagues){
       const b=el("button","sw lg"+x.ci); b.setAttribute("aria-pressed",x.id===L.id);
       b.onclick=()=>openLeague(x.id);
@@ -1306,6 +1417,22 @@ function renderModal(){
     });
     f3.appendChild(seg2); m.appendChild(f3);
 
+    /* hardcore players carry mock drafts, best ball and dead leagues; hidden ones aren't even fetched */
+    let lgBox=null, lgErr=null;
+    if((S.allLeagues||[]).length>1){
+      const f5=el("div","field"); f5.appendChild(el("label",null,"Leagues to show"));
+      lgBox=el("div","lglist");
+      const hid=new Set(S.cfg.hidden||[]);
+      for(const x of S.allLeagues){
+        const opt=el("label","lgopt"); const cb=el("input"); cb.type="checkbox"; cb.checked=!hid.has(x.id); cb.dataset.id=x.id;
+        opt.appendChild(cb); opt.appendChild(el("span",null,x.name)); lgBox.appendChild(opt);
+      }
+      f5.appendChild(lgBox);
+      lgErr=el("div","lb acc fielderr"); lgErr.setAttribute("role","alert"); f5.appendChild(lgErr);
+      f5.appendChild(el("div","hint","Hide mock drafts, best ball or leagues you've left. Hidden leagues aren't loaded."));
+      m.appendChild(f5);
+    }
+
     const save=el("button","btn btn-primary btn-block","Save");
     save.onclick=async()=>{
       const name=un.value.trim();
@@ -1315,6 +1442,15 @@ function renderModal(){
         const err=await adoptUser(name);          // saves everything and closes on success
         if(err){ unErr.textContent=err; save.disabled=false; save.textContent="Save"; }
         return;
+      }
+      if(lgBox){
+        const nextHidden=[...lgBox.querySelectorAll("input")].filter(c=>!c.checked).map(c=>c.dataset.id);
+        if(nextHidden.length===S.allLeagues.length){ lgErr.textContent="Keep at least one league."; return; }
+        if([...nextHidden].sort().join()!==[...(S.cfg.hidden||[])].sort().join()){
+          S.cfg.hidden=nextHidden; saveCfg(); S.modal=null;
+          S.leagues=[]; S.league=null; S.view="home"; S.open=new Set(); render(); refresh(true);
+          return;
+        }
       }
       saveCfg(); S.modal=null; render();
     };
@@ -1385,8 +1521,13 @@ async function startWith(name){
    RENDER — root
    ============================================================ */
 function syncHeader(){
-  $("#wklab").textContent = "W"+(S.week??"—");
-  $("#stamp").textContent = !isCurrent() ? "PAST WEEK" : S.updated ? "UPDATED "+hhmm(S.updated) : "";
+  $("#wklab").textContent = "WEEK "+(S.week??"—");
+  const past = S.curWeek!=null && S.week!=null && !isCurrent();
+  $(".wk").classList.toggle("past", past);
+  $("#now").hidden = !past;
+  $("#now").textContent = S.curWeek ? `WEEK ${S.curWeek} →` : "THIS WEEK";
+  $("#now").title = "Back to this week";
+  $("#stamp").textContent = past ? "" : S.updated ? "UPDATED "+hhmm(S.updated) : "";
   $("#btn").title = S.updated ? `Refresh · updated ${hhmm(S.updated)}, and every ${S.cfg.refresh}s while this week is on` : "Refresh";
   $("#prev").disabled = !S.curWeek || S.week<=1;
   $("#next").disabled = !S.curWeek || S.week>=S.curWeek;
@@ -1405,6 +1546,8 @@ function render(){
   const v=$("#view");
   /* a refresh rebuilds everything; put each scrolled list back where the reader left it */
   const keep={}; v.querySelectorAll("[data-k]").forEach(n=>{ keep[n.dataset.k]=n.scrollTop; });
+  const keepX={}; v.querySelectorAll("[data-x]").forEach(n=>{ keepX[n.dataset.x]=n.scrollLeft; });
+  const navigated=S.anim;
   v.innerHTML=""; v.className="view"+(S.wide?" wide":"");
   if(!S.cfg.username){ renderOnboard(v); renderModal(); return; }
   if(!S.leagues.length){
@@ -1418,6 +1561,12 @@ function render(){
   else if(S.view==="detail" && S.leagues.some(l=>l.id===S.league)) v.appendChild(detail());
   else { S.view="home"; v.appendChild(home()); }
   v.querySelectorAll("[data-k]").forEach(n=>{ if(keep[n.dataset.k]) n.scrollTop=keep[n.dataset.k]; });
+  const strip=v.querySelector(".switch.strip");
+  if(strip){
+    const on=strip.querySelector("[aria-pressed=true]");
+    if(navigated || keepX.switch==null){ if(on) strip.scrollLeft=on.offsetLeft-(strip.clientWidth-on.offsetWidth)/2; }
+    else strip.scrollLeft=keepX.switch;
+  }
   S.anim=false;
   renderModal();
 }
@@ -1470,6 +1619,7 @@ $("#btn").onclick=()=>refresh(false);
 $("#gear").onclick=()=>{ S.modal="settings"; render(); };
 $("#prev").onclick=()=>setWeek(S.week-1);
 $("#next").onclick=()=>setWeek(S.week+1);
+$("#now").onclick=()=>setWeek(S.curWeek);
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&S.modal) closeModal(); });
 window.matchMedia("(min-width:900px)").addEventListener("change",e=>{ S.wide=e.matches; render(); });
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden && isCurrent()) refresh(false); });
