@@ -110,7 +110,7 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
 .lgrid .cell:nth-child(n+3){border-top:2px solid var(--color-divider)}
 /* under two columns the vertical rules become horizontal ones */
 @media(max-width:359px){
-  .cells .cell:nth-child(2n),.cells .pcell:nth-child(2n){border-left:0}
+  .cells .cell:nth-child(2n){border-left:0}
   .lgrid .cell+.cell{border-top:2px solid var(--color-divider)}
 }
 .chead{display:flex;align-items:baseline;gap:6px}
@@ -165,15 +165,7 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
 .nmrow .nm{min-width:0}
 .chead .lb.ell{min-width:0}
 
-/* ---------- home: live cells ---------- */
-.pcell{padding:11px 12px;text-align:left;cursor:pointer;background:var(--color-bg);width:100%;display:block;
-  border-bottom:1px solid var(--color-divider)}
-.pcell:hover{background:var(--color-accent-100)}
-.cells .pcell:nth-child(2n){border-left:1px solid var(--color-divider)}
-.pcell .nm{font-size:14px;font-weight:600;margin-top:3px}
-.pcell .pt{font-size:26px;line-height:1.1}
-.pcell .clock{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--color-accent-700);
-  white-space:nowrap;flex:none;font-variant-numeric:tabular-nums}
+/* ---------- home: game progress bar ---------- */
 .track{height:3px;background:var(--color-neutral-300);margin-top:5px}
 .track i{display:block;height:3px;background:var(--color-accent)}
 
@@ -338,6 +330,19 @@ button.mside:hover,.mside.on{background:var(--color-accent-100)}
 .gopen{border-bottom:2px solid var(--color-divider)}
 /* up next: kickoffs that involve your starters */
 .row.up{min-height:0;gap:14px}
+.row.live{gap:14px;cursor:pointer}
+button.row.live:hover{background:var(--color-accent-100)}
+.row.live .clk{width:auto;min-width:64px;align-self:center}
+.row.live .ck.live{color:var(--color-accent)}
+.row.live .track{margin-top:6px;width:64px}
+.row.live .p{width:auto;min-width:44px;align-items:flex-end;margin-left:auto;font-size:24px}
+.row .lb.wrap{white-space:normal;line-height:1.4}
+.lb.why{margin-top:10px;color:var(--color-neutral-800)}
+.demobar{display:flex;align-items:center;gap:10px;flex:none;padding:6px 14px;font-size:12px;
+  background:var(--color-text);color:var(--color-bg)}
+.demobar[hidden]{display:none}
+.demobar b{letter-spacing:.12em}
+.demobar a{margin-left:auto;color:inherit;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:11px}
 .row.up .clk{width:auto;min-width:64px;align-self:flex-start}
 .plist{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:4px}
 .pl{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--color-neutral-800)}
@@ -447,6 +452,7 @@ button.row:hover{background:var(--color-accent-100)}
     <button class="icon" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
     <span class="livetag" id="live" hidden><i></i><span id="liven"></span></span>
   </header>
+  <div class="demobar" id="demobar" hidden><span><b>DEMO</b> · Simulated live scores on your real leagues</span><a href="/scoreboard">Exit</a></div>
   <div id="err"></div>
   <div class="view" id="view"><div class="loading lb">Loading rosters and live scores</div></div>
 </div>
@@ -479,6 +485,7 @@ const S = {
   onboard:{value:"", err:null, busy:false},
   wide: window.matchMedia("(min-width:900px)").matches,
   prevPts:{}, deltas:{}, statCache:{}, err:null, booted:false, updated:null, anim:false,
+  demo: new URLSearchParams(location.search).get("demo")==="live",
 };
 
 /* ---------- helpers ---------- */
@@ -504,8 +511,10 @@ const isCurrent = () => S.week === S.curWeek;
 const timeStr = d => d.toLocaleTimeString([], {weekday:"short",hour:"numeric",minute:"2-digit"});
 const hhmm    = d => d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
 const slotLabel = s => String(s||"").replace(/_/g," ");
+/* win odds as a percentage; while anything is left to play it never says 0% or 100% */
+const pct = p => { const n=Math.round(p*100); return n<1 ? "<1%" : n>99 ? ">99%" : n+"%"; };
 /* analytics: what happened, never whose leagues (see /assets/analytics.js) */
-const track = (name, params) => { try{ window.arTrack && window.arTrack(name, params); }catch(e){} };
+const track = (name, params) => { if(S.demo) return; try{ window.arTrack && window.arTrack(name, params); }catch(e){} };
 const bucket = n => n<=1 ? "1" : n<=4 ? "2-4" : n<=9 ? "5-9" : "10+";
 const SLOT_SHORT = {FLEX:"FLX",SUPER_FLEX:"SF",REC_FLEX:"W/T",WRRB_FLEX:"W/R",IDP_FLEX:"IDP"};
 const SLOT_NAME  = {FLEX:"FLEX",SUPER_FLEX:"SUPERFLEX",REC_FLEX:"WR/TE FLEX",WRRB_FLEX:"WR/RB FLEX",IDP_FLEX:"IDP FLEX"};
@@ -529,7 +538,7 @@ function applyTheme(t){
   document.documentElement.dataset.theme = t;
   $('meta[name=theme-color]').content = t==="dark" ? "#1a1918" : "#f3f2f2";
 }
-function saveCfg(){ store.set("sb_cfg", S.cfg); }
+function saveCfg(){ if(!S.demo) store.set("sb_cfg", S.cfg); }   // a demo never changes what's saved
 
 /* Check a username against Sleeper before it replaces the saved one, so a typo
    never wipes out leagues that were working. Returns an error message, or null. */
@@ -919,7 +928,7 @@ function gameLabel(team){
   return {
     txt: line,
     clock: g.state==="post" ? "FINAL" : g.state==="in" ? `${g.period>4?"OT":"Q"+g.period} ${g.clock}` : hhmm(g.start),
-    sub: g.state==="pre" ? `${dayOf(g.start).slice(0,3)} · ${g.away} AT ${g.home}` : `${mineScore} · ${theirScore} ${other}`,
+    sub: g.state==="pre" ? `${dayOf(g.start).slice(0,3)} · ${g.away} AT ${g.home}` : `${team} ${mineScore}–${theirScore} ${other}`,
     live: g.state==="in", phase:g.state, frac:1-fractionLeft(g), game:g
   };
 }
@@ -946,7 +955,7 @@ function rowEl(o){
   const mid=el("div","mid");
   if(o.chips){ const nr=el("div","nmrow"); nr.appendChild(el("div","nm",o.name)); nr.appendChild(o.chips); mid.appendChild(nr); }
   else mid.appendChild(el("div","nm",o.name));
-  mid.appendChild(el("div","lb ell"+(o.metaAccent?" acc":""),o.meta));
+  mid.appendChild(el("div","lb "+(o.metaWrap?"wrap":"ell")+(o.metaAccent?" acc":""),o.meta));
   b.appendChild(mid);
   const c=el("div","clk");
   c.appendChild(el("div","ck n"+(o.live?" live":"")+(o.bigClock?" rec":""),o.clock));
@@ -1034,7 +1043,7 @@ function leagueCell(L){
   const m=el("div","matrix");
   for(let i=0;i<CELLS;i++) m.appendChild(el("i",i<on?"on":null));
   b.appendChild(m);
-  const wl=lb(!w ? "NO MATCHUP" : w.decided ? "FINAL · " : `${Math.round(w.p*100)}% TO WIN · `);
+  const wl=lb(!w ? "NO MATCHUP" : w.decided ? "FINAL · " : `${pct(w.p)} TO WIN · `);
   if(w) wl.appendChild(el("span","cst",statusOf(L)));
   b.appendChild(wl);
 
@@ -1082,7 +1091,7 @@ function leagueRow(L){
   mid.appendChild(el("div","lname",L.name));
   const w=L.hasMatchup ? winProb(L) : null;
   const meta=lb(L.error ? L.error : !L.hasMatchup ? `${L.record||""} · NO MATCHUP`
-    : `${L.record} · ${w ? (w.decided ? "FINAL" : Math.round(w.p*100)+"% TO WIN") : ""} · `);
+    : `${L.record} · ${w ? (w.decided ? "FINAL" : pct(w.p)+" TO WIN") : ""} · `);
   if(!L.error && L.hasMatchup) meta.appendChild(el("span","cst",statusOf(L)));
   mid.appendChild(meta);
   if(w && !w.decided){ const t=el("div","wbar"); const i=el("i"); i.style.width=Math.round(w.p*100)+"%"; t.appendChild(i); mid.appendChild(t); }
@@ -1126,18 +1135,22 @@ function liveStarters(){
   }
   return out.sort((a,b)=>b.p.pts-a.p.pts);
 }
-function liveCell({p,L,gl}){
-  const b=el("button","pcell");
+/* one player per row: clock and game progress, who and where, points; league letters say which lineups */
+function liveRow({p,L,gl}){
+  const b=el("button","row live");
   b.onclick=()=>openLeague(L.id,p.pid,"live_player");
-  const h=el("div","chead");
-  h.appendChild(lb([p.pos,p.team].filter(Boolean).join(" ")));
-  const ch=leagueChips(p.pid,null,true); if(ch) h.appendChild(ch);
-  h.appendChild(el("span","clock",gl.clock));
-  b.appendChild(h);
-  b.appendChild(el("div","nm ell",p.name));
-  b.appendChild(el("div","pt n",f1(p.pts)));
-  const t=el("div","track"); const i=el("i"); i.style.width=Math.round(gl.frac*100)+"%"; t.appendChild(i);
+  const t=el("div","clk"); t.appendChild(el("div","ck n live",gl.clock));
+  const tr=el("div","track"); const i=el("i"); i.style.width=Math.round(gl.frac*100)+"%"; tr.appendChild(i); t.appendChild(tr);
   b.appendChild(t);
+  const mid=el("div","mid");
+  const nr=el("div","nmrow"); nr.appendChild(el("div","nm",p.name));
+  const ch=leagueChips(p.pid,null,true); if(ch) nr.appendChild(ch);
+  mid.appendChild(nr);
+  mid.appendChild(el("div","lb ell",[p.pos, gl.sub].filter(Boolean).join(" · ")));
+  b.appendChild(mid);
+  const pt=el("div","p n"+(p.pts?"":" zero")); pt.appendChild(el("span",null,f1(p.pts)));
+  if(S.deltas[p.pid]) pt.appendChild(el("span","dl",(S.deltas[p.pid]>0?"+":"")+f1(S.deltas[p.pid])));
+  b.appendChild(pt);
   return b;
 }
 
@@ -1157,17 +1170,15 @@ function renderHome(v){
   }
 
   const live=liveStarters();
-  const up=live.length || !isCurrent() ? [] : upNext();
-  const band=el("div","band");
-  band.appendChild(lb(live.length || !up.length ? "ON THE FIELD NOW" : "UP NEXT · YOUR STARTERS"));
-  const c=lb(live.length || !up.length ? live.length+" PLAYING" : up.length+(up.length>1?" GAMES":" GAME"));
-  c.style.marginLeft="auto"; band.appendChild(c);
-  body.appendChild(band);
+  const up=isCurrent() ? upNext() : [];
+  const band=(label,count)=>{ const b=el("div","band"); b.appendChild(lb(label)); const c=lb(count); c.style.marginLeft="auto"; b.appendChild(c); body.appendChild(b); };
   if(live.length){
-    const lg=el("div","cells");
-    live.forEach(x=>lg.appendChild(liveCell(x)));
-    body.appendChild(lg);
-  }else if(up.length){
+    band("ON THE FIELD NOW", live.length+" PLAYING");
+    live.forEach(x=>body.appendChild(liveRow(x)));
+  }
+  if(!live.length && !up.length) band("ON THE FIELD NOW","0 PLAYING");
+  if(up.length){
+    band("UP NEXT · YOUR STARTERS", up.length+(up.length>1?" GAMES":" GAME"));
     for(const {g,ps} of up){
       const r=el("div","row up");
       const t=el("div","clk"); t.appendChild(el("div","ck n",hhmm(g.start))); t.appendChild(lb(dayOf(g.start)));
@@ -1184,7 +1195,8 @@ function renderHome(v){
       r.appendChild(mid);
       body.appendChild(r);
     }
-  }else{
+  }
+  if(!live.length && !up.length){
     body.appendChild(el("div","note", !S.games.length ? "Live game clocks are unreachable. The scores above still work."
       : S.games.every(g=>g.state==="post") ? "Every game this week is final."
       : "Nobody of yours is on the field right now."));
@@ -1227,12 +1239,13 @@ const INSTALL = {
 };
 INSTALL.platform = INSTALL.ios ? "ios" : INSTALL.android ? "android" : INSTALL.touch ? "touch" : "desktop";
 const installState = () => store.get("sb_install") || {};
-const saveInstall = x => store.set("sb_install", {...installState(), ...x});
+const saveInstall = x => { if(!S.demo) store.set("sb_install", {...installState(), ...x}); };
 window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); INSTALL.prompt=e; render(); });
 window.addEventListener("appinstalled", ()=>{ saveInstall({installed:true}); track("app_installed",{platform:INSTALL.platform}); render(); });
 
 function showInstallBanner(){
-  if(INSTALL.standalone || !S.cfg.username || !S.leagues.length) return false;
+  if(S.demo || INSTALL.standalone || !S.cfg.username || !S.leagues.length) return false;
+  if(isCurrent() && S.games.some(g=>g.state==="in")) return false;   // scores come first on game day
   if(!(INSTALL.ios || INSTALL.android || INSTALL.touch)) return false;
   const st=installState();
   if(st.installed || (st.visits||0)<2) return false;
@@ -1350,7 +1363,7 @@ function clockRows(L, host){
       name:`${g.away} AT ${g.home}`,
       meta: g.state==="in" ? `${g.period>4?"OT":"Q"+g.period} ${g.clock}`+(g.dnd?` · ${g.dnd}`:"")+(g.poss?` · ${g.poss} ball`:"")
         : g.state==="post" ? (g.period>4?"Final, overtime · ":"")+timeStr(g.start) : timeStr(g.start),
-      metaAccent:g.state==="in",
+      metaAccent:g.state==="in", metaWrap:true,
       clock: g.state==="in"?"LIVE":g.state==="post"?"FINAL":"SOON", live:g.state==="in",
       clockSub: `${starters} OF YOURS`, on:open,
       onClick:()=>toggle(key)
@@ -1464,13 +1477,12 @@ function matchCard(L, pr, key, open){
   if(!w.decided){ const bar=el("div","gbar"); const i=el("i"); i.style.width=Math.round(w.p*100)+"%"; bar.appendChild(i); card.appendChild(bar); }
   else card.appendChild(el("div","grule"));
   const foot=el("div","gfoot");
-  const pa=Math.round(w.p*100);
-  foot.appendChild(lb(w.decided ? (d>0?"WON":d<0?"LOST":"TIED") : pa+"%"));
+  foot.appendChild(lb(w.decided ? (d>0?"WON":d<0?"LOST":"TIED") : pct(w.p)));
   const live = [...A.side,...B.side].some(p=>p.starter && gameLabel(p.team).live);
   foot.appendChild(lb(w.decided ? "FINAL"
     : started2(A,B) ? `${w.leftA+w.leftB} STARTERS LEFT${live?" · LIVE":""}`
     : `PROJ ${f1(w.projA)} – ${f1(w.projB)}`));
-  foot.appendChild(lb(w.decided ? (d<0?"WON":d>0?"LOST":"TIED") : (100-pa)+"%"));
+  foot.appendChild(lb(w.decided ? (d<0?"WON":d>0?"LOST":"TIED") : pct(1-w.p)));
   foot.appendChild(el("span","caret",open?"▴":"▾"));
   card.appendChild(foot);
   return card;
@@ -1573,11 +1585,18 @@ function renderDetail(d){
     body.appendChild(lb(`THEM · ${L.oppName||"Opponent"}`));
     body.appendChild(el("div","big n"+size("them"),f2(L.oppPts)));
     body.appendChild(lb(w?`PROJ ${f1(w.projOpp)} · ${w.oppLeft} LEFT`:"—"));
+    /* ahead on the board but behind in the odds (or the reverse) reads like a bug unless it's explained */
+    if(w && !w.decided){
+      const l=leader(L);
+      const why = l==="me" && w.p<0.5 ? "THEY HAVE MORE PROJECTED POINTS LEFT TO PLAY"
+                : l==="them" && w.p>0.5 ? "YOU HAVE MORE PROJECTED POINTS LEFT TO PLAY" : "";
+      if(why){ const h=lb(why); h.classList.add("why"); body.appendChild(h); }
+    }
   }
   sc.appendChild(body);
   if(w){
     const g=el("div","gauge");
-    g.appendChild(el("div","gp n", w.decided ? (w.margin>0?"WON":w.margin<0?"LOST":"TIE") : Math.round(w.p*100)+"%"));
+    g.appendChild(el("div","gp n", w.decided ? (w.margin>0?"WON":w.margin<0?"LOST":"TIE") : pct(w.p)));
     g.appendChild(lb(w.decided ? "FINAL" : "TO WIN"));
     const on=Math.round(w.p*10);
     for(let i=0;i<10;i++) g.appendChild(el("i", i>=10-on ? "on" : null));
@@ -1607,7 +1626,7 @@ function renderDetail(d){
       mini.appendChild(el("span","dash","–"));
       mini.appendChild(el("span","ms"+(lead!=="me"?" lead":""),f2(L.oppPts)));
       mini.appendChild(lb("THEM"));
-      const ml=lb(w ? (w.decided ? statusOf(L) : Math.round(w.p*100)+"% TO WIN") : "","mw"); ml.classList.add("mw");
+      const ml=lb(w ? (w.decided ? statusOf(L) : pct(w.p)+" TO WIN") : "","mw");
       mini.appendChild(ml);
     }else{
       const nm=lb(L.name.toUpperCase(),"lgc"); mini.appendChild(nm);
@@ -1916,6 +1935,46 @@ function snapshotPts(){
   if(isCurrent()) for(const k in cur){ if(S.prevPts[k]!=null){ const d=cur[k]-S.prevPts[k]; if(Math.abs(d)>=0.05) S.deltas[k]=d; } }
   S.prevPts=cur;
 }
+/* ============================================================
+   DEMO — /scoreboard?demo=live
+   A Sunday afternoon on your real leagues, for checking the live layout on any
+   device or taking screenshots. The earliest game is final, Sunday 1pm games are
+   in the second half, late games in the first half, night games not started.
+   Clocks and points are made up but deterministic, so refreshes agree, and they
+   run two game minutes per real minute. Nothing is saved or tracked.
+   ============================================================ */
+function simulateLive(){
+  if(!S.demo || !isCurrent() || !S.games.length) return;
+  S.demoStart = S.demoStart || Date.now();
+  const adv = (Date.now()-S.demoStart)/60000*2;
+  const hash = k => { let h=2166136261; for(const c of String(k)){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); } return ((h>>>0)%10000)/10000; };
+  const games=[...S.games].sort((a,b)=>a.start-b.start), first=games[0].start;
+  for(const g of games){
+    const day=g.start.getDay(), hr=g.start.getHours()+g.start.getMinutes()/60;
+    let played = g.start-first < 3600e3 ? 60 : day===0 && hr<14 ? 32+hash(g.id+"q")*24 : day===0 && hr<17 ? 3+hash(g.id+"q")*24 : -1;
+    if(played<0){ Object.assign(g,{state:"pre",period:0,clock:"15:00",homeScore:0,awayScore:0,poss:"",dnd:""}); continue; }
+    played=Math.min(60, played+adv);
+    const f=played/60;
+    g.homeScore=Math.round((10+hash(g.id+"h")*24)*f); g.awayScore=Math.round((10+hash(g.id+"a")*24)*f);
+    if(played>=60){ Object.assign(g,{state:"post",period:4,clock:"0:00",poss:"",dnd:""}); continue; }
+    const left=15-(played%15), m=Math.floor(left);
+    Object.assign(g,{state:"in", period:Math.floor(played/15)+1, clock:`${m}:${String(Math.floor((left-m)*60)).padStart(2,"0")}`,
+      poss: hash(g.id+"p"+Math.floor(played/2))<.5 ? g.home : g.away,
+      dnd: ["1st & 10","2nd & 7","3rd & 4","3rd & 11","1st & Goal","2nd & 3"][Math.floor(hash(g.id+"d"+Math.floor(played))*6)]});
+  }
+  S.byTeam={}; for(const g of S.games){ S.byTeam[g.home]=g; S.byTeam[g.away]=g; }
+  const ptsFor=(p,L)=>{ const g=S.byTeam[p.team]; if(p.empty||!g||g.state==="pre") return 0;
+    const f=g.state==="post"?1:1-fractionLeft(g); return Math.round(projFor(p,L)*f*(0.35+hash(p.pid+"x")*1.4)*10)/10; };
+  for(const L of S.leagues){
+    if(L.error) continue;
+    const sides=new Set([L.mine,L.them,...(L.pairs||[]).flatMap(pr=>pr.teams.map(t=>t.side))]);
+    for(const side of sides) for(const p of side||[]) p.pts=ptsFor(p,L);
+    const sum=side=>Math.round((side||[]).filter(p=>p.starter).reduce((a,p)=>a+p.pts,0)*100)/100;
+    for(const pr of L.pairs||[]) for(const t of pr.teams){ t.pts=sum(t.side); const m=L.matchups.find(x=>x.roster_id===t.roster?.roster_id); if(m) m.points=t.pts; }
+    L.myPts=sum(L.mine); L.oppPts=sum(L.them);
+  }
+}
+
 let again=false;
 async function refresh(first){
   if(!S.cfg.username){ render(); return; }
@@ -1929,7 +1988,11 @@ async function refresh(first){
     const need=new Set(); raw.flat().forEach(r=>(r.players||[]).forEach(p=>need.add(p)));
     await loadPlayers([...need]);
     await Promise.all(S.leagues.map(loadLeague));
+    simulateLive();
+    const firstLook = S.demo && !Object.keys(S.prevPts).length;
     snapshotPts();
+    /* a demo's first frame gets a few fresh scoring plays, so the +points tags are on show */
+    if(firstLook) liveStarters().slice(0,4).forEach((x,i)=>{ if(x.p.pts) S.deltas[x.p.pid]=[6,2.4,4.1,0.8][i]; });
     S.updated=new Date(); S.err=null; render();
   }catch(e){
     S.err=e.message+"."; console.error(e); render();
@@ -1961,7 +2024,8 @@ loadCfg();
 /* /scoreboard?user=name opens those leagues (the homepage form and the copyable link use it),
    then the address goes back to plain /scoreboard and the saved username takes over */
 const fromLink=(new URLSearchParams(location.search).get("user")||"").trim();
-if(fromLink) history.replaceState(null,"",location.pathname+location.hash);
+if(fromLink){ const u=new URL(location.href); u.searchParams.delete("user"); history.replaceState(null,"",u.pathname+u.search+u.hash); }
+if(S.demo) $("#demobar").hidden=false;
 if(fromLink && fromLink.toLowerCase()!==S.cfg.username.toLowerCase()) startWith(fromLink, "link");
 else refresh(true);
 restartTimer();

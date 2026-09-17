@@ -77,6 +77,16 @@ nothing. For those cases, Settings shows each visitor a personal
 button to switch to a different account. Modernist is a
 light-only system; the dark theme redefines its tokens in `index.html`.
 
+## Demo mode
+
+`/scoreboard?demo=live` shows a Sunday afternoon on the saved (or `?user=`) leagues, so the
+live layout can be checked on any device or captured for screenshots. The earliest game of
+the week is final, Sunday 1pm games are in the second half, late games in the first half, and
+night games haven't started. Clocks and points are made up but deterministic (projections times
+the share of each game played), and advance two game minutes per real minute. Only the current
+week is simulated. A demo saves nothing, sends no analytics, and hides the add-to-home-screen
+strip; a black DEMO bar under the header links back to the real scoreboard.
+
 ## Add to home screen
 
 On phones and tablets, from the second visit with leagues loaded, a strip above the home
