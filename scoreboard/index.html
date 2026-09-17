@@ -21,34 +21,13 @@
 <link rel="preconnect" href="https://api.sleeper.app" crossorigin>
 <link rel="stylesheet" href="/ds/modernist/styles.css">
 <link rel="stylesheet" href="/assets/dark.css">
+<link rel="stylesheet" href="/assets/leagues.css">
 <style>
 /* ============================================================
    App layer. Every value below comes from a Modernist token in
    ds/modernist/styles.css — no hard-coded hexes, no radii.
    The dark values live in /assets/dark.css.
    ============================================================ */
-/* League colors. Red stays the signal color (live, winning, lost points), so each league gets
-   its own hue instead; every value clears 4.5:1 on the ground and on its tint, in both themes. */
-:root{
-  --league-0:#2549c8; --league-0-tint:#e8edfb;
-  --league-1:#0a7650; --league-1-tint:#e2f2ea;
-  --league-2:#6a3ecf; --league-2-tint:#eee8fa;
-  --league-3:#8f5d00; --league-3-tint:#f6ecd8;
-  --on-league:#ffffff;
-}
-[data-theme=dark]{
-  --league-0:#8ea7ff; --league-0-tint:#1b2243;
-  --league-1:#4ccf9e; --league-1-tint:#0f2a20;
-  --league-2:#b89dff; --league-2-tint:#241b3b;
-  --league-3:#eeb04f; --league-3-tint:#2e2310;
-  --on-league:#1a1918;
-}
-.lg0{--lg:var(--league-0);--lg-tint:var(--league-0-tint)}
-.lg1{--lg:var(--league-1);--lg-tint:var(--league-1-tint)}
-.lg2{--lg:var(--league-2);--lg-tint:var(--league-2-tint)}
-.lg3{--lg:var(--league-3);--lg-tint:var(--league-3-tint)}
-.lgc,.lb.lgc{color:var(--lg)}
-
 html,body{margin:0;padding:0;height:100%}
 body{background:var(--color-bg);-webkit-font-smoothing:antialiased;overscroll-behavior-y:contain}
 button{font-family:inherit;color:inherit;font-size:inherit;background:none;border:0;padding:0}
@@ -82,14 +61,18 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
 .step:hover:not(:disabled){color:var(--color-accent)}
 .step:disabled{opacity:.3;cursor:default}
 .stamp{white-space:nowrap;margin:0 6px}
-@media(max-width:379px){.stamp{display:none}}
+@media(max-width:479px){.stamp{display:none}}
+@media(max-width:399px){.brand{font-size:12px;letter-spacing:.08em}.step{width:26px}.icon{width:36px}.livetag{padding:4px 6px;margin:0 2px 0 4px;letter-spacing:.08em}}
 .icon{width:40px;height:40px;display:grid;place-items:center;cursor:pointer;color:var(--color-neutral-700);flex:none}
 .icon:hover:not(:disabled){color:var(--color-accent)}
 .icon:disabled{opacity:.45;cursor:default}
 .icon svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
 .icon.spin svg{animation:spin .8s linear infinite}
-.blip{width:8px;height:8px;margin:0 8px 0 4px;background:var(--color-accent);display:block;flex:none;animation:blip 2s ease-in-out infinite}
-.blip.off{background:var(--color-neutral-400);animation:none}
+/* shown only while games are live, so its presence is the news */
+.livetag{display:inline-flex;align-items:center;gap:6px;flex:none;margin:0 4px 0 6px;padding:4px 8px;
+  background:var(--color-accent);color:var(--color-bg);font-size:10px;font-weight:800;letter-spacing:.12em;white-space:nowrap}
+.livetag[hidden]{display:none}
+.livetag i{width:6px;height:6px;background:currentColor;display:block;animation:blip 2s ease-in-out infinite}
 
 /* ---------- shared bits ---------- */
 .err{background:var(--color-accent-100);border-bottom:2px solid var(--color-accent);padding:10px 14px;flex:none}
@@ -116,15 +99,27 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
   .lgrid .cell+.cell{border-top:2px solid var(--color-divider)}
 }
 .chead{display:flex;align-items:baseline;gap:6px}
+/* the leader's score is the big one; a tie is two of the same size */
+.cs{display:flex;align-items:baseline;gap:6px;min-width:0}
+.cs .v{font-size:30px;line-height:1.05;letter-spacing:-.02em}
+.cs.trail .v{font-size:20px;color:var(--color-neutral-600)}
+.cs.tie .v{font-size:25px}
+.cs .lb{font-size:9px}
+.cs.first{margin-top:3px}
 .cme{font-size:30px;line-height:1.05;margin-top:3px}
-.cthem{font-size:20px;line-height:1.05;color:var(--color-neutral-600)}
 .matrix{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;margin-top:9px}
 .matrix i{aspect-ratio:1;display:block;background:var(--color-neutral-300)}
 .matrix i.on{background:var(--color-accent)}
 /* auto keeps the OPEN rule on the same line across cells of unequal text */
-.copen{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;border-top:1px solid var(--color-divider)}
-.copen .o{font-size:11px;font-weight:800;letter-spacing:.08em}
-.copen .s{margin-left:auto;font-size:18px;line-height:1;color:var(--color-neutral-600)}
+.cst{font-weight:800;color:var(--color-text)}
+/* the card's way in: a full-width bar in the league's color, pinned to the bottom so cards line up */
+.cgo{display:flex;align-items:center;gap:8px;margin:10px -12px -13px;margin-top:auto;padding:11px 12px;min-height:40px;
+  border-top:1px solid var(--color-divider);color:var(--lg);font-size:11px;font-weight:800;letter-spacing:.08em}
+.cgo .ar{margin-left:auto;font-size:17px;line-height:1;transition:transform .15s}
+.cell:hover .cgo,.cell:active .cgo{background:var(--lg);color:var(--on-league)}
+.cell:hover .cgo .ar{transform:translateX(3px)}
+.cell.sel .cgo{background:transparent;color:var(--color-neutral-700)}
+.cell .bp{margin-bottom:10px}
 /* a league's colored letter: solid where the player is yours, outlined where he starts against you */
 .key{display:inline-grid;place-items:center;min-width:15px;height:15px;padding:0 3px;flex:none;align-self:center;
   font-size:9px;font-weight:800;letter-spacing:0;line-height:1;text-transform:uppercase;
@@ -133,7 +128,6 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
 .chips{display:inline-flex;gap:3px;flex:none;align-items:center}
 .nmrow{display:flex;align-items:center;gap:6px;min-width:0}
 .nmrow .nm{min-width:0}
-.cell.sel .copen .s{color:var(--lg)}
 .chead .lb.ell{min-width:0}
 
 /* ---------- home: live cells ---------- */
@@ -161,10 +155,6 @@ button.main:hover{background:var(--color-accent-100)}
 .alertbtn .v{font-size:15px;font-weight:800;letter-spacing:.02em}
 .alertbtn.clear{background:var(--color-surface);color:var(--color-text);cursor:default}
 .alertbtn.clear .k{color:var(--color-neutral-700);opacity:1}
-.livepill{margin-left:auto;display:inline-flex;align-items:center;gap:6px;background:var(--color-accent);
-  color:var(--color-bg);padding:4px 9px;font-size:10px;font-weight:800;letter-spacing:.12em;white-space:nowrap}
-.livepill.off{background:var(--color-surface);color:var(--color-neutral-700)}
-.footline{border-top:2px solid var(--color-divider);display:flex;align-items:center;gap:10px;padding:10px 14px;flex:none}
 
 /* ---------- detail ---------- */
 .detail{flex:1;display:flex;flex-direction:column;min-height:0}
@@ -190,7 +180,8 @@ button.main:hover{background:var(--color-accent-100)}
 .lghead .lb{margin-left:auto;flex:none}
 .score .body{flex:1;min-width:0;padding:14px 14px 13px}
 .big{font-size:clamp(46px,13.5vw,66px);line-height:.86;letter-spacing:-.035em}
-.big.them{font-size:clamp(32px,9vw,44px);line-height:.88;letter-spacing:-.03em;color:var(--color-neutral-600)}
+.big.trail{font-size:clamp(32px,9vw,44px);line-height:.88;letter-spacing:-.03em;color:var(--color-neutral-600)}
+.big.tie{font-size:clamp(38px,11vw,54px);line-height:.87}
 .srule{height:2px;background:var(--color-divider);margin:12px 0}
 .gauge{width:64px;flex:none;border-left:2px solid var(--color-divider);display:flex;flex-direction:column;
   padding:10px 0;gap:3px;align-items:center}
@@ -343,7 +334,7 @@ button.row:hover{background:var(--color-accent-100)}
     <span class="lb stamp" id="stamp"></span>
     <button class="icon" id="btn" aria-label="Refresh"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
     <button class="icon" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
-    <span class="blip off" id="blip"></span>
+    <span class="livetag" id="live" hidden><i></i><span id="liven"></span></span>
   </header>
   <div id="err"></div>
   <div class="view" id="view"><div class="loading lb">Loading rosters and live scores</div></div>
@@ -863,15 +854,22 @@ function leagueCell(L){
   if(L.error){ b.appendChild(el("div","cme n","—")); b.appendChild(el("div","lb",L.error)); return b; }
   if(!L.hasMatchup){ b.appendChild(el("div","cme n","—")); b.appendChild(lb(`NO WEEK ${S.week} MATCHUP`)); return b; }
 
-  b.appendChild(el("div","cme n",f2(L.myPts)));
-  b.appendChild(el("div","cthem n",f2(L.oppPts)));
+  const lead=leader(L);
+  const line=(pts,who,side)=>{
+    const r=el("div","cs "+(lead==="tie"?"tie":lead===side?"lead":"trail")+(side==="me"?" first":""));
+    r.appendChild(el("span","v n",f2(pts))); r.appendChild(lb(who)); return r;
+  };
+  b.appendChild(line(L.myPts,"YOU","me"));
+  b.appendChild(line(L.oppPts,"THEM","them"));
 
   const w=winProb(L);
   const on=w?Math.round(w.p*CELLS):0;
   const m=el("div","matrix");
   for(let i=0;i<CELLS;i++) m.appendChild(el("i",i<on?"on":null));
   b.appendChild(m);
-  b.appendChild(lb(!w ? "NO MATCHUP" : w.decided ? "FINAL" : `${Math.round(w.p*100)}% TO WIN`));
+  const wl=lb(!w ? "NO MATCHUP" : w.decided ? "FINAL · " : `${Math.round(w.p*100)}% TO WIN · `);
+  if(w) wl.appendChild(el("span","cst",statusOf(L)));
+  b.appendChild(wl);
 
   /* before kickoff there's no bench story to tell, so show what's projected instead */
   let bp;
@@ -880,22 +878,31 @@ function leagueCell(L){
     const bs=benchStory(L);
     bp=lb(`BENCH ${f1(benchPts(L))} · ${bs.gain>=0.05 ? "+"+f1(bs.gain)+" LEFT" : "NONE LEFT"}`, bs.gain>=0.05?"acc":null);
   }
-  bp.style.marginTop="3px"; b.appendChild(bp);
+  bp.style.marginTop="3px"; bp.classList.add("bp"); b.appendChild(bp);
 
-  const o=el("div","copen");
-  o.appendChild(el("span","o n",statusOf(L)));
-  o.appendChild(el("span","s","›"));
-  b.appendChild(o);
+  /* beside the open league on wide screens the bar has nowhere to go, so it says so */
+  const showing = S.wide && L.id===detailLeague().id;
+  const go=el("div","cgo");
+  go.appendChild(el("span",null, showing ? "SHOWING AT RIGHT" : "MATCHUP & STATS"));
+  if(!showing) go.appendChild(el("span","ar","→"));
+  b.appendChild(go);
+  b.setAttribute("aria-label", `${L.name}: ${f2(L.myPts)} to ${f2(L.oppPts)}, ${statusOf(L).toLowerCase()}. Open matchup and player stats`);
   return b;
 }
 
+/* "me", "them" or "tie", at the two decimals the scores are shown with */
+function leader(L){
+  const d=Math.round((L.myPts-L.oppPts)*100);
+  return d>0 ? "me" : d<0 ? "them" : "tie";
+}
 const started = L => !!(L.myPts || L.oppPts || [...(L.mine||[]),...(L.them||[])].some(p=>p.pts));
 function statusOf(L){
   if(!L.hasMatchup) return "NO MATCHUP";
   const d=L.myPts-L.oppPts, w=winProb(L);
-  if(w && w.decided) return Math.abs(d)<0.005 ? "TIED" : `${d>0?"WON":"LOST"} BY ${f1(Math.abs(d))}`;
-  if(Math.abs(d)<0.05) return "TIED";
-  return `${d>0?"UP":"DOWN"} ${f1(Math.abs(d))}`;
+  const by = Math.abs(d)<0.1 ? f2(Math.abs(d)) : f1(Math.abs(d));
+  if(leader(L)==="tie") return "TIED";
+  if(w && w.decided) return `${d>0?"WON":"LOST"} BY ${by}`;
+  return `${d>0?"UP":"DOWN"} ${by}`;
 }
 /* the next kickoffs that involve any of your starters */
 function upNext(){
@@ -1209,11 +1216,12 @@ function renderDetail(d){
     body.appendChild(lb(L.error || `NO WEEK ${S.week} MATCHUP POSTED`));
   }else{
     body.appendChild(lb(`ME · ${L.myName}`,"lgc"));
-    body.appendChild(el("div","big n",f2(L.myPts)));
+    const lead=leader(L), size=side=>lead==="tie"?" tie":lead===side?"":" trail";
+    body.appendChild(el("div","big n"+size("me"),f2(L.myPts)));
     body.appendChild(lb(w?`PROJ ${f1(w.projMe)} · ${w.left} OF ${w.total} STARTERS LEFT`:"—"));
     body.appendChild(el("div","srule"));
     body.appendChild(lb(`THEM · ${L.oppName||"Opponent"}`));
-    body.appendChild(el("div","big them n",f2(L.oppPts)));
+    body.appendChild(el("div","big n"+size("them"),f2(L.oppPts)));
     body.appendChild(lb(w?`PROJ ${f1(w.projOpp)} · ${w.oppLeft} LEFT`:"—"));
   }
   sc.appendChild(body);
@@ -1242,16 +1250,6 @@ function renderDetail(d){
   ({mine:mineRows,clocks:clockRows,them:themRows,table:tableRows}[S.tab])(L,host);
   d.appendChild(list);
 
-  const foot=el("div","footline");
-  const upd=el("button","main"); upd.style.padding="0"; upd.style.flex="0 1 auto";
-  upd.appendChild(lb(isCurrent()
-    ? `UPDATED ${hhmm(S.updated||new Date())} · EVERY ${S.cfg.refresh}S`
-    : `WEEK ${S.week} · FINAL`));
-  upd.onclick=()=>refresh(false);
-  foot.appendChild(upd);
-  const liveN=S.games.filter(g=>g.state==="in").length;
-  foot.appendChild(el("span","livepill"+(liveN?"":" off"), liveN?`${liveN} GAME${liveN>1?"S":""} LIVE`:"NO GAMES LIVE"));
-  d.appendChild(foot);
 }
 
 /* ============================================================
@@ -1388,12 +1386,14 @@ async function startWith(name){
    ============================================================ */
 function syncHeader(){
   $("#wklab").textContent = "W"+(S.week??"—");
-  $("#stamp").textContent = !isCurrent() ? "PAST WEEK" : S.updated ? hhmm(S.updated) : "";
+  $("#stamp").textContent = !isCurrent() ? "PAST WEEK" : S.updated ? "UPDATED "+hhmm(S.updated) : "";
+  $("#btn").title = S.updated ? `Refresh · updated ${hhmm(S.updated)}, and every ${S.cfg.refresh}s while this week is on` : "Refresh";
   $("#prev").disabled = !S.curWeek || S.week<=1;
   $("#next").disabled = !S.curWeek || S.week>=S.curWeek;
-  const live = isCurrent() && S.games.some(g=>g.state==="in");
-  $("#blip").classList.toggle("off", !live);
-  $("#blip").title = live ? "Games are live" : "No games live";
+  const n = isCurrent() ? S.games.filter(g=>g.state==="in").length : 0;
+  $("#live").hidden = !n;
+  $("#liven").textContent = `${n} LIVE`;
+  $("#live").title = `${n} game${n===1?"":"s"} in progress`;
 }
 function render(){
   syncHeader();

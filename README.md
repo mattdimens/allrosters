@@ -16,7 +16,8 @@ https://allrosters.com. No build step, no server, no API keys — static HTML.
   designed in. Colors, type, spacing and radii all come from its variables;
   the pages never hard-code a hex. Re-sync this file rather than editing it.
 - `assets/dark.css` — the dark theme, shared by every page.
-- League colors (`--league-0` to `--league-3` in `scoreboard/index.html`) are the
+- `assets/leagues.css` — league colors (`--league-0` to `--league-3`, in both
+  themes), shared by the scoreboard and the homepage's picture of it. They are the
   one addition to Modernist's palette. Red stays the signal color (live, win
   odds, lost points), so each league takes its own hue, in order, for its
   stripe, name, tab underline and letter chip. A solid chip beside a player means
@@ -24,7 +25,8 @@ https://allrosters.com. No build step, no server, no API keys — static HTML.
   there. Every value clears 4.5:1 contrast in both themes.
 - `favicon.svg`, `favicon.ico`, `apple-touch-icon.png`, `icon-192.png`,
   `icon-512.png`, `site.webmanifest` — icons and the install manifest.
-- `og.png` — the 1200×630 share image.
+- `og.png` — the 1200×630 share image. When you replace it, bump the `?v=` on
+  its URLs in `index.html` so link previews fetch the new one.
 - `robots.txt`, `sitemap.xml`, `llms.txt` — for search and AI crawlers.
 
 Asset paths are root-relative (`/ds/...`), so every page must be served from a
