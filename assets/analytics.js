@@ -26,7 +26,8 @@
   }catch(e){}
   var gpc = navigator.globalPrivacyControl === true;
   var production = location.hostname === "allrosters.com";
-  var on = production && !optedOut && !gpc;
+  var demo = /[?&]demo=/.test(location.search);           // simulated scores are never measured
+  var on = production && !optedOut && !gpc && !demo;
 
   if(on){
     var ads = {ad_storage:"denied", ad_user_data:"denied", ad_personalization:"denied"};
@@ -45,7 +46,7 @@
     document.head.appendChild(s);
   }
 
-  if(debug) console.info("[analytics]", on ? "sending to " + ID : "not sending", {production:production, optedOut:optedOut, gpc:gpc});
+  if(debug) console.info("[analytics]", on ? "sending to " + ID : "not sending", {production:production, optedOut:optedOut, gpc:gpc, demo:demo});
 
   window.arTrack = function(name, params){
     if(debug) console.info("[analytics] event", name, params || {});
