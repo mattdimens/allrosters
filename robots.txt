@@ -1,8 +1,8 @@
 # AllRosters
 # Crawling is open to every bot, including AI search and answer engines
 # (Googlebot, Bingbot, OAI-SearchBot, GPTBot, ClaudeBot, PerplexityBot).
-# While the site is private, the X-Robots-Tag header in vercel.json keeps
-# pages out of the index. Crawlers must be allowed here to see that header.
+# The homepage is indexable. /scoreboard is a personal, browser-rendered app,
+# so it carries its own noindex tag; it stays crawlable so that tag is seen.
 
 User-agent: *
 Allow: /

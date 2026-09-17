@@ -78,19 +78,18 @@ light-only system; the dark theme redefines its tokens in `index.html`.
 
 ## Search and privacy
 
-While the site is private, the `X-Robots-Tag: noindex` header on `/(.*)` in
-`vercel.json` keeps every page out of search results. `robots.txt` deliberately
-allows crawling: a crawler blocked by robots.txt never sees the noindex header,
-and can still list the bare URL. The header is a request, not a lock — for a
-real gate, turn on Vercel Authentication in project settings.
+The homepage is indexable. `/scoreboard` carries `noindex, follow` because it is a
+personal page rendered in the browser; the 404 page is `noindex` too. Any host
+other than allrosters.com (preview deployments, allrosters.vercel.app) gets an
+`X-Robots-Tag: noindex` header from `vercel.json`, so copies of the site never
+compete with the real one. `robots.txt` allows every crawler, AI search included,
+because a crawler blocked there can't see a noindex tag.
 
-To launch:
+After a launch-affecting change:
 
-1. Delete the `X-Robots-Tag` entry from the `/(.*)` block in `vercel.json`.
-   The homepage becomes indexable; `/scoreboard` stays out by its own meta tag.
-2. Add allrosters.com to Google Search Console and Bing Webmaster Tools
-   (Bing also feeds ChatGPT search and Copilot) and submit `/sitemap.xml`.
-3. Validate the homepage in Google's Rich Results Test and a social card debugger.
+1. In Google Search Console and Bing Webmaster Tools (Bing also feeds ChatGPT
+   search and Copilot), submit `/sitemap.xml` and request indexing for `/`.
+2. Check the homepage in Google's Rich Results Test and a social card debugger.
 
 When a page's content changes, update its `lastmod` in `sitemap.xml` and
 `dateModified` in the homepage's JSON-LD.
