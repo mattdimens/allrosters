@@ -330,6 +330,29 @@ button.mside:hover,.mside.on{background:var(--color-accent-100)}
 .gopen{border-bottom:2px solid var(--color-divider)}
 /* up next: kickoffs that involve your starters */
 .row.up{min-height:0;gap:14px}
+/* weekly awards */
+.awblk{border-bottom:1px solid var(--color-divider);box-shadow:inset 4px 0 0 var(--lg)}
+.awh{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px 11px 14px;text-align:left;cursor:pointer;background:var(--color-bg)}
+.awh:hover{background:var(--lg-tint)}
+.awh>.key{min-width:22px;height:18px;font-size:10px}
+.awh .awt{flex:1;min-width:0}
+.awh .nm{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.awh .caret{flex:none;width:18px;text-align:center;font-size:15px;line-height:1;color:var(--lg)}
+.awgrid{display:grid;grid-template-columns:minmax(0,1fr)}
+.list.wide .awgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.awr{display:grid;grid-template-columns:104px minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;padding:9px 14px;
+  text-align:left;background:var(--color-bg);border-top:1px solid var(--color-divider);cursor:pointer}
+.awr:disabled{cursor:default;color:inherit}
+button.awr:not(:disabled):hover{background:var(--lg-tint)}
+.awr.mine{background:var(--lg-tint)}
+.awr>.lb{white-space:nowrap}
+.awr .am{min-width:0}
+.awr .nm{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.awr .am .lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.awr .av{font-size:17px;text-align:right}
+.awlist{border-bottom:2px solid var(--color-divider)}
+.list.wide .awlist{max-width:1040px;border-right:2px solid var(--color-divider)}
+.list.wide .awlist .awr{box-shadow:inset -1px 0 0 var(--color-divider)}
 .row.live{gap:14px;cursor:pointer}
 button.row.live:hover{background:var(--color-accent-100)}
 .row.live .clk{width:auto;min-width:64px;align-self:center}
@@ -802,6 +825,87 @@ const ELIG = {QB:["QB"],RB:["RB"],WR:["WR"],TE:["TE"],K:["K"],DEF:["DEF"],
   DL:["DL"],LB:["LB"],DB:["DB"],IDP_FLEX:["DL","LB","DB"]};
 
 /* the highest-scoring legal lineup out of everyone rostered, and who filled each slot */
+/* ============================================================
+   WEEKLY AWARDS
+   Eight awards, the same every week, decided only by league-wide final
+   results: every team's points, every matchup, every player's points. No
+   projections, no randomness and nothing from your point of view, so everyone
+   in a league sees the same winners. Ties go to the lower roster id.
+   ============================================================ */
+const weekFinal = () => S.games.length>0 && S.games.every(g=>g.state==="post");
+function leagueAwards(L){
+  const teams=(L.pairs||[]).flatMap(pr=>pr.teams);
+  if(teams.length<2) return [];
+  const pts=t=>Math.round((t.pts||0)*100)/100;
+  const top=(arr,score)=>arr.slice().sort((a,b)=>(score(b)-score(a)) || ((a.roster?.roster_id??a.t?.roster?.roster_id??0)-(b.roster?.roster_id??b.t?.roster?.roster_id??0)))[0];
+  const games=(L.pairs||[]).filter(pr=>pr.teams.length===2).map(pr=>{
+    const [a,b]=pr.teams; if(pts(a)===pts(b)) return null;
+    const w=pts(a)>pts(b)?a:b, l=w===a?b:a;
+    return {w, l, margin:Math.round((pts(w)-pts(l))*100)/100, roster:w.roster};
+  }).filter(Boolean);
+  const out=[];
+  const add=(key,title,team,value,detail)=>{ if(team) out.push({key,title,team,value,detail}); };
+  const hi=top(teams,pts);
+  add("high","HIGH SCORE",hi,f2(pts(hi)),hi.user||"");
+  const starters=teams.flatMap(t=>t.side.filter(p=>p.starter && !p.empty).map(p=>({p,t,roster:t.roster})));
+  const mvp=top(starters,x=>x.p.pts||0);
+  if(mvp && mvp.p.pts) out.push({key:"mvp",title:"MVP",player:mvp.p,team:mvp.t,value:f1(mvp.p.pts),detail:mvp.t.name});
+  if(games.length){
+    const blow=top(games,g=>g.margin);
+    add("blowout","BLOWOUT",blow.w,"+"+f1(blow.margin),`Beat ${blow.l.name}`);
+    if(games.length>1){ const nail=top(games,g=>-g.margin); add("nail","NAIL-BITER",nail.w,"+"+f2(nail.margin),`Edged ${nail.l.name}`); }
+    const heart=top(games.map(g=>({...g, roster:g.l.roster})),g=>pts(g.l));
+    add("heart","HEARTBREAKER",heart.l,f2(pts(heart.l)),`Lost to ${heart.w.name}`);
+    const lucky=top(games,g=>-pts(g.w));
+    add("lucky","LUCKY WIN",lucky.w,f2(pts(lucky.w)),`Beat ${lucky.l.name}`);
+  }
+  const bench=top(teams.map(t=>({t, roster:t.roster, left:Math.round((bestLineup(t.side,L.slots).total-pts(t))*10)/10})),x=>x.left);
+  if(bench && bench.left>=0.1) add("bench","BENCH BLUNDER",bench.t,"+"+f1(bench.left),"Left on the bench");
+  const low=top(teams,t=>-pts(t));
+  add("low","ROCK BOTTOM",low,f2(pts(low)),low.user||"");
+  return out;
+}
+function awardRow(L, a){
+  const b=el("button","awr"+(a.team.mine?" mine":""));
+  b.onclick=()=>openLeague(L.id,null,"awards","league");
+  b.appendChild(lb(a.title));
+  const mid=el("div","am");
+  const nm=el("div","nm");
+  nm.appendChild(el("span",null, a.player ? a.player.name : a.team.name));
+  if(a.team.mine) nm.appendChild(el("span","you","YOU"));
+  mid.appendChild(nm);
+  mid.appendChild(lb(a.player ? `${[a.player.pos,a.player.team].filter(Boolean).join(" ")} · ${a.team.name}` : a.detail));
+  b.appendChild(mid);
+  b.appendChild(el("div","av n",a.value));
+  return b;
+}
+function awardsNote(){ return el("div","note","Based on final Sleeper scores. NFL stat corrections can still move them until midweek."); }
+/* home: a block per league; past three leagues they start closed with what you won */
+function renderAwardsHome(body){
+  const b=el("div","band"); b.appendChild(lb(`WEEK ${S.week} AWARDS`)); const c=lb("ALL GAMES FINAL"); c.style.marginLeft="auto"; b.appendChild(c);
+  body.appendChild(b);
+  S.awOpen = S.awOpen || {};
+  for(const L of S.leagues){
+    const list=leagueAwards(L);
+    if(!list.length) continue;
+    const key=`${S.week}:${L.id}`;
+    const open = S.awOpen[key] ?? (S.leagues.length<=3);
+    const blk=el("div","awblk lg"+L.ci+(open?" open":""));
+    const h=el("button","awh"); h.setAttribute("aria-expanded",open);
+    h.appendChild(chip(L));
+    const t=el("div","awt"); t.appendChild(el("div","nm",L.name));
+    const mine=list.filter(a=>a.team.mine).map(a=>a.title.toLowerCase().replace(/^\w/,c=>c.toUpperCase()));
+    t.appendChild(lb(mine.length ? "YOU: "+mine.join(", ").toUpperCase() : `${list.length} AWARDS`, mine.length?"lgc":null));
+    h.appendChild(t);
+    h.appendChild(el("span","caret",open?"▴":"▾"));
+    h.onclick=()=>{ S.awOpen[key]=!open; if(!open) track("awards_opened",{league_bucket:bucket(S.leagues.length)}); render(); };
+    blk.appendChild(h);
+    if(open){ const g=el("div","awgrid"); list.forEach(a=>g.appendChild(awardRow(L,a))); blk.appendChild(g); }
+    body.appendChild(blk);
+  }
+  body.appendChild(awardsNote());
+}
+
 function bestLineup(players, slots){
   const order = slots.map((s,i)=>({s,i})).filter(x=>ELIG[x.s])
                      .sort((a,b)=>ELIG[a.s].length-ELIG[b.s].length);   // tightest slots first
@@ -1254,7 +1358,8 @@ function renderHome(v){
     band("ON THE FIELD NOW", live.length+" PLAYING");
     live.forEach(x=>body.appendChild(liveRow(x)));
   }
-  if(!live.length && !up.length) band("ON THE FIELD NOW","0 PLAYING");
+  const awards = !live.length && !up.length && weekFinal() && S.leagues.some(L=>(L.pairs||[]).length);
+  if(!live.length && !up.length && !awards) band("ON THE FIELD NOW","0 PLAYING");
   if(up.length){
     band("UP NEXT · YOUR STARTERS", up.length+(up.length>1?" GAMES":" GAME"));
     for(const {g,ps} of up){
@@ -1274,7 +1379,8 @@ function renderHome(v){
       body.appendChild(r);
     }
   }
-  if(!live.length && !up.length){
+  if(awards) renderAwardsHome(body);
+  else if(!live.length && !up.length){
     body.appendChild(el("div","note", !S.games.length ? "Live game clocks are unreachable. The scores above still work."
       : S.games.every(g=>g.state==="post") ? "Every game this week is final."
       : "Nobody of yours is on the field right now."));
@@ -1366,9 +1472,9 @@ function installBanner(){
    RENDER — league detail
    ============================================================ */
 function detailLeague(){ return S.leagues.find(l=>l.id===S.league) || S.leagues[0]; }
-function openLeague(id, expandPid, from){
+function openLeague(id, expandPid, from, tab){
   track("league_opened", {from: from||"card", league_bucket: bucket(S.leagues.length), week: isCurrent() ? "current" : "past"});
-  S.view="detail"; S.league=id; S.tab="mine"; S.open=new Set(); S.anim=true;
+  S.view="detail"; S.league=id; S.tab=tab||"mine"; S.open=new Set(); S.anim=true;
   if(expandPid){
     const key=`${id}:${expandPid}`;
     S.open.add(key);
@@ -1514,6 +1620,16 @@ function themRows(L, host){
 function leagueRows(L, host){
   const pairs=L.pairs||[];
   if(!pairs.length){ host.appendChild(el("div","note",`No week ${S.week} matchups are posted in this league.`)); return; }
+  if(weekFinal()){
+    const list=leagueAwards(L);
+    if(list.length){
+      const aw=el("div","awlist");
+      aw.appendChild(headerRow(`WEEK ${S.week} AWARDS`, "FINAL"));
+      const g=el("div","awgrid");
+      list.forEach(a=>{ const r=awardRow(L,a); r.onclick=null; r.disabled=true; g.appendChild(r); });
+      aw.appendChild(g); host.appendChild(aw);
+    }
+  }
   host.appendChild(headerRow(`${L.name.toUpperCase()} · WEEK ${S.week}`, `${pairs.length} MATCHUP${pairs.length>1?"S":""}`));
   const grid=el("div","lgames");
   for(const pr of [...pairs].sort((a,b)=>(b.mine-a.mine)||(a.mid-b.mid))){
