@@ -54,7 +54,9 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
 /* ---------- header ---------- */
 .top{display:flex;align-items:center;gap:2px;padding:4px 8px 4px 14px;flex:none;
   border-bottom:2px solid var(--color-divider)}
-.brand{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:800;letter-spacing:.14em;white-space:nowrap}
+.brand{display:flex;align-items:center;gap:9px;min-height:40px;min-width:40px;padding-right:4px;font-size:13px;font-weight:800;letter-spacing:.14em;
+  white-space:nowrap;color:var(--color-text);text-decoration:none}
+.brand:hover .word{color:var(--color-accent)}
 .brand svg{width:20px;height:20px;display:block;flex:none}
 /* the week control: a labeled stepper, and a way home when you've gone back in time */
 .wk{margin-left:auto;display:flex;align-items:stretch;flex:none;height:36px;border:1px solid var(--color-divider)}
@@ -368,7 +370,7 @@ button.row:hover{background:var(--color-accent-100)}
 
 <div class="app">
   <header class="top">
-    <span class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" fill="var(--color-text)"/><rect x="5" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="5" y="17" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="17" width="10" height="10" fill="var(--color-neutral-600)"/></svg><span class="word">SCOREBOARD</span></span>
+    <a class="brand" href="/" aria-label="AllRosters home"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" fill="var(--color-text)"/><rect x="5" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="5" y="17" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="17" width="10" height="10" fill="var(--color-neutral-600)"/></svg><span class="word">SCOREBOARD</span></a>
     <div class="wk" role="group" aria-label="Week">
       <button class="step" id="prev" aria-label="Previous week">‹</button>
       <span class="wklab" id="wklab" aria-live="polite">WEEK —</span>

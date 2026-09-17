@@ -15,9 +15,13 @@ main{max-width:520px;border-top:2px solid var(--color-text);padding-top:16px}
 .lb{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700)}
 h1{font-size:clamp(36px,8vw,56px);line-height:.95;letter-spacing:-.03em;margin:8px 0 12px}
 .row{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+.brand{position:fixed;top:16px;left:16px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:800;letter-spacing:.14em;
+  color:var(--color-text);text-decoration:none}
+.brand svg{width:22px;height:22px;display:block}
 </style>
 </head>
 <body>
+<a class="brand" href="/" aria-label="AllRosters home"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" fill="var(--color-text)"/><rect x="5" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="5" y="17" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="17" width="10" height="10" fill="var(--color-neutral-600)"/></svg>ALLROSTERS</a>
 <main>
   <p class="lb">404</p>
   <h1>That page isn't on the board.</h1>
