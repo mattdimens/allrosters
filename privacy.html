@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en-US" data-theme="light">
+<head>
+<meta charset="utf-8">
+<script src="/assets/analytics.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Privacy · AllRosters</title>
+<meta name="description" content="What AllRosters keeps in your browser, what it asks Sleeper for, and the anonymous analytics it uses, with how to turn them off.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://allrosters.com/privacy">
+<meta name="theme-color" content="#f3f2f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1918" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/ds/modernist/styles.css">
+<link rel="stylesheet" href="/assets/dark.css">
+<script>
+try{
+  var t=(JSON.parse(localStorage.getItem("sb_cfg"))||{}).theme;
+  if(!t && matchMedia("(prefers-color-scheme: dark)").matches) t="dark";
+  if(t) document.documentElement.dataset.theme=t;
+}catch(e){}
+</script>
+<style>
+body{-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 var(--space-4)}
+.lb{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--color-neutral-700)}
+.lb.acc{color:var(--color-accent-700)}
+.site{border-bottom:2px solid var(--color-divider)}
+.site .wrap{display:flex;align-items:center;gap:var(--space-4);min-height:56px}
+.brand{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:800;letter-spacing:.14em;color:var(--color-text);text-decoration:none}
+.brand svg{width:22px;height:22px;display:block}
+.site nav{margin-left:auto}
+article{max-width:720px;padding:clamp(40px,7vw,72px) 0}
+h1{font-size:clamp(36px,6vw,56px);line-height:.95;letter-spacing:-.03em;margin:var(--space-3) 0 var(--space-4)}
+.lede{font-size:18px;color:var(--color-neutral-800);margin-bottom:var(--space-8)}
+h2{font-size:24px;letter-spacing:-.015em;margin:var(--space-8) 0 var(--space-3);padding-top:var(--space-4);border-top:2px solid var(--color-text)}
+p,li{color:var(--color-neutral-800)}
+ul{padding-left:1.2em;margin:0 0 var(--space-3)}
+li{margin-bottom:6px}
+.switch{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);margin-top:var(--space-3);padding:var(--space-3);
+  border:1px solid var(--color-divider);background:var(--color-surface)}
+.switch .state{font-weight:800}
+footer{border-top:2px solid var(--color-divider);padding:var(--space-6) 0 calc(var(--space-6) + env(safe-area-inset-bottom))}
+footer .wrap{display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-6);font-size:13px;color:var(--color-neutral-700)}
+footer a{color:inherit}
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="AllRosters home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" fill="var(--color-text)"/><rect x="5" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="5" y="17" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="17" width="10" height="10" fill="var(--color-neutral-600)"/></svg>
+      ALLROSTERS
+    </a>
+    <nav aria-label="Main"><a class="btn btn-primary" href="/scoreboard">Open scoreboard</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <article>
+    <p class="lb acc">Privacy</p>
+    <h1>What AllRosters knows about you</h1>
+    <p class="lede">Very little. There are no accounts, nothing you enter is stored on our side, and the analytics are anonymous and easy to turn off.</p>
+
+    <h2>Saved in your browser</h2>
+    <p>The scoreboard keeps these in your browser's local storage, on your device only:</p>
+    <ul>
+      <li>Your Sleeper username</li>
+      <li>Your settings: refresh rate, light or dark, and any leagues you've hidden</li>
+      <li>A cache of player names and injury statuses, refreshed every few hours</li>
+      <li>Whether you've turned analytics off</li>
+    </ul>
+    <p>Clearing this site's data in your browser removes all of it. Your personal scoreboard link (in settings) brings your leagues back.</p>
+
+    <h2>Sent to Sleeper</h2>
+    <p>To show your leagues, your browser asks Sleeper's public API directly for your leagues, rosters, matchups, projections and live scores, using your username. Those requests go straight from your browser to Sleeper, not through AllRosters. Sleeper's own privacy policy covers what it does with them. AllRosters is not affiliated with Sleeper.</p>
+
+    <h2>Anonymous analytics</h2>
+    <p>AllRosters uses Google Analytics 4 to learn how the site is used. It records:</p>
+    <ul>
+      <li>Pages visited, and roughly where visitors come from (country or region, and the site or search that sent them)</li>
+      <li>Device type, browser and screen size</li>
+      <li>Features used: opening a league, switching tabs or weeks, expanding a player or game, hiding leagues, and whether a username entered was found</li>
+      <li>How many leagues people follow, in ranges (1, 2–4, 5–9, 10+)</li>
+    </ul>
+    <p>It never records your Sleeper username, league names, team names or players. Usernames are removed from page addresses before anything is sent. Google Signals and ad features are off, the site shows no ads, and Google keeps the data for 14 months. Google Analytics doesn't store IP addresses.</p>
+    <p>Analytics are off by default for visitors in the European Economic Area, the UK and Switzerland, where only cookieless measurement is sent. If your browser sends a <a href="https://globalprivacycontrol.org/">Global Privacy Control</a> signal, analytics don't load at all.</p>
+    <div class="switch" id="switch" hidden>
+      <span>Analytics in this browser: <span class="state" id="state"></span></span>
+      <button class="btn btn-secondary" id="flip" type="button"></button>
+    </div>
+
+    <h2>Cookies</h2>
+    <p>The only cookies are Google Analytics' own (<code>_ga</code> and <code>_ga_*</code>), which tell repeat visits apart. They aren't set when analytics are off or in the regions above.</p>
+
+    <h2>Changes</h2>
+    <p>If this changes, this page will say so. Last updated September 16, 2026.</p>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 AllRosters</span>
+    <a href="/">Home</a>
+    <a href="/scoreboard">Scoreboard</a>
+  </div>
+</footer>
+<script>
+/* the same switch as the scoreboard's settings */
+(function(){
+  if(!window.arAnalytics) return;
+  var box=document.getElementById("switch"), state=document.getElementById("state"), flip=document.getElementById("flip");
+  function show(){
+    var st=arAnalytics.state();
+    box.hidden=false;
+    if(st==="gpc"){ state.textContent="off (Global Privacy Control)"; flip.hidden=true; return; }
+    state.textContent = st==="on" ? "on" : "off";
+    flip.textContent = st==="on" ? "Turn off" : "Turn on";
+  }
+  flip.addEventListener("click",function(){ arAnalytics.set(arAnalytics.state()!=="on"); show(); });
+  show();
+})();
+</script>
+</body>
+</html>

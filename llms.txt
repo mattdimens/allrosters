@@ -8,6 +8,7 @@ AllRosters is an independent project, not affiliated with or endorsed by Sleeper
 
 - [Homepage](https://allrosters.com/): what AllRosters does, how to set it up, how win probability is calculated, and FAQ
 - [Scoreboard](https://allrosters.com/scoreboard): the app itself, which runs in the browser
+- [Privacy](https://allrosters.com/privacy): what is stored, what is sent to Sleeper, and the analytics used
 
 ## Key facts
 
@@ -22,4 +23,4 @@ AllRosters is an independent project, not affiliated with or endorsed by Sleeper
 - Home screen: starters currently in live games, or between games the next kickoffs involving the visitor's starters
 - Left on the bench: the difference between points scored and the best legal lineup from the full roster, respecting flex eligibility, with the swaps that would have closed the gap
 - Scoring: point breakdowns use each league's own scoring settings (PPR, half-PPR, standard and custom)
-- Privacy: username and preferences are stored only in the visitor's browser, which is how returning visitors see their leagues without an account; https://allrosters.com/scoreboard?user=USERNAME opens a given user's leagues on any device
+- Privacy: no accounts; the username and preferences are stored only in the visitor's browser, which is how returning visitors see their leagues; https://allrosters.com/scoreboard?user=USERNAME opens a given user's leagues on any device. Anonymous Google Analytics 4 measures pages and feature use without usernames; it is off by default in the EEA, UK and Switzerland, honors Global Privacy Control, and can be turned off in settings. Details: https://allrosters.com/privacy
