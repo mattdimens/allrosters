@@ -16,6 +16,9 @@ AllRosters is an independent project, not affiliated with or endorsed by Sleeper
 - Data: Sleeper's public API (rosters, matchups, projections, stats) and Sleeper's live NFL scores
 - Refresh: every 45 seconds by default; 30 seconds, 90 seconds or 5 minutes are options
 - Win probability: points scored plus each remaining starter's projection scaled by the share of their game left; per-player uncertainty is combined and the probability that the projected margin ends above zero is read from a normal distribution; players listed Out, Doubtful, IR or suspended count for nothing
+- Views: every league side by side on the home screen, each league in its own color and letter; per league, a lineup view, a head-to-head matchup view (both lineups slot by slot), live NFL game clocks, and standings
+- Multi-league players: a player on the visitor's roster in more than one league carries a solid letter tag for each other league; an outlined tag marks a league where that player starts against the visitor
+- Home screen: starters currently in live games, or between games the next kickoffs involving the visitor's starters
 - Left on the bench: the difference between points scored and the best legal lineup from the full roster, respecting flex eligibility, with the swaps that would have closed the gap
 - Scoring: point breakdowns use each league's own scoring settings (PPR, half-PPR, standard and custom)
 - Privacy: username and preferences are stored only in the visitor's browser, which is how returning visitors see their leagues without an account; https://allrosters.com/scoreboard?user=USERNAME opens a given user's leagues on any device

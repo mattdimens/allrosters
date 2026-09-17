@@ -1,0 +1,23 @@
+/* League colors, shared by the scoreboard and the homepage's picture of it.
+   Red stays Modernist's signal color (live, win odds, lost points), so each league takes its own
+   hue, in order. Every value clears 4.5:1 on the ground and on its tint, in both themes.
+   An element opts in with .lg0–.lg3, which sets --lg and --lg-tint for everything inside it. */
+:root{
+  --league-0:#2549c8; --league-0-tint:#e8edfb;
+  --league-1:#0a7650; --league-1-tint:#e2f2ea;
+  --league-2:#6a3ecf; --league-2-tint:#eee8fa;
+  --league-3:#8f5d00; --league-3-tint:#f6ecd8;
+  --on-league:#ffffff;
+}
+[data-theme=dark]{
+  --league-0:#8ea7ff; --league-0-tint:#1b2243;
+  --league-1:#4ccf9e; --league-1-tint:#0f2a20;
+  --league-2:#b89dff; --league-2-tint:#241b3b;
+  --league-3:#eeb04f; --league-3-tint:#2e2310;
+  --on-league:#1a1918;
+}
+.lg0{--lg:var(--league-0);--lg-tint:var(--league-0-tint)}
+.lg1{--lg:var(--league-1);--lg-tint:var(--league-1-tint)}
+.lg2{--lg:var(--league-2);--lg-tint:var(--league-2-tint)}
+.lg3{--lg:var(--league-3);--lg-tint:var(--league-3-tint)}
+.lgc,.lb.lgc{color:var(--lg)}

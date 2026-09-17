@@ -16,10 +16,10 @@
 <meta property="og:url" content="https://allrosters.com/">
 <meta property="og:title" content="AllRosters: A Live Scoreboard for Every Sleeper League">
 <meta property="og:description" content="Every Sleeper matchup on one screen, with live win probability and the points your bench is costing you.">
-<meta property="og:image" content="https://allrosters.com/og.png">
+<meta property="og:image" content="https://allrosters.com/og.png?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="AllRosters scoreboard showing two Sleeper leagues side by side with scores and win probability">
+<meta property="og:image:alt" content="AllRosters scoreboard showing two Sleeper leagues, each in its own color, with scores and win probability">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
 
@@ -33,6 +33,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap">
 <link rel="stylesheet" href="/ds/modernist/styles.css">
 <link rel="stylesheet" href="/assets/dark.css">
+<link rel="stylesheet" href="/assets/leagues.css">
 <script>
 /* match the scoreboard's saved look, else the system's, before first paint */
 try{
@@ -69,7 +70,7 @@ try{
       "description": "Follow all your Sleeper fantasy football leagues on one live scoreboard: scores, win probability, game clocks, and the points your bench is costing you.",
       "isPartOf": { "@id": "https://allrosters.com/#website" },
       "about": { "@id": "https://allrosters.com/#app" },
-      "primaryImageOfPage": { "@type": "ImageObject", "url": "https://allrosters.com/og.png" },
+      "primaryImageOfPage": { "@type": "ImageObject", "url": "https://allrosters.com/og.png?v=2" },
       "dateModified": "2026-09-16",
       "inLanguage": "en-US"
     },
@@ -86,12 +87,14 @@ try{
       "publisher": { "@id": "https://allrosters.com/#org" },
       "description": "A free, read-only live scoreboard for people who play in more than one Sleeper fantasy football league.",
       "featureList": [
-        "Every Sleeper league for a username on one screen",
+        "Every Sleeper league for a username on one screen, each in its own color",
+        "Head-to-head matchup view, slot by slot",
         "Live win probability for each matchup",
         "Points left on the bench against your best possible lineup",
-        "Your starters currently on the field, with game clocks",
+        "League tags on every player rostered in more than one league",
+        "Your starters currently on the field, and upcoming kickoffs for your starters",
         "Point-by-point scoring breakdowns using each league's settings",
-        "Opponent lineups and league standings",
+        "League standings",
         "Lineup alerts for injured, bye-week and empty starters"
       ]
     },
@@ -105,6 +108,8 @@ try{
           "acceptedAnswer": { "@type": "Answer", "text": "No. AllRosters only needs your public Sleeper username. It reads the same public data anyone can see about a Sleeper league, and never asks for a password." } },
         { "@type": "Question", "name": "Will it remember my leagues next time?",
           "acceptedAnswer": { "@type": "Answer", "text": "Yes. Your username is saved in the browser you used, so the scoreboard opens straight to your leagues. Settings also gives you a personal link that brings them back on any other phone or computer, or if your browser's data gets cleared." } },
+        { "@type": "Question", "name": "What if the same player is on my roster in more than one league?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Each league gets its own color and letter. Beside a player's name, a solid letter marks every other league where that player is yours, and an outlined letter marks a league where they're starting against you. On the home screen, upcoming kickoffs list your starters with the same letters." } },
         { "@type": "Question", "name": "Can AllRosters change my lineup or make waiver claims?",
           "acceptedAnswer": { "@type": "Answer", "text": "No. Sleeper's public API is read-only, so AllRosters can only show your leagues. Lineup changes, trades and waivers still happen in the Sleeper app." } },
         { "@type": "Question", "name": "Does it work with ESPN, Yahoo or NFL.com leagues?",
@@ -163,23 +168,39 @@ body{-webkit-font-smoothing:antialiased}
 .start .fine{margin:var(--space-2) 0 0}
 .fine{font-size:13px;color:var(--color-neutral-700)}
 
-/* product picture, drawn with the scoreboard's own parts */
+/* product picture, drawn with the scoreboard's own parts: league colors, lead-sized scores, the way in */
 .shot{border:2px solid var(--color-text);background:var(--color-bg)}
-.shot .bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:2px solid var(--color-divider)}
+.shot .bar{display:flex;align-items:center;gap:10px;padding:8px 12px 8px 14px;border-bottom:2px solid var(--color-divider)}
 .shot .bar b{font-size:12px;letter-spacing:.14em}
-.shot .bar .lb{margin-left:auto}
-.shot .blip{width:8px;height:8px;background:var(--color-accent)}
+.shot .bar .wk{margin-left:auto}
+.livetag{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;background:var(--color-accent);color:var(--color-bg);
+  font-size:10px;font-weight:800;letter-spacing:.12em;white-space:nowrap}
+.livetag i{width:6px;height:6px;background:currentColor}
 .cells{display:grid;grid-template-columns:1fr 1fr}
-.cell{padding:12px;display:flex;flex-direction:column}
+.cell{padding:14px 12px 0;display:flex;flex-direction:column;box-shadow:inset 0 4px 0 var(--lg);min-width:0}
 .cell+.cell{border-left:2px solid var(--color-divider)}
-.cell.sel{background:var(--color-accent-100)}
-.cell .hd{display:flex;gap:6px}
+.cell.sel{background:var(--lg-tint)}
+.cell .hd{display:flex;align-items:center;gap:6px;min-width:0}
 .cell .hd .lb:last-child{margin-left:auto}
-.cme{font-size:clamp(24px,3.4vw,32px);line-height:1.05;margin-top:3px}
-.cthem{font-size:clamp(17px,2.2vw,21px);line-height:1.05;color:var(--color-neutral-600)}
+.key{display:inline-grid;place-items:center;min-width:15px;height:15px;padding:0 3px;flex:none;font-size:9px;font-weight:800;
+  line-height:1;letter-spacing:0;background:var(--lg);color:var(--on-league)}
+.key.vs{background:transparent;color:var(--lg);box-shadow:inset 0 0 0 1.5px var(--lg)}
+.cs{display:flex;align-items:baseline;gap:6px}
+.cs .v{font-size:clamp(24px,3.2vw,30px);line-height:1.05;letter-spacing:-.02em}
+.cs.trail .v{font-size:clamp(17px,2.1vw,20px);color:var(--color-neutral-600)}
+.cs .lb{font-size:9px}
+.cs.first{margin-top:4px}
 .matrix{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;margin:9px 0 4px}
 .matrix i{aspect-ratio:1;background:var(--color-neutral-300)}
 .matrix i.on{background:var(--color-accent)}
+.cst{color:var(--color-text);font-weight:800}
+.shot .cell .lb{font-size:10px}
+.shot .cell .lb.acc{margin:3px 0 10px}
+@media(max-width:479px){.shot .cell .lb.acc{display:none}.shot .cell .matrix{margin-bottom:6px}.cgo{margin-top:10px}.shot .cell .cst{display:block}}
+.cgo{display:flex;align-items:center;margin:auto -12px 0;padding:10px 12px;border-top:1px solid var(--color-divider);
+  color:var(--lg);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.cgo span:last-child{margin-left:auto;font-size:16px;line-height:1}
+.cell.sel .cgo{background:var(--lg);color:var(--on-league)}
 .shot .band{padding:8px 14px;background:var(--color-surface);border-top:2px solid var(--color-divider);
   border-bottom:2px solid var(--color-divider);display:flex}
 .shot .band .lb:last-child{margin-left:auto}
@@ -187,6 +208,7 @@ body{-webkit-font-smoothing:antialiased}
 .row:last-child{border-bottom:0}
 .row .p{width:48px;font-size:20px}
 .row .nm{font-size:14px;font-weight:600}
+.row .chips{display:inline-flex;gap:3px}
 .row .ck{margin-left:auto;text-align:right;font-size:12px;font-weight:800;color:var(--color-accent)}
 .shot figcaption{padding:8px 14px;margin:0;border-top:2px solid var(--color-divider)}
 
@@ -264,30 +286,32 @@ footer .dis{flex-basis:100%}
 
       <figure class="shot">
         <div aria-hidden="true">
-          <div class="bar"><b>SCOREBOARD</b><span class="lb">W2 · 3:42 PM</span><span class="blip"></span></div>
+          <div class="bar"><b>SCOREBOARD</b><span class="lb wk">‹ W2 ›</span><span class="livetag"><i></i>2 LIVE</span></div>
           <div class="cells">
-            <div class="cell sel">
-              <div class="hd"><span class="lb acc">Home league</span><span class="lb">1-0</span></div>
-              <div class="cme n">98.42</div>
-              <div class="cthem n">81.10</div>
+            <div class="cell lg0 sel">
+              <div class="hd"><span class="key">H</span><span class="lb lgc">Home league</span><span class="lb">1-0</span></div>
+              <div class="cs first"><span class="v n">98.42</span><span class="lb">You</span></div>
+              <div class="cs trail"><span class="v n">81.10</span><span class="lb">Them</span></div>
               <div class="matrix"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
-              <span class="lb">74% to win</span>
-              <span class="lb acc">Bench 22.6 · +6.4 lost</span>
+              <span class="lb">74% to win · <span class="cst">Up 17.3</span></span>
+              <span class="lb acc">Bench 22.6 · +6.4 left</span>
+              <div class="cgo"><span>Matchup &amp; stats</span><span>→</span></div>
             </div>
-            <div class="cell">
-              <div class="hd"><span class="lb acc">Dynasty</span><span class="lb">0-1</span></div>
-              <div class="cme n">64.90</div>
-              <div class="cthem n">77.35</div>
+            <div class="cell lg1">
+              <div class="hd"><span class="key">D</span><span class="lb lgc">Dynasty</span><span class="lb">0-1</span></div>
+              <div class="cs first trail"><span class="v n">64.90</span><span class="lb">You</span></div>
+              <div class="cs"><span class="v n">77.40</span><span class="lb">Them</span></div>
               <div class="matrix"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-              <span class="lb">36% to win</span>
-              <span class="lb acc">Bench 31.0 · +14.2 lost</span>
+              <span class="lb">36% to win · <span class="cst">Down 12.5</span></span>
+              <span class="lb acc">Bench 31.0 · +14.2 left</span>
+              <div class="cgo"><span>Matchup &amp; stats</span><span>→</span></div>
             </div>
           </div>
           <div class="band"><span class="lb">On the field now</span><span class="lb">3 playing</span></div>
-          <div class="row"><span class="p n">18.4</span><span class="nm">Your QB</span><span class="ck">Q3 6:12</span></div>
-          <div class="row"><span class="p n">11.7</span><span class="nm">Your WR1</span><span class="ck">Q2 0:48</span></div>
+          <div class="row"><span class="p n">18.4</span><span class="nm">Your QB</span><span class="chips"><span class="key lg0">H</span><span class="key lg1">D</span></span><span class="ck">Q3 6:12</span></div>
+          <div class="row"><span class="p n">11.7</span><span class="nm">Your WR1</span><span class="chips"><span class="key lg1">D</span></span><span class="ck">Q2 0:48</span></div>
         </div>
-        <figcaption class="lb">Two leagues, live, on one screen. Sample numbers.</figcaption>
+        <figcaption class="lb">Two leagues, live, each in its own color. Sample numbers.</figcaption>
       </figure>
     </div>
   </div>
@@ -298,12 +322,14 @@ footer .dis{flex-basis:100%}
       <h2 id="features-h">Everything a multi-league Sunday needs, and nothing it doesn't</h2>
       <p class="intro">Sleeper shows one league at a time. AllRosters loads every league for your username for the season and keeps them all live together.</p>
       <div class="grid">
-        <div><p class="lb">01</p><h3>All your leagues at once</h3><p>Your score, your opponent's score and your record in every league, side by side. Tap one to open the full matchup.</p></div>
-        <div><p class="lb">02</p><h3>Live win probability</h3><p>A 20-square meter per league shows how likely you are to win right now, based on who has played and who is still to come.</p></div>
-        <div><p class="lb">03</p><h3>Points left on the bench</h3><p>How many more points your best possible lineup would have scored, and exactly which swaps would have done it.</p></div>
-        <div><p class="lb">04</p><h3>Your players on the field now</h3><p>Every starter of yours in a live game, across all leagues, with the game clock and how far through the game they are.</p></div>
-        <div><p class="lb">05</p><h3>Scoring broken down</h3><p>Open any player to see each stat and what it was worth, priced with that league's own scoring settings, against their projection.</p></div>
-        <div><p class="lb">06</p><h3>Lineup alerts</h3><p>Injured, inactive and bye-week starters and empty slots, flagged before kickoff, with the bench players who could replace them.</p></div>
+        <div><p class="lb">01</p><h3>All your leagues at once</h3><p>Your score, your opponent's and your record in every league, side by side. Each league has its own color and letter, and one tap opens the full matchup.</p></div>
+        <div><p class="lb">02</p><h3>Head-to-head matchups</h3><p>Your lineup against your opponent's, slot by slot, with the higher score in each spot in bold. Tap either player for their stats.</p></div>
+        <div><p class="lb">03</p><h3>Live win probability</h3><p>A 20-square meter per league shows how likely you are to win right now, and whoever's ahead gets the bigger score.</p></div>
+        <div><p class="lb">04</p><h3>Points left on the bench</h3><p>How many more points your best possible lineup would have scored, and exactly which swaps would have done it.</p></div>
+        <div><p class="lb">05</p><h3>See which league every player is in</h3><p>A colored letter beside a player marks each league where they're yours. An outlined one flags a player starting against you somewhere else.</p></div>
+        <div><p class="lb">06</p><h3>On the field now, and up next</h3><p>Every starter of yours in a live game, with the clock. Between games, the next kickoffs that involve your starters, by day and time.</p></div>
+        <div><p class="lb">07</p><h3>Scoring broken down</h3><p>Open any player to see each stat and what it was worth, priced with that league's own scoring settings, against their projection.</p></div>
+        <div><p class="lb">08</p><h3>Lineup alerts</h3><p>Injured, inactive and bye-week starters and empty slots, flagged before kickoff, with the bench players who could replace them.</p></div>
       </div>
     </div>
   </section>
@@ -315,7 +341,7 @@ footer .dis{flex-basis:100%}
       <ol class="steps grid">
         <li><h3>Open AllRosters</h3><p>It runs in any browser on your phone or computer. Nothing to install, though you can add it to your home screen.</p></li>
         <li><h3>Enter your Sleeper username</h3><p>Type the username from your Sleeper profile. AllRosters finds every NFL league you're in this season and remembers you in that browser.</p></li>
-        <li><h3>Leave it open on game day</h3><p>Scores refresh every 45 seconds while games are live. Step back through past weeks with the arrows in the header.</p></li>
+        <li><h3>Leave it open on game day</h3><p>Scores refresh every 45 seconds, and a live tag in the header counts the games in progress. Step back through past weeks with the arrows beside it.</p></li>
       </ol>
     </div>
   </section>
@@ -352,6 +378,7 @@ footer .dis{flex-basis:100%}
         <details open><summary>Is AllRosters free?</summary><p>Yes. There is no account, no subscription and no ads. You enter your Sleeper username and your leagues load.</p></details>
         <details><summary>Do I have to log in to Sleeper or share my password?</summary><p>No. AllRosters only needs your public Sleeper username. It reads the same public data anyone can see about a Sleeper league, and never asks for a password.</p></details>
         <details><summary>Will it remember my leagues next time?</summary><p>Yes. Your username is saved in the browser you used, so the scoreboard opens straight to your leagues. Settings also gives you a personal link that brings them back on any other phone or computer, or if your browser's data gets cleared.</p></details>
+        <details><summary>What if the same player is on my roster in more than one league?</summary><p>Each league gets its own color and letter. Beside a player's name, a solid letter marks every other league where that player is yours, and an outlined letter marks a league where they're starting against you. On the home screen, upcoming kickoffs list your starters with the same letters.</p></details>
         <details><summary>Can AllRosters change my lineup or make waiver claims?</summary><p>No. Sleeper's public API is read-only, so AllRosters can only show your leagues. Lineup changes, trades and waivers still happen in the Sleeper app.</p></details>
         <details><summary>Does it work with ESPN, Yahoo or NFL.com leagues?</summary><p>Not today. AllRosters works with Sleeper NFL leagues only.</p></details>
         <details><summary>How is win probability calculated?</summary><p>For each starter still to play, AllRosters takes their projection and scales it by the share of their game left. Adding that to the points already scored gives a projected final for both teams. The uncertainty of each remaining starter is combined, and the chance your projected margin stays above zero on a normal curve is your win probability. Injured and inactive players count for nothing.</p></details>
