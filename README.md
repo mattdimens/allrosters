@@ -38,8 +38,8 @@ card each, and past four every league becomes a compact row. A card shows the
 score, a 20-square win-probability matrix and what your bench is costing you.
 Below the leagues are your starters on the field right now, or the next
 kickoffs that involve them. Tapping a league opens the detail screen: the
-scores, a win gauge, and four tabs (lineup, head-to-head matchup, game clocks,
-standings). Any player row opens a
+scores, a win gauge, and five tabs: lineup, your head-to-head matchup, the whole
+league's matchups that week (each opens slot by slot), standings, and NFL game clocks. Any player row opens a
 point-by-point breakdown of how their score was earned, priced with that
 league's own scoring settings.
 
@@ -99,7 +99,7 @@ stripped from page addresses, and no event carries a username, league or player 
 
 Pages call `arTrack(name, params)`. Events: `username_submitted` (found, source),
 `leagues_loaded` (league_bucket, leagues, hidden), `league_opened` (from, league_bucket, week),
-`tab_viewed`, `week_changed`, `player_expanded`, `game_expanded`, `leagues_hidden`,
+`tab_viewed`, `week_changed`, `player_expanded`, `game_expanded`, `matchup_expanded`, `leagues_hidden`,
 `install_banner_shown`, `install_banner_dismissed`, `install_steps_opened`, `install_prompt_opened`,
 `install_prompt_result`, `app_installed`, and on the
 homepage `username_form_submitted` and `open_scoreboard_click` (location).
