@@ -212,6 +212,22 @@ button.main:hover{background:var(--color-accent-100)}
 /* ---------- detail ---------- */
 .detail{flex:1;display:flex;flex-direction:column;min-height:0}
 .detail.enter{animation:slidein .22s ease-out}   /* only when it arrives as a navigation */
+/* phones: the league view scrolls as one page. Only the tabs stay, and once the big score has
+   scrolled away a slim score bar slides in above them. The bar is drawn over the space the score
+   left (sticky offsets don't move the layout), so nothing below it jumps. */
+.pane.detail.flowy{display:block;overflow-y:auto;position:relative}
+.flowy .list{flex:none;min-height:0}
+.dstick{position:sticky;top:0;z-index:6;background:var(--color-bg)}
+.dstick.stuck{top:44px}
+.mini{position:absolute;left:0;right:0;bottom:100%;height:44px;width:100%;display:flex;align-items:center;gap:8px;padding:0 14px;
+  text-align:left;cursor:pointer;background:var(--color-bg);box-shadow:inset 0 3px 0 var(--lg),inset 0 -1px 0 var(--color-divider);
+  opacity:0;pointer-events:none;transform:translateY(6px);transition:opacity .18s,transform .18s}
+.dstick.stuck .mini{opacity:1;pointer-events:auto;transform:none}
+.mini .ms{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--color-neutral-600);letter-spacing:-.01em}
+.mini .ms.lead{color:var(--color-text)}
+.mini .dash{color:var(--color-neutral-500)}
+.mini .mw{margin-left:auto;white-space:nowrap}
+.mini .up{font-size:15px;color:var(--lg);margin-left:4px}
 .back{display:flex;align-items:center;gap:8px;padding:10px 14px;width:100%;text-align:left;cursor:pointer;flex:none;
   border-bottom:1px solid var(--color-divider)}
 .back:hover{background:var(--color-accent-100)}
@@ -1503,6 +1519,8 @@ function tableRows(L, host){
 function renderDetail(d){
   const L=detailLeague();
   d.classList.add("lg"+L.ci);
+  const flowy=!S.wide;
+  if(flowy){ d.classList.add("flowy","scroll"); d.dataset.k=`detail:${L.id}`; }
 
   /* wide keeps home open beside this, so neither control has anything to do */
   if(!S.wide){
@@ -1570,14 +1588,43 @@ function renderDetail(d){
   const tabs=el("div","tabs");
   [["LINEUP","mine"],["MATCHUP","them"],["LEAGUE","league"],["STANDINGS","table"],["NFL","clocks"]].forEach(([label,val])=>{
     const b=el("button",null,label); b.setAttribute("aria-selected",S.tab===val); b.setAttribute("role","tab");
-    b.onclick=()=>{ if(S.tab!==val) track("tab_viewed", {tab: label.toLowerCase()}); S.tab=val; S.open=new Set(); render(); };
+    b.onclick=()=>{
+      if(S.tab!==val) track("tab_viewed", {tab: label.toLowerCase()});
+      if(flowy) S.tabJump=d.scrollTop;          // the new tab should start under the tabs, not mid-list
+      S.tab=val; S.open=new Set(); render();
+    };
     tabs.appendChild(b);
   });
   tabs.setAttribute("role","tablist");
-  d.appendChild(tabs);
+  if(flowy){
+    const stick=el("div","dstick");
+    const mini=el("button","mini"); mini.setAttribute("aria-label","Back to the top of this league");
+    mini.appendChild(chip(L));
+    if(!L.error && L.hasMatchup){
+      const lead=leader(L);
+      mini.appendChild(lb("YOU"));
+      mini.appendChild(el("span","ms"+(lead!=="them"?" lead":""),f2(L.myPts)));
+      mini.appendChild(el("span","dash","–"));
+      mini.appendChild(el("span","ms"+(lead!=="me"?" lead":""),f2(L.oppPts)));
+      mini.appendChild(lb("THEM"));
+      const ml=lb(w ? (w.decided ? statusOf(L) : Math.round(w.p*100)+"% TO WIN") : "","mw"); ml.classList.add("mw");
+      mini.appendChild(ml);
+    }else{
+      const nm=lb(L.name.toUpperCase(),"lgc"); mini.appendChild(nm);
+      mini.appendChild(el("span","mw",""));
+    }
+    mini.appendChild(el("span","up","↑"));
+    mini.onclick=()=>d.scrollTo({top:0,behavior:"smooth"});
+    stick.appendChild(mini); stick.appendChild(tabs); d.appendChild(stick);
+    /* the bar takes over when 44px of score is left, exactly covering it, so the tabs never move */
+    /* measured from the score block: a stuck element's offsetTop reports where it's stuck, not where it sits */
+    d._tabTop=()=>sc.offsetTop+sc.offsetHeight-44;
+    d._sync=()=>{ stick.classList.toggle("stuck", d.scrollTop >= d._tabTop()); };
+    d.addEventListener("scroll", d._sync, {passive:true});
+  }else d.appendChild(tabs);
 
-  const list=el("div","list scroll"+(S.wide?" wide":""));
-  list.dataset.k=`list:${L.id}:${S.tab}`;
+  const list=el("div","list"+(flowy?"":" scroll")+(S.wide?" wide":""));
+  if(!flowy) list.dataset.k=`list:${L.id}:${S.tab}`;
   const host = S.tab==="clocks" ? list.appendChild(el("div","flow")) : list;
   ({mine:mineRows,clocks:clockRows,them:themRows,league:leagueRows,table:tableRows}[S.tab])(L,host);
   d.appendChild(list);
@@ -1841,6 +1888,12 @@ function render(){
   else if(S.view==="detail" && S.leagues.some(l=>l.id===S.league)) v.appendChild(detail());
   else { S.view="home"; v.appendChild(home()); }
   v.querySelectorAll("[data-k]").forEach(n=>{ if(keep[n.dataset.k]) n.scrollTop=keep[n.dataset.k]; });
+  const dp=v.querySelector(".pane.detail.flowy");
+  if(dp){
+    if(S.tabJump!=null){ dp.scrollTop=Math.min(S.tabJump, dp._tabTop()); }
+    dp._sync();
+  }
+  S.tabJump=null;
   const strip=v.querySelector(".switch.strip");
   if(strip){
     const on=strip.querySelector("[aria-pressed=true]");
