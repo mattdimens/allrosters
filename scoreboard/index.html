@@ -255,6 +255,9 @@ button.main:hover{background:var(--color-accent-100)}
 .tabs button:hover{color:var(--color-accent)}
 .tabs button[aria-selected=true]{font-weight:800;color:var(--color-text);
   border-bottom:3px solid var(--lg,var(--color-accent));margin-bottom:-2px}
+/* five tabs on a small phone: close up the gaps rather than scroll */
+@media(max-width:419px){.tabs{gap:14px}}
+@media(max-width:389px){.tabs{gap:10px;padding:0 12px}}
 
 /* ---------- rows ---------- */
 /* wide: games flow into columns; an open one spans them */
@@ -290,6 +293,33 @@ button.mside:hover,.mside.on{background:var(--color-accent-100)}
   .mrow{grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr)}
 }
 .list.wide .mwrap,.list.wide .stand{max-width:1040px;border-right:2px solid var(--color-divider);min-height:100%}
+/* league tab: a card per matchup, two across when wide, an opened one spanning both */
+.lgames{display:grid;grid-template-columns:minmax(0,1fr);align-content:start}
+.list.wide .lgames{grid-template-columns:repeat(2,minmax(0,1fr));max-width:1040px;border-right:2px solid var(--color-divider)}
+.list.wide .lgames .gopen{grid-column:1/-1;max-width:none;border-right:0;min-height:0}
+.list.wide .gcard:not(.on){box-shadow:inset -1px 0 0 var(--color-divider)}
+.gcard{display:block;width:100%;text-align:left;cursor:pointer;background:var(--color-bg);padding:10px 14px 9px;
+  border-bottom:1px solid var(--color-divider)}
+.gcard:hover,.gcard.on{background:var(--lg-tint)}
+.gcard.mine,.list.wide .gcard.mine:not(.on){box-shadow:inset 4px 0 0 var(--lg)}
+.gt{display:flex;align-items:center;gap:10px;min-height:36px}
+.gav{width:24px;height:24px;flex:none;display:grid;place-items:center;object-fit:cover;background:var(--color-surface);
+  font-size:11px;font-weight:800;color:var(--color-neutral-700);box-shadow:inset 0 0 0 1px var(--color-divider)}
+.gt .gn{flex:1;min-width:0}
+.gt .nm{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.gt .gn .lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.you{display:inline-block;margin-left:6px;padding:2px 4px;font-size:9px;font-weight:800;letter-spacing:.1em;vertical-align:2px;
+  background:var(--lg);color:var(--on-league)}
+.gt .v{flex:none;font-size:22px;line-height:1;letter-spacing:-.02em}
+.gt .v.trail{font-size:17px;color:var(--color-neutral-600)}
+.gt .v.tie{font-size:19px}
+.gbar{display:flex;height:4px;margin:8px 0 5px;background:var(--color-neutral-300)}
+.gbar i{display:block;height:4px;background:var(--color-text)}
+.grule{height:1px;margin:8px 0 5px;background:var(--color-divider)}
+.gfoot{display:flex;align-items:center;gap:8px}
+.gfoot .lb:nth-child(2){flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gfoot .caret{width:14px;text-align:right;font-size:11px;color:var(--color-neutral-600)}
+.gopen{border-bottom:2px solid var(--color-divider)}
 /* up next: kickoffs that involve your starters */
 .row.up{min-height:0;gap:14px}
 .row.up .clk{width:auto;min-width:64px;align-self:flex-start}
@@ -647,8 +677,25 @@ async function loadLeague(L){
   L.myName=L.teamName(mine); L.oppName=oppR?L.teamName(oppR):null;
   L.myPts=mm?.points??0; L.oppPts=opp?.points??0; L.hasMatchup=!!mm;
   L.mine = buildSide(mm,mine,L); L.them = opp?buildSide(opp,oppR,L):[];
-  L.record = `${mine.settings?.wins??0}-${mine.settings?.losses??0}${mine.settings?.ties?`-${mine.settings.ties}`:""}`;
+  L.record = recordOf(mine);
+
+  /* the whole week in this league: each matchup's two teams, yours reusing the sides built above */
+  const byMid=new Map();
+  for(const m of matchups){ if(m.matchup_id==null) continue; if(!byMid.has(m.matchup_id)) byMid.set(m.matchup_id,[]); byMid.get(m.matchup_id).push(m); }
+  L.pairs=[...byMid.entries()].sort((a,b)=>a[0]-b[0]).map(([mid,ms])=>{
+    const teams=ms.slice(0,2).map(m=>{
+      const r=rosters.find(x=>x.roster_id===m.roster_id);
+      const side = r===mine ? L.mine : r===oppR ? L.them : buildSide(m,r,L);
+      return { roster:r, pts:m.points??0, side, mine:r===mine, name:L.teamName(r), user:L.userName(r), record:recordOf(r),
+               avatar:L.userById[r?.owner_id]?.avatar||null };
+    });
+    if(teams[1]?.mine) teams.reverse();
+    return { mid, teams, mine:teams.some(t=>t.mine) };
+  });
+  const paired=new Set(matchups.filter(m=>m.matchup_id!=null).map(m=>m.roster_id));
+  L.byes=rosters.filter(r=>!paired.has(r.roster_id)).map(r=>L.teamName(r));
 }
+const recordOf = r => `${r?.settings?.wins??0}-${r?.settings?.losses??0}${r?.settings?.ties?`-${r.settings.ties}`:""}`;
 
 function buildSide(m, roster, L){
   const startIds = m?.starters || roster?.starters || [];
@@ -683,13 +730,18 @@ function projectSide(players, L){
   }
   return {rem, sd:Math.sqrt(v), left, total};
 }
+/* the chance side A outscores side B, from points on the board and what's left to play */
+function pairProb(A, B, ptsA, ptsB, L){
+  const a=projectSide(A,L), b=projectSide(B,L);
+  const diff=(ptsA+a.rem)-(ptsB+b.rem), sd=Math.sqrt(a.sd*a.sd+b.sd*b.sd);
+  const p = sd<0.5 ? (diff>0?1:diff<0?0:0.5) : normCdf(diff/sd);
+  return { p:clamp(p,0.001,0.999), projA:ptsA+a.rem, projB:ptsB+b.rem, leftA:a.left, leftB:b.left, total:a.total,
+           decided:a.left===0&&b.left===0, margin:ptsA-ptsB };
+}
 function winProb(L){
   if(!L.hasMatchup||!L.them.length) return null;
-  const a=projectSide(L.mine,L), b=projectSide(L.them,L);
-  const diff=(L.myPts+a.rem)-(L.oppPts+b.rem), sd=Math.sqrt(a.sd*a.sd+b.sd*b.sd);
-  const p = sd<0.5 ? (diff>0?1:diff<0?0:0.5) : normCdf(diff/sd);
-  return { p:clamp(p,0.001,0.999), projMe:L.myPts+a.rem, projOpp:L.oppPts+b.rem,
-           left:a.left, total:a.total, oppLeft:b.left, decided:a.left===0&&b.left===0, margin:L.myPts-L.oppPts };
+  const w=pairProb(L.mine,L.them,L.myPts,L.oppPts,L);
+  return { p:w.p, projMe:w.projA, projOpp:w.projB, left:w.leftA, total:w.total, oppLeft:w.leftB, decided:w.decided, margin:w.margin };
 }
 const OUT = new Set(["Out","IR","PUP","Sus","COV","NA","Doubtful"]);
 const isOut = p => OUT.has(p.inj);
@@ -888,7 +940,7 @@ function rowEl(o){
 function toggle(key, pid){
   if(S.open.has(key)) S.open.delete(key);
   else{
-    track(pid ? "player_expanded" : "game_expanded", {tab: {mine:"lineup",them:"matchup",clocks:"games",table:"standings"}[S.tab]||S.tab});
+    track(pid ? "player_expanded" : "game_expanded", {tab: {mine:"lineup",them:"matchup",league:"league",clocks:"nfl",table:"standings"}[S.tab]||S.tab});
     S.open.add(key);
     if(pid && S.statCache[statKey(pid)]===undefined) statsFor(pid).then(render);
   }
@@ -1312,33 +1364,106 @@ function clockRows(L, host){
   }
 }
 
-/* head to head: each lineup slot as one row, you on the left and them on the right */
-function themRows(L, host){
-  if(!(L.them||[]).length){ host.appendChild(el("div","note","No opponent this week.")); return; }
+/* head to head: each lineup slot as one row, one team on the left and the other on the right */
+function headToHead(L, A, B, o){
   const bySlot=side=>{ const m=new Map(); for(const p of side||[]) if(p.starter) m.set(p.slotIndex,p); return m; };
-  const A=bySlot(L.mine), B=bySlot(L.them);
-  const idx=[...new Set([...A.keys(),...B.keys()])].sort((x,y)=>x-y);
+  const SA=bySlot(A), SB=bySlot(B);
+  const idx=[...new Set([...SA.keys(),...SB.keys()])].sort((x,y)=>x-y);
+  const scored=[...(A||[]),...(B||[])].some(p=>p.pts);
   const wrap=el("div","mwrap");
-  wrap.appendChild(headerRow(`${(L.myName||"You").toUpperCase()} VS ${(L.oppName||"Opponent").toUpperCase()}`,
-    `${f2(L.myPts)} – ${f2(L.oppPts)}`));
+  if(o.header) wrap.appendChild(headerRow(`${(o.nameA||"Team").toUpperCase()} VS ${(o.nameB||"Team").toUpperCase()}`, `${f2(o.ptsA)} – ${f2(o.ptsB)}`));
   for(const i of idx){
-    const a=A.get(i), b=B.get(i);
-    const lead = a && b && started(L) ? (a.pts>b.pts+0.04 ? "a" : b.pts>a.pts+0.04 ? "b" : "") : "";
+    const a=SA.get(i), b=SB.get(i);
+    const lead = a && b && scored ? (a.pts>b.pts+0.04 ? "a" : b.pts>a.pts+0.04 ? "b" : "") : "";
     const r=el("div","mrow");
-    r.appendChild(matchSide(a,L,"a",lead==="a"));
+    r.appendChild(matchSide(a,L,"a",lead==="a",o.keyA));
     r.appendChild(el("div","mslot",slotShort(L.slots[i]||a?.slot||b?.slot)));
-    r.appendChild(matchSide(b,L,"b",lead==="b"));
+    r.appendChild(matchSide(b,L,"b",lead==="b",o.keyB));
     wrap.appendChild(r);
-    for(const [p,k] of [[a,"M"],[b,"T"]]){
-      if(!p || p.empty || !S.open.has(`${L.id}:${k}:${p.pid}`)) continue;
-      wrap.appendChild(playerPanel(p,L,k==="M" ? "" : `${L.oppName||"Opponent"} starting`));
+    for(const [p,k,ctx] of [[a,o.keyA,o.ctxA],[b,o.keyB,o.ctxB]]){
+      if(!p || p.empty || !S.open.has(`${k}:${p.pid}`)) continue;
+      wrap.appendChild(playerPanel(p,L,ctx||""));
     }
   }
-  host.appendChild(wrap);
+  return wrap;
 }
-function matchSide(p, L, side, lead){
+function themRows(L, host){
+  if(!(L.them||[]).length){ host.appendChild(el("div","note","No opponent this week.")); return; }
+  host.appendChild(headToHead(L, L.mine, L.them, {header:true, nameA:L.myName||"You", nameB:L.oppName||"Opponent",
+    ptsA:L.myPts, ptsB:L.oppPts, keyA:`${L.id}:M`, keyB:`${L.id}:T`, ctxA:"", ctxB:`${L.oppName||"Opponent"} starting`}));
+}
+
+/* the week across the league: a card per matchup, yours first; tap one to open its head to head */
+function leagueRows(L, host){
+  const pairs=L.pairs||[];
+  if(!pairs.length){ host.appendChild(el("div","note",`No week ${S.week} matchups are posted in this league.`)); return; }
+  host.appendChild(headerRow(`${L.name.toUpperCase()} · WEEK ${S.week}`, `${pairs.length} MATCHUP${pairs.length>1?"S":""}`));
+  const grid=el("div","lgames");
+  for(const pr of [...pairs].sort((a,b)=>(b.mine-a.mine)||(a.mid-b.mid))){
+    const key=`${L.id}:G${pr.mid}`, open=S.open.has(key);
+    grid.appendChild(matchCard(L,pr,key,open));
+    const [A,B]=pr.teams;
+    if(open && B){
+      const w=headToHead(L, A.side, B.side, {header:true, nameA:A.name, nameB:B.name, ptsA:A.pts, ptsB:B.pts,
+        keyA:`${key}a`, keyB:`${key}b`, ctxA:A.mine?"":`${A.name} starting`, ctxB:`${B.name} starting`});
+      w.classList.add("gopen"); grid.appendChild(w);
+    }
+  }
+  host.appendChild(grid);
+  if(L.byes?.length) host.appendChild(el("div","note",`On bye this week: ${L.byes.join(", ")}.`));
+}
+function matchCard(L, pr, key, open){
+  const [A,B]=pr.teams;
+  const card=el("button","gcard"+(pr.mine?" mine":"")+(open?" on":""));
+  card.setAttribute("aria-expanded", open);
+  card.onclick=()=>{
+    if(S.open.has(key)) S.open.delete(key);
+    else{ S.open.add(key); track("matchup_expanded",{mine:pr.mine}); }
+    render();
+  };
+  const d = B ? Math.round((A.pts-B.pts)*100) : 0;
+  const team=(t,side)=>{
+    const row=el("div","gt");
+    if(t.avatar){
+      const img=el("img","gav"); img.src=`https://sleepercdn.com/avatars/thumbs/${encodeURIComponent(t.avatar)}`;
+      img.alt=""; img.width=24; img.height=24; img.loading="lazy";
+      img.onerror=()=>img.replaceWith(el("span","gav",(t.name||"?")[0].toUpperCase()));
+      row.appendChild(img);
+    }else row.appendChild(el("span","gav",(t.name||"?")[0].toUpperCase()));
+    const n=el("div","gn");
+    const nm=el("div","nm"); nm.appendChild(el("span",null,t.name));
+    if(t.mine) nm.appendChild(el("span","you","YOU"));
+    n.appendChild(nm);
+    n.appendChild(lb([t.user && t.user!==t.name ? t.user : "", t.record].filter(Boolean).join(" · ")));
+    row.appendChild(n);
+    const lead = !B || d===0 ? "tie" : (d>0)===(side==="a") ? "lead" : "trail";
+    row.appendChild(el("div","v n "+lead, f2(t.pts)));
+    return row;
+  };
+  card.appendChild(team(A,"a"));
+  if(!B){ card.appendChild(lb("NO OPPONENT")); return card; }
+  card.appendChild(team(B,"b"));
+  const w=pairProb(A.side,B.side,A.pts,B.pts,L);
+  /* odds only mean something while there's still football to play */
+  if(!w.decided){ const bar=el("div","gbar"); const i=el("i"); i.style.width=Math.round(w.p*100)+"%"; bar.appendChild(i); card.appendChild(bar); }
+  else card.appendChild(el("div","grule"));
+  const foot=el("div","gfoot");
+  const pa=Math.round(w.p*100);
+  foot.appendChild(lb(w.decided ? (d>0?"WON":d<0?"LOST":"TIED") : pa+"%"));
+  const live = [...A.side,...B.side].some(p=>p.starter && gameLabel(p.team).live);
+  foot.appendChild(lb(w.decided ? "FINAL"
+    : started2(A,B) ? `${w.leftA+w.leftB} STARTERS LEFT${live?" · LIVE":""}`
+    : `PROJ ${f1(w.projA)} – ${f1(w.projB)}`));
+  foot.appendChild(lb(w.decided ? (d<0?"WON":d>0?"LOST":"TIED") : (100-pa)+"%"));
+  foot.appendChild(el("span","caret",open?"▴":"▾"));
+  card.appendChild(foot);
+  return card;
+}
+const started2 = (A,B) => !!(A.pts || B.pts || [...A.side,...B.side].some(p=>p.pts));
+
+function matchSide(p, L, side, lead, prefix){
   if(!p) return el("div","mside "+side);
-  const key=`${L.id}:${side==="a"?"M":"T"}:${p.pid}`;
+  const key=`${prefix}:${p.pid}`;
   const b=el(p.empty?"div":"button","mside "+side+(S.open.has(key)?" on":""));
   if(!p.empty) b.onclick=()=>toggle(key,p.pid);
   b.appendChild(el("div","mp n"+(lead?" lead":"")+(p.pts?"":" zero"), p.empty?"—":f1(p.pts)));
@@ -1443,7 +1568,7 @@ function renderDetail(d){
   d.appendChild(sc);
 
   const tabs=el("div","tabs");
-  [["LINEUP","mine"],["MATCHUP","them"],["GAMES","clocks"],["STANDINGS","table"]].forEach(([label,val])=>{
+  [["LINEUP","mine"],["MATCHUP","them"],["LEAGUE","league"],["STANDINGS","table"],["NFL","clocks"]].forEach(([label,val])=>{
     const b=el("button",null,label); b.setAttribute("aria-selected",S.tab===val); b.setAttribute("role","tab");
     b.onclick=()=>{ if(S.tab!==val) track("tab_viewed", {tab: label.toLowerCase()}); S.tab=val; S.open=new Set(); render(); };
     tabs.appendChild(b);
@@ -1454,7 +1579,7 @@ function renderDetail(d){
   const list=el("div","list scroll"+(S.wide?" wide":""));
   list.dataset.k=`list:${L.id}:${S.tab}`;
   const host = S.tab==="clocks" ? list.appendChild(el("div","flow")) : list;
-  ({mine:mineRows,clocks:clockRows,them:themRows,table:tableRows}[S.tab])(L,host);
+  ({mine:mineRows,clocks:clockRows,them:themRows,league:leagueRows,table:tableRows}[S.tab])(L,host);
   d.appendChild(list);
 
 }
