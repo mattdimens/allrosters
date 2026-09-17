@@ -33,6 +33,10 @@ https://allrosters.com. No build step, no server, no API keys — static HTML.
 Asset paths are root-relative (`/ds/...`), so every page must be served from a
 server, never opened as a file.
 
+Shared files under `/ds/` and `/assets/` aren't versioned, so `vercel.json` makes browsers
+revalidate them on every load (`max-age=0, must-revalidate`). An unchanged file costs a 304;
+a changed one reaches returning visitors on their next visit instead of up to a day later.
+
 Two screens. The home screen is every league at once: up to four leagues get a
 card each, and past four every league becomes a compact row. A card shows the
 score, a 20-square win-probability matrix and what your bench is costing you.
