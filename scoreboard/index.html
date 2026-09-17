@@ -179,6 +179,24 @@ button{font-family:inherit;color:inherit;font-size:inherit;background:none;borde
 
 /* ---------- footers ---------- */
 .foot{border-top:2px solid var(--color-divider);display:flex;align-items:stretch;flex:none}
+/* add to home screen: a quiet strip above the footer, never on a first visit */
+.install{display:flex;align-items:center;gap:12px;flex:none;padding:10px 4px 10px 14px;
+  border-top:2px solid var(--color-text);background:var(--color-surface);animation:fan .25s ease-out}
+.install .im{flex:none;width:34px;height:34px}
+.install .im svg{width:34px;height:34px;display:block}
+.install .it{flex:1;min-width:0}
+.install .t{font-size:14px;font-weight:800;line-height:1.25}
+.install .d{font-size:12px;line-height:1.35;color:var(--color-neutral-800);margin-top:1px}
+.install .btn{flex:none;padding:9px 14px;font-size:13px}
+.install .x{flex:none;width:36px;height:44px;display:grid;place-items:center;cursor:pointer;font-size:22px;line-height:1;color:var(--color-neutral-700)}
+.install .x:hover{color:var(--color-accent)}
+.steps{list-style:none;margin:4px 0 0;padding:0;counter-reset:st}
+.steps li{counter-increment:st;display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--color-divider);font-size:15px}
+.steps li::before{content:counter(st);flex:none;width:24px;height:24px;display:grid;place-items:center;
+  background:var(--color-accent);color:var(--color-bg);font-size:12px;font-weight:800}
+.steps .ico{display:inline-grid;place-items:center;width:26px;height:26px;vertical-align:-7px;margin:0 2px;
+  border:1px solid var(--color-divider);background:var(--color-bg)}
+.steps .ico svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .foot .main{flex:1;min-width:0;padding:11px 12px;text-align:left}
 .foot .main .v{font-size:15px;font-variant-numeric:tabular-nums;font-weight:800}
 button.main{cursor:pointer}
@@ -549,7 +567,9 @@ async function loadShell(){
   if(S.league && !S.leagues.some(l=>l.id===S.league)){ S.league=null; S.view="home"; }
   if(!S.tracked){
     S.tracked=true;
-    track("leagues_loaded", {league_bucket: bucket(S.leagues.length), leagues: S.leagues.length, hidden: lgs.length-S.leagues.length});
+    track("leagues_loaded", {league_bucket: bucket(S.leagues.length), leagues: S.leagues.length, hidden: lgs.length-S.leagues.length,
+      display_mode: INSTALL.standalone ? "home_screen" : "browser"});
+    if(!INSTALL.standalone) saveInstall({visits:(installState().visits||0)+1});
   }
 }
 
@@ -1103,6 +1123,7 @@ function renderHome(v){
   }
   v.appendChild(body);
 
+  if(showInstallBanner()) v.appendChild(installBanner());
   const foot=el("div","foot");
   const next=[...S.games].filter(g=>g.state==="pre").sort((a,b)=>a.start-b.start)[0];
   const main=el("div","main");
@@ -1118,6 +1139,68 @@ function renderHome(v){
   if(al.length) ab.onclick=()=>{ S.modal="alerts"; render(); };
   foot.appendChild(ab);
   v.appendChild(foot);
+}
+
+/* ============================================================
+   ADD TO HOME SCREEN
+   Chrome and Edge on Android hand us a real install prompt; Safari has no API,
+   so iPhones and iPads get steps. An iPhone home-screen app keeps its own
+   storage, so while the steps are open the address carries ?user=, which the
+   app adopts on its first launch.
+   ============================================================ */
+const INSTALL = {
+  prompt:null,
+  standalone: matchMedia("(display-mode: standalone)").matches || navigator.standalone===true,
+  android: /Android/i.test(navigator.userAgent),
+  /* iPadOS reports itself as a Mac, so a Mac with a touchscreen is an iPad */
+  ios: !/Android/i.test(navigator.userAgent) && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1)),
+  touch: matchMedia("(pointer:coarse)").matches,
+  shown:false,
+};
+INSTALL.platform = INSTALL.ios ? "ios" : INSTALL.android ? "android" : INSTALL.touch ? "touch" : "desktop";
+const installState = () => store.get("sb_install") || {};
+const saveInstall = x => store.set("sb_install", {...installState(), ...x});
+window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); INSTALL.prompt=e; render(); });
+window.addEventListener("appinstalled", ()=>{ saveInstall({installed:true}); track("app_installed",{platform:INSTALL.platform}); render(); });
+
+function showInstallBanner(){
+  if(INSTALL.standalone || !S.cfg.username || !S.leagues.length) return false;
+  if(!(INSTALL.ios || INSTALL.android || INSTALL.touch)) return false;
+  const st=installState();
+  if(st.installed || (st.visits||0)<2) return false;
+  if(st.dismissed && (Date.now()-st.dismissed < 21*864e5 || (st.count||0)>=3)) return false;
+  return true;
+}
+async function startInstall(from){
+  if(INSTALL.prompt){
+    const p=INSTALL.prompt; INSTALL.prompt=null;
+    track("install_prompt_opened",{platform:INSTALL.platform, from});
+    try{
+      p.prompt();
+      const {outcome}=await p.userChoice;
+      track("install_prompt_result",{platform:INSTALL.platform, outcome});
+      if(outcome==="accepted") saveInstall({installed:true});
+    }catch(e){ S.modal="install"; }
+    render(); return;
+  }
+  track("install_steps_opened",{platform:INSTALL.platform, from});
+  S.modal="install"; render();
+}
+function installBanner(){
+  const b=el("div","install"); b.setAttribute("role","region"); b.setAttribute("aria-label","Add to home screen");
+  const im=el("div","im"); im.innerHTML=`<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" fill="var(--color-text)"/><rect x="5" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="5" width="10" height="10" fill="var(--color-accent)"/><rect x="5" y="17" width="10" height="10" fill="var(--color-accent)"/><rect x="17" y="17" width="10" height="10" fill="var(--color-neutral-600)"/></svg>`; b.appendChild(im);
+  const t=el("div","it");
+  t.appendChild(el("div","t","Put AllRosters on your home screen"));
+  t.appendChild(el("div","d","One tap to every league on game day. Opens full screen, like an app."));
+  b.appendChild(t);
+  const go=el("button","btn btn-primary", INSTALL.prompt ? "Add" : "Show me");
+  go.onclick=()=>startInstall("banner"); b.appendChild(go);
+  const x=el("button","x","×"); x.setAttribute("aria-label","Not now");
+  x.onclick=()=>{ const st=installState(); saveInstall({dismissed:Date.now(), count:(st.count||0)+1});
+    track("install_banner_dismissed",{platform:INSTALL.platform}); render(); };
+  b.appendChild(x);
+  if(!INSTALL.shown){ INSTALL.shown=true; track("install_banner_shown",{platform:INSTALL.platform, prompt:!!INSTALL.prompt}); }
+  return b;
 }
 
 /* ============================================================
@@ -1379,7 +1462,10 @@ function renderDetail(d){
 /* ============================================================
    RENDER — modals
    ============================================================ */
-function closeModal(){ S.modal=null; render(); }
+function closeModal(){
+  if(S.modal==="install") history.replaceState(null,"",location.pathname+location.hash);
+  S.modal=null; render();
+}
 function modalShell(title, build){
   const layer=$("#layer"); layer.innerHTML="";
   const back=el("div","backdrop"); back.onclick=closeModal; layer.appendChild(back);
@@ -1391,6 +1477,29 @@ function modalShell(title, build){
 function renderModal(){
   const layer=$("#layer");
   if(!S.modal){ layer.innerHTML=""; return; }
+  if(S.modal==="install") modalShell("Add to home screen", m=>{
+    /* the address is what Safari saves, so let it carry the username to the new app */
+    if(S.cfg.username) history.replaceState(null,"",`${location.pathname}?user=${encodeURIComponent(S.cfg.username)}`);
+    const ol=el("ol","steps");
+    const step=html=>{ const li=el("li"); const sp=el("span"); sp.innerHTML=html; li.appendChild(sp); ol.appendChild(li); };
+    if(INSTALL.ios){
+      step(`Tap the Share button <span class="ico"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m8 7 4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg></span> in the toolbar. In Safari it's at the bottom on iPhone and the top on iPad; in Chrome it's in the address bar.`);
+      step(`Scroll down and tap <b>Add to Home Screen</b> <span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg></span>.`);
+      step(`Tap <b>Add</b>. AllRosters opens full screen from its new icon.`);
+    }else if(INSTALL.android || INSTALL.touch){
+      step(`Open your browser's menu <span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span>.`);
+      step(`Tap <b>Add to Home screen</b> or <b>Install app</b>.`);
+      step(`Tap <b>Add</b> or <b>Install</b>. AllRosters opens full screen from its new icon.`);
+    }else{
+      step(`In Chrome or Edge, click the install icon at the right end of the address bar, or open the browser menu and choose <b>Install AllRosters</b>.`);
+      step(`In Safari on a Mac, choose <b>File → Add to Dock</b>.`);
+      step(`AllRosters then opens in its own window, one click from your leagues.`);
+    }
+    m.appendChild(ol);
+    m.appendChild(el("div","note", INSTALL.ios
+      ? "Keep this open while you add it, so the new icon opens straight to your leagues."
+      : "The installed app opens straight to your leagues."));
+  });
   if(S.modal==="alerts") modalShell("Lineup alerts", m=>{
     const al=allAlerts();
     if(!al.length) m.appendChild(el("div","arow","Nothing to fix."));
@@ -1512,6 +1621,11 @@ function renderModal(){
     const rl=el("button","btn btn-secondary btn-block","Reload player database");
     rl.onclick=()=>{ store.set("sb_players",null); S.modal=null; refresh(false); };
     m.appendChild(rl);
+    if(!INSTALL.standalone){
+      const ins=el("button","btn btn-secondary btn-block","Add AllRosters to your home screen");
+      ins.onclick=()=>{ S.modal=null; startInstall("settings"); };
+      m.appendChild(ins);
+    }
     if(S.cfg.username){
       const fg=el("button","btn btn-secondary btn-block","Use a different Sleeper account");
       fg.onclick=forgetUser; m.appendChild(fg);
@@ -1527,9 +1641,16 @@ function renderOnboard(v){
   const o=S.onboard;
   const wrap=el("div","scroll obwrap");
   const f=el("form","onboard"); f.noValidate=true;
-  f.appendChild(lb("WELCOME TO ALLROSTERS","acc"));
-  f.appendChild(el("h1",null,"What's your Sleeper username?"));
-  f.appendChild(el("p",null,"AllRosters loads every NFL league you're in this season. Your username is saved in this browser, so your leagues are here the next time you open the scoreboard."));
+  if(INSTALL.standalone){
+    /* an iPhone home-screen app starts with empty storage, even for someone who just used the site */
+    f.appendChild(lb("ONE LAST STEP","acc"));
+    f.appendChild(el("h1",null,"Enter your Sleeper username once more"));
+    f.appendChild(el("p",null,"The home screen app keeps its own storage, separate from your browser. Enter your username here once, and it will open straight to your leagues from now on."));
+  }else{
+    f.appendChild(lb("WELCOME TO ALLROSTERS","acc"));
+    f.appendChild(el("h1",null,"What's your Sleeper username?"));
+    f.appendChild(el("p",null,"AllRosters loads every NFL league you're in this season. Your username is saved in this browser, so your leagues are here the next time you open the scoreboard."));
+  }
   const l=el("label","lb","Sleeper username"); l.htmlFor="ob"; f.appendChild(l);
   const row=el("div","obrow");
   const inp=el("input","input"); inp.id="ob"; inp.name="user"; inp.value=o.value; inp.required=true;
